@@ -166,17 +166,137 @@ window.SendSMSView = {
             style.id = 'sendsms-css';
             style.innerHTML = `
                 .glass-input-select, .glass-input-textarea {
-                    background-color: var(--surface-glass);
-                    border: 1px solid var(--border-glass);
+                    background-color: rgba(30, 30, 35, 0.7);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
                     color: var(--text-primary);
-                    padding: 10px 14px;
-                    border-radius: var(--radius-md);
+                    padding: 12px 16px;
+                    border-radius: 12px;
                     outline: none;
-                    transition: var(--transition);
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    font-size: 0.95rem;
+                    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+                    -webkit-appearance: none;
+                    appearance: none;
+                    backdrop-filter: blur(12px);
                 }
-                .glass-input-select:focus, .glass-input-textarea:focus { border-color: var(--accent-color); background: var(--surface-glass-hover); }
+                .glass-input-select {
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+                    background-repeat: no-repeat;
+                    background-position: right 14px center;
+                    padding-right: 40px;
+                    cursor: pointer;
+                }
+                .glass-input-select:hover {
+                    background-color: rgba(40, 40, 48, 0.85);
+                    border-color: rgba(255, 255, 255, 0.2);
+                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+                }
+                .glass-input-select:focus, .glass-input-textarea:focus {
+                    border-color: rgba(10, 132, 255, 0.6);
+                    background-color: rgba(35, 35, 42, 0.9);
+                    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.15), 0 4px 16px rgba(0, 0, 0, 0.3);
+                }
+                .glass-input-select option {
+                    background: #1c1c1e;
+                    color: #f5f5f7;
+                    padding: 10px;
+                    font-size: 0.95rem;
+                }
                 .cost-tooltip-container:hover #costTooltip { display: block !important; }
                 .bad-char { background-color: rgba(255, 69, 58, 0.4); border-radius: 4px; border-bottom: 2px solid var(--danger-color); }
+
+                /* Apple-style Confirm Modal */
+                @keyframes modalSlideIn {
+                    from { opacity: 0; transform: scale(0.92) translateY(10px); }
+                    to { opacity: 1; transform: scale(1) translateY(0); }
+                }
+                @keyframes modalBackdropIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                .apple-modal-overlay {
+                    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                    background: rgba(0, 0, 0, 0.55);
+                    backdrop-filter: blur(20px) saturate(180%);
+                    -webkit-backdrop-filter: blur(20px) saturate(180%);
+                    z-index: 99999; display: flex; align-items: center; justify-content: center;
+                    animation: modalBackdropIn 0.2s ease-out;
+                }
+                .apple-modal-card {
+                    background: rgba(44, 44, 48, 0.92);
+                    backdrop-filter: blur(40px) saturate(150%);
+                    -webkit-backdrop-filter: blur(40px) saturate(150%);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
+                    border-radius: 20px;
+                    padding: 0;
+                    width: 380px;
+                    text-align: center;
+                    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255,255,255,0.08) inset;
+                    animation: modalSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+                    overflow: hidden;
+                }
+                .apple-modal-card .modal-body {
+                    padding: 28px 28px 20px;
+                }
+                .apple-modal-card .modal-icon {
+                    width: 56px; height: 56px; border-radius: 16px;
+                    background: linear-gradient(135deg, rgba(10,132,255,0.25), rgba(94,92,230,0.25));
+                    display: flex; align-items: center; justify-content: center;
+                    margin: 0 auto 16px; font-size: 1.6rem;
+                    box-shadow: 0 4px 16px rgba(10,132,255,0.15);
+                    border: 1px solid rgba(10,132,255,0.2);
+                }
+                .apple-modal-card h3 {
+                    font-size: 1.15rem; font-weight: 700; color: #f5f5f7;
+                    letter-spacing: -0.02em; margin: 0 0 8px;
+                    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+                }
+                .apple-modal-card .modal-desc {
+                    font-size: 0.85rem; color: rgba(255,255,255,0.55);
+                    line-height: 1.45; margin: 0 0 20px;
+                }
+                .apple-modal-card .modal-stats {
+                    display: flex; gap: 1px; background: rgba(255,255,255,0.06);
+                    border-radius: 12px; overflow: hidden; margin-bottom: 4px;
+                }
+                .apple-modal-card .modal-stat {
+                    flex: 1; padding: 12px 8px;
+                    background: rgba(0,0,0,0.2);
+                    display: flex; flex-direction: column; align-items: center; gap: 4px;
+                }
+                .apple-modal-card .modal-stat .stat-value {
+                    font-size: 1.1rem; font-weight: 700; color: #f5f5f7;
+                }
+                .apple-modal-card .modal-stat .stat-label {
+                    font-size: 0.7rem; color: rgba(255,255,255,0.4);
+                    text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
+                }
+                .apple-modal-card .modal-actions {
+                    display: flex; border-top: 1px solid rgba(255,255,255,0.08);
+                }
+                .apple-modal-card .modal-actions button {
+                    flex: 1; padding: 16px; border: none; cursor: pointer;
+                    font-size: 0.95rem; font-weight: 500;
+                    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+                    transition: all 0.15s ease;
+                    background: transparent;
+                }
+                .apple-modal-card .modal-actions button:first-child {
+                    color: rgba(255,255,255,0.6);
+                    border-right: 1px solid rgba(255,255,255,0.08);
+                }
+                .apple-modal-card .modal-actions button:first-child:hover {
+                    background: rgba(255,255,255,0.05);
+                }
+                .apple-modal-card .modal-actions button:last-child {
+                    color: #0a84ff; font-weight: 600;
+                }
+                .apple-modal-card .modal-actions button:last-child:hover {
+                    background: rgba(10, 132, 255, 0.1);
+                }
+                .apple-modal-card .modal-actions button:active {
+                    transform: scale(0.97);
+                }
             `;
             document.head.appendChild(style);
         }
@@ -460,14 +580,34 @@ window.SendSMSView = {
             const existingModal = document.getElementById('confirmModal');
             if (existingModal) existingModal.remove();
 
+            const totalCredits = validRecipients.length * calc.segments;
             const modalHTML = `
-                <div id="confirmModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 9999; display:flex; align-items:center; justify-content:center;">
-                    <div style="background: var(--surface-glass); border: 1px solid var(--border-glass); border-radius: 16px; padding: 24px; width: 400px; text-align:center;">
-                        <h3>Confirm Dispatch</h3>
-                        <p style="margin: 20px 0;">Send to ${validRecipients.length} recipients?</p>
-                        <div style="display:flex; justify-content:center; gap: 12px;">
-                            <button id="cancelConfBtn" class="btn">Cancel</button>
-                            <button id="agreeConfBtn" class="btn primary-btn">Yes, Dispatch</button>
+                <div id="confirmModal" class="apple-modal-overlay">
+                    <div class="apple-modal-card">
+                        <div class="modal-body">
+                            <div class="modal-icon">
+                                <i class="icon-lucide-send" style="color: #0a84ff;"></i>
+                            </div>
+                            <h3>${isSch ? 'Schedule Message?' : 'Send Message?'}</h3>
+                            <p class="modal-desc">This action will ${isSch ? 'schedule' : 'dispatch'} your message to <strong style="color:#f5f5f7;">${validRecipients.length}</strong> recipient${validRecipients.length !== 1 ? 's' : ''} via <strong style="color:#f5f5f7;">${senderId.value}</strong>.</p>
+                            <div class="modal-stats">
+                                <div class="modal-stat">
+                                    <span class="stat-value" style="color:#0a84ff;">${validRecipients.length}</span>
+                                    <span class="stat-label">Recipients</span>
+                                </div>
+                                <div class="modal-stat">
+                                    <span class="stat-value" style="color:#bf5af2;">${calc.segments}</span>
+                                    <span class="stat-label">Segments</span>
+                                </div>
+                                <div class="modal-stat">
+                                    <span class="stat-value" style="color:#32d74b;">${totalCredits}</span>
+                                    <span class="stat-label">Credits</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button id="cancelConfBtn">Cancel</button>
+                            <button id="agreeConfBtn">${isSch ? 'Schedule' : 'Send Now'}</button>
                         </div>
                     </div>
                 </div>
