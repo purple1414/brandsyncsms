@@ -184,6 +184,36 @@ window.SendSMSView = {
         this.bindEvents();
     },
 
+    addContactNumbers: async function(element, type, idOrPhone) {
+        try {
+            let numbersToAdd = [];
+            const menu = document.getElementById('contactsDropdownMenu');
+            
+            if (type === 'contact') {
+                numbersToAdd = [idOrPhone];
+            } else if (type === 'group') {
+                element.innerHTML = '<span style="font-size: 0.75rem; color: var(--text-muted);">Loading group...</span>';
+                const contacts = await window.BrandSyncAPI.getContacts();
+                numbersToAdd = contacts.filter(c => c.groupIds && c.groupIds.includes(Number(idOrPhone))).map(c => c.phone);
+            }
+            
+            if (numbersToAdd.length > 0) {
+                const recipientsArea = document.getElementById('recipientsArea');
+                let existing = recipientsArea.value ? recipientsArea.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
+                recipientsArea.value = [...new Set([...existing, ...numbersToAdd])].join(', ');
+                recipientsArea.dispatchEvent(new Event('input')); // Trigger metrics update
+                window.showToast(`Added ${numbersToAdd.length} contact(s)`);
+            } else {
+                window.showToast('No contacts in this group', 'error');
+            }
+            
+            if (menu) menu.style.display = 'none';
+        } catch(e) {
+            console.error(e);
+            window.showToast('Error adding contacts', 'error');
+        }
+    },
+
     bindEvents() {
         const textInput = document.getElementById('messageArea');
         const charCount = document.getElementById('charCount');
@@ -247,9 +277,140 @@ window.SendSMSView = {
         };
 
         // Contacts Dropdown
-        document.getElementById('btnContactsDropdown').onclick = () => {
+        document.getElementById('btnContactsDropdown').onclick = async (e) => {
+            e.stopPropagation();
             const menu = document.getElementById('contactsDropdownMenu');
-            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+                return;
+            }
+            menu.style.display = 'block';
+            menu.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); padding:4px;">Loading...</div>';
+            
+            try {
+                const [groups, contacts] = await Promise.all([
+                    window.BrandSyncAPI.getGroups(),
+                    window.BrandSyncAPI.getContacts()
+                ]);
+                
+                let html = '';
+                
+                // Add Groups
+                if (groups.length > 0) {
+                    html += `<div style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; padding: 4px 8px; letter-spacing: 0.05em;">Groups</div>`;
+                    groups.forEach(g => {
+                        const count = contacts.filter(c => c.groupIds && c.groupIds.includes(g.id)).length;
+                        html += `
+                            <div class="dropdown-item" style="padding: 8px; cursor: pointer; border-radius: 6px; display:flex; justify-content:space-between; align-items:center;" onclick="window.SendSMSView.addContactNumbers(this, 'group', ${g.id})">
+                                <span style="font-size: 0.85rem; display:flex; align-items:center; gap: 6px;"><div style="width:10px; height:10px; border-radius:50%; background:${g.color}"></div> ${g.name}</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 8px;">${count}</span>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Add Contacts
+                if (contacts.length > 0) {
+                    html += `<div style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; padding: 4px 8px; margin-top: 8px; letter-spacing: 0.05em;">Individual Contacts</div>`;
+                    contacts.forEach(c => {
+                        html += `
+                            <div class="dropdown-item" style="padding: 8px; cursor: pointer; border-radius: 6px;" onclick="window.SendSMSView.addContactNumbers(this, 'contact', '${c.phone}')">
+                                <div style="font-size: 0.85rem; font-weight: 500;">${c.name}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">${c.phone}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                if (html === '') html = '<div style="font-size:0.75rem; color:var(--text-muted); padding:4px;">No contacts found.</div>';
+                menu.innerHTML = html;
+                
+            } catch (err) {
+                menu.innerHTML = '<div style="font-size:0.75rem; color:var(--danger-color); padding:4px;">Error loading contacts.</div>';
+            }
+        };
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const btn = document.getElementById('btnContactsDropdown');
+            const menu = document.getElementById('contactsDropdownMenu');
+            if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+            
+            const btnT = document.getElementById('btnTemplatesDropdown');
+            const menuT = document.getElementById('templatesDropdownMenu');
+            if (btnT && menuT && !btnT.contains(e.target) && !menuT.contains(e.target)) {
+                menuT.style.display = 'none';
+            }
+        });
+
+        // Templates Dropdown logic
+        document.getElementById('btnTemplatesDropdown').onclick = async (e) => {
+            e.stopPropagation();
+            const menu = document.getElementById('templatesDropdownMenu');
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+                return;
+            }
+            menu.style.display = 'block';
+            menu.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); padding:4px;">Loading templates...</div>';
+            
+            try {
+                const templates = await window.BrandSyncAPI.getTemplates();
+                let html = '';
+                if (templates.length > 0) {
+                    templates.forEach(t => {
+                        html += `
+                            <div class="dropdown-item" style="padding: 8px; cursor: pointer; border-radius: 6px; display:flex; flex-direction:column; gap:4px;" onclick="window.SendSMSView.insertTemplate(this, '${t.content.replace(/'/g, "\\'")}')">
+                                <span style="font-size: 0.85rem; font-weight: 600; color: ${t.color || 'var(--accent-color)'};">${t.name}</span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.content}</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html = '<div style="font-size:0.75rem; color:var(--text-muted); padding:4px;">No templates found.</div>';
+                }
+                menu.innerHTML = html;
+            } catch (err) {
+                menu.innerHTML = '<div style="font-size:0.75rem; color:var(--danger-color); padding:4px;">Error loading templates.</div>';
+            }
+        };
+
+        // Inject helper for templates
+        window.SendSMSView.insertTemplate = (el, content) => {
+            const ta = document.getElementById('messageArea');
+            ta.value = ta.value + (ta.value ? '\\n' : '') + content;
+            ta.dispatchEvent(new Event('input'));
+            document.getElementById('templatesDropdownMenu').style.display = 'none';
+            window.showToast("Template inserted!");
+        };
+
+        // Auto Spintax logic
+        document.getElementById('btnSpintax').onclick = () => {
+            const ta = document.getElementById('messageArea');
+            if (!ta.value) {
+                ta.value = "{Hi|Hello|Hey} {there|friend|customer}, ";
+                ta.dispatchEvent(new Event('input'));
+                window.showToast("Spintax starter added!");
+                return;
+            }
+            
+            // Basic Auto-Spintax replacements
+            let val = ta.value;
+            val = val.replace(/\\b(Hi)\\b/gi, "{Hi|Hello|Hey}");
+            val = val.replace(/\\b(Hello)\\b/gi, "{Hello|Hi|Greetings}");
+            val = val.replace(/\\b(Offer)\\b/gi, "{Offer|Deal|Promo}");
+            val = val.replace(/\\b(Buy)\\b/gi, "{Buy|Purchase|Get}");
+            val = val.replace(/\\b(Thanks)\\b/gi, "{Thanks|Thank you|We appreciate you}");
+            
+            if (val !== ta.value) {
+                ta.value = val;
+                ta.dispatchEvent(new Event('input'));
+                window.showToast("Auto-Spintax applied!");
+            } else {
+                window.showToast("No common words found to spin.", "info");
+            }
         };
 
         // GSM Check
@@ -294,6 +455,10 @@ window.SendSMSView = {
             const validRecipients = recipientsArea.value.split(',').map(r => r.trim()).filter(r => r.length >= 10);
             const calc = window.calculateSMSLength(textInput.value);
             const isSch = scheduleTime.style.display !== 'none' && scheduleTime.value;
+
+            // Prevent multiple modals from overlapping
+            const existingModal = document.getElementById('confirmModal');
+            if (existingModal) existingModal.remove();
 
             const modalHTML = `
                 <div id="confirmModal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 9999; display:flex; align-items:center; justify-content:center;">

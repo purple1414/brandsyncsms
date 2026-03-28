@@ -564,9 +564,10 @@ window.BrandSyncAPI = {
             }
         };
         this.runHealth();
-        setInterval(this.runHealth, 500); // 500ms Baseline Pulse logic
+        // REDUCED SPAM RATE TO PREVENT 429 ERRORS: 30 seconds instead of 500ms
+        setInterval(this.runHealth, 30000); 
 
-        // Run Background Data Reconciliation (Pull) every 60 seconds
+        // Run Background Data Reconciliation (Pull) every 2 minutes
         setInterval(async () => {
             const config = JSON.parse(localStorage.getItem('BS_GH_CONFIG') || '{}');
             const token = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN) || config.token;
@@ -576,7 +577,7 @@ window.BrandSyncAPI = {
                 console.log("GitHub Cloud Engine: Background Reconciliation...");
                 await this.githubPull(token, gistId);
             }
-        }, 60000);
+        }, 120000);
     }
 };
 
