@@ -1,10 +1,32 @@
 // Utility functions for UI and Logic
 
-// Show Toast notification
 window.showToast = (message, type = 'success') => {
-    const container = document.getElementById('toast-container');
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position:fixed; bottom:24px; right:24px; z-index:100000; display:flex; flex-direction:column; gap:10px; pointer-events:none;';
+        document.body.appendChild(container);
+    }
+    
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
+    toast.style.cssText = `
+        background: rgba(30, 30, 35, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-left: 4px solid ${type === 'error' ? '#ff453a' : type === 'info' ? '#0a84ff' : '#32d74b'};
+    `;
     
     let icon = 'icon-lucide-check-circle';
     if(type === 'error') icon = 'icon-lucide-alert-circle';
