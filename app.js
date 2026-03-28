@@ -250,7 +250,7 @@ class BrandSyncApp {
         // Load correct view if exists
         const viewMap = {
             'dashboard': window.DashboardView,
-            'send-sms': window.SendSmsView,
+            'send-sms': window.SendSMSView,
             'contacts': window.ContactsView,
             'inbox': window.InboxView,
             'campaigns': window.CampaignsView,
