@@ -33,7 +33,7 @@ window.ApiView = {
     },
 
     attemptApiUnlock() {
-        const key = document.getElementById('apiUnlockKey').value;
+        const key = document.getElementById('apiUnlockKey').value.trim();
         if (key === 'dadasafa') {
             sessionStorage.setItem('BS_API_UNLOCKED', 'true');
             window.showToast('Administrative Access Granted', 'success');

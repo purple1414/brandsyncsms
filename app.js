@@ -38,7 +38,8 @@ class BrandSyncApp {
     }
 
     attemptUnlock() {
-        const key = document.getElementById('masterKeyInput').value;
+        const inputEl = document.getElementById('masterKeyInput');
+        const key = inputEl.value.trim();
         const err = document.getElementById('authError');
         
         // Master Password: dadasafa
@@ -101,14 +102,23 @@ class BrandSyncApp {
         try {
             const mKey = BS_STORAGE_KEYS.MESSAGES || 'brandsync_messages';
             const msgs = JSON.parse(localStorage.getItem(mKey) || '[]');
-            health.unreadCount = msgs.filter(m => (m.sender === 'contact' && (m.isRead === false || m.isRead === undefined))).length;
+            const unreadCount = msgs.filter(m => (m.sender === 'contact' && (m.isRead === false || m.isRead === undefined))).length;
             
             const sKey = (window.Scheduler && window.Scheduler.STORAGE_KEY) || 'brandsync_scheduled_messages';
             const scheduled = JSON.parse(localStorage.getItem(sKey) || '[]');
-            health.scheduledCount = scheduled.filter(s => (s.status || '').toLowerCase() === 'pending').length;
+            const scheduledCount = scheduled.filter(s => (s.status || '').toLowerCase() === 'pending').length;
             
             const campaigns = JSON.parse(localStorage.getItem('brandsync_campaigns') || '[]');
-            health.campaignsCount = campaigns.length;
+            const campaignsCount = campaigns.length;
+            
+            // Update UI directly if flyout is open
+            const elInCount = document.getElementById('gateway_inbox_count');
+            const elSched = document.getElementById('gateway_scheduled_count');
+            const elCamp = document.getElementById('gateway_campaigns_count');
+            
+            if (elInCount) elInCount.innerText = unreadCount;
+            if (elSched) elSched.innerText = scheduledCount;
+            if (elCamp) elCamp.innerText = campaignsCount;
         } catch (e) { console.error("Health Check Metrics Error", e); }
 
             const closer = (e) => {
@@ -513,9 +523,15 @@ class BrandSyncApp {
 }
 
 // Boot application
-document.addEventListener('DOMContentLoaded', () => {
+const bootApp = () => {
     window.app = new BrandSyncApp();
     if(window.Scheduler) {
         window.Scheduler.restoreTimers();
     }
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootApp);
+} else {
+    bootApp();
+}

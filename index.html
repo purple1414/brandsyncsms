@@ -23,11 +23,11 @@
             <p style="color:rgba(255,255,255,0.4); font-size:0.9rem; margin-bottom:32px; line-height:1.5;">Enter your administrative Master Key to unlock the SMS intelligence platform.</p>
             
             <div style="margin-bottom:20px;">
-                <input type="password" id="masterKeyInput" placeholder="Enter Master Key" style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:16px; color:#fff; font-size:1rem; text-align:center; outline:none; transition:0.3s;" onfocus="this.style.borderColor='rgba(255,159,10,0.5)';this.style.background='rgba(255,255,255,0.08)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <input type="password" id="masterKeyInput" placeholder="Enter Master Key" style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:16px; color:#fff; font-size:1rem; text-align:center; outline:none; transition:0.3s;" onfocus="this.style.borderColor='rgba(255,159,10,0.5)';this.style.background='rgba(255,255,255,0.08)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" onkeydown="if(event.key === 'Enter') (window.BrandSyncAppInstance || window.app).attemptUnlock()">
                 <div id="authError" style="display:none; color:#ff453a; font-size:0.75rem; font-weight:800; margin-top:12px; text-transform:uppercase; letter-spacing:0.05em;">Invalid Master Key. Access Denied.</div>
             </div>
             
-            <button onclick="window.BrandSyncAppInstance.attemptUnlock()" style="width:100%; background:#fff; color:#000; border:none; border-radius:14px; padding:16px; font-weight:800; font-size:0.95rem; cursor:pointer; transition:0.3s; margin-bottom:24px;" onmouseover="this.style.transform='scale(1.02)';this.style.boxShadow='0 10px 25px rgba(255,255,255,0.2)'" onmouseout="this.style.transform='scale(1)'">Unlock Platform</button>
+            <button onclick="(window.BrandSyncAppInstance || window.app).attemptUnlock()" style="width:100%; background:#fff; color:#000; border:none; border-radius:14px; padding:16px; font-weight:800; font-size:0.95rem; cursor:pointer; transition:0.3s; margin-bottom:24px;" onmouseover="this.style.transform='scale(1.02)';this.style.boxShadow='0 10px 25px rgba(255,255,255,0.2)'" onmouseout="this.style.transform='scale(1)'">Unlock Platform</button>
             
             <div style="height:1px; background:rgba(255,255,255,0.08); margin-bottom:24px;"></div>
             
