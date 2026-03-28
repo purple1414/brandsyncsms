@@ -24,8 +24,8 @@ window.SendSMSView = {
                                 <input type="file" id="fileImportInput" style="display:none;" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
                                 <div style="position:relative;">
                                     <button id="btnContactsDropdown" class="btn" style="height: 36px; padding: 0 16px; font-size: 0.75rem; background: rgba(10, 132, 255, 0.15); border: 1px solid rgba(10, 132, 255, 0.3); color: var(--accent-color); border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); display: inline-flex; align-items: center; justify-content: center; gap: 6px; line-height: 1;" title="Import Contacts"><i class="icon-lucide-plus-circle" style="font-size: 0.9rem;"></i> <span style="display:inline-block; vertical-align: middle; margin-top: 1px;">Contacts</span></button>
-                                    <div id="contactsDropdownMenu" style="display:none; position:absolute; right:0; top:100%; margin-top:8px; background: rgba(45, 45, 50, 0.95); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:8px; width:240px; z-index:100; max-height:280px; overflow-y:auto; text-align: left; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-                                        <div style="font-size:0.75rem; color:var(--text-muted); padding:4px;">Loading contacts...</div>
+                                    <div id="contactsDropdownMenu" class="apple-dropdown-menu">
+                                        <div style="font-size:0.75rem; color:var(--text-muted); padding:12px; text-align:center;">Loading contacts...</div>
                                     </div>
                                 </div>
                             </div>
@@ -297,6 +297,38 @@ window.SendSMSView = {
                 .apple-modal-card .modal-actions button:active {
                     transform: scale(0.97);
                 }
+
+                /* Apple-style Dropdown */
+                .apple-dropdown-menu {
+                    display:none; position:absolute; right:0; top:100%; margin-top:8px; 
+                    background: rgba(45, 45, 50, 0.95); backdrop-filter:blur(30px) saturate(150%); -webkit-backdrop-filter:blur(30px) saturate(150%);
+                    border:1px solid rgba(255,255,255,0.15); border-radius:14px; width:280px; z-index:100;
+                    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 0.5px rgba(255,255,255,0.1) inset;
+                    overflow: hidden; animation: modalSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    text-align: left;
+                }
+                .apple-dropdown-search-container {
+                    padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.1);
+                }
+                .apple-dropdown-search {
+                    width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,0.08);
+                    border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; color: #fff; font-size: 0.85rem;
+                    outline: none; transition: 0.2s; box-sizing: border-box;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+                    background-repeat: no-repeat; background-position: 10px center;
+                }
+                .apple-dropdown-search:focus {
+                    background-color: rgba(255,255,255,0.12); border-color: rgba(10, 132, 255, 0.5);
+                }
+                .apple-dropdown-scroll {
+                    max-height: 250px; overflow-y: auto; padding: 6px;
+                }
+                .apple-dropdown-scroll::-webkit-scrollbar { width: 6px; }
+                .apple-dropdown-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+                .apple-dropdown-item {
+                    padding: 10px; cursor: pointer; border-radius: 8px; transition: background 0.15s; margin-bottom: 2px;
+                }
+                .apple-dropdown-item:hover { background: rgba(255,255,255,0.1); }
             `;
             document.head.appendChild(style);
         }
@@ -396,7 +428,7 @@ window.SendSMSView = {
             reader.readAsText(file);
         };
 
-        // Contacts Dropdown
+        // Contacts Dropdown with Search
         document.getElementById('btnContactsDropdown').onclick = async (e) => {
             e.stopPropagation();
             const menu = document.getElementById('contactsDropdownMenu');
@@ -405,48 +437,88 @@ window.SendSMSView = {
                 return;
             }
             menu.style.display = 'block';
-            menu.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); padding:4px;">Loading...</div>';
+            menu.innerHTML = '<div style="font-size:0.8rem; color:rgba(255,255,255,0.5); padding:20px; text-align:center;"><i class="icon-lucide-loader" style="animation: spin 1s linear infinite;"></i> Loading...</div>';
             
             try {
                 const [groups, contacts] = await Promise.all([
                     window.BrandSyncAPI.getGroups(),
                     window.BrandSyncAPI.getContacts()
                 ]);
+
+                // Cache for fast local search
+                window.SendSMSView._cachedGroups = groups;
+                window.SendSMSView._cachedContacts = contacts;
                 
-                let html = '';
-                
-                // Add Groups
-                if (groups.length > 0) {
-                    html += `<div style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; padding: 4px 8px; letter-spacing: 0.05em;">Groups</div>`;
-                    groups.forEach(g => {
-                        const count = contacts.filter(c => c.groupIds && c.groupIds.includes(g.id)).length;
-                        html += `
-                            <div class="dropdown-item" style="padding: 8px; cursor: pointer; border-radius: 6px; display:flex; justify-content:space-between; align-items:center;" onclick="window.SendSMSView.addContactNumbers(this, 'group', ${g.id})">
-                                <span style="font-size: 0.85rem; display:flex; align-items:center; gap: 6px;"><div style="width:10px; height:10px; border-radius:50%; background:${g.color}"></div> ${g.name}</span>
-                                <span style="font-size: 0.7rem; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 8px;">${count}</span>
-                            </div>
-                        `;
-                    });
-                }
-                
-                // Add Contacts
-                if (contacts.length > 0) {
-                    html += `<div style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; padding: 4px 8px; margin-top: 8px; letter-spacing: 0.05em;">Individual Contacts</div>`;
-                    contacts.forEach(c => {
-                        html += `
-                            <div class="dropdown-item" style="padding: 8px; cursor: pointer; border-radius: 6px;" onclick="window.SendSMSView.addContactNumbers(this, 'contact', '${c.phone}')">
-                                <div style="font-size: 0.85rem; font-weight: 500;">${c.name}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">${c.phone}</div>
-                            </div>
-                        `;
-                    });
-                }
-                
-                if (html === '') html = '<div style="font-size:0.75rem; color:var(--text-muted); padding:4px;">No contacts found.</div>';
-                menu.innerHTML = html;
+                window.SendSMSView.renderContactDropdownItems();
                 
             } catch (err) {
-                menu.innerHTML = '<div style="font-size:0.75rem; color:var(--danger-color); padding:4px;">Error loading contacts.</div>';
+                menu.innerHTML = '<div style="font-size:0.8rem; color:var(--danger-color); padding:16px; text-align:center;">Error loading contacts.</div>';
+            }
+        };
+
+        // Render helper for contact dropdown with search
+        window.SendSMSView.renderContactDropdownItems = (searchTerm = '') => {
+            const menu = document.getElementById('contactsDropdownMenu');
+            if (!menu) return;
+            
+            const groups = window.SendSMSView._cachedGroups || [];
+            const contacts = window.SendSMSView._cachedContacts || [];
+            const term = searchTerm.toLowerCase();
+            
+            let html = `
+                <div class="apple-dropdown-search-container">
+                    <input type="text" id="contactSearchInput" class="apple-dropdown-search" placeholder="Search contacts or groups..." value="${searchTerm}" autocomplete="off">
+                </div>
+                <div class="apple-dropdown-scroll">
+            `;
+            
+            let listHtml = '';
+            
+            // Filter Groups
+            const filteredGroups = groups.filter(g => g.name.toLowerCase().includes(term));
+            if (filteredGroups.length > 0) {
+                listHtml += `<div style="font-size: 0.65rem; text-transform: uppercase; color: rgba(255,255,255,0.4); font-weight: 700; padding: 8px 10px 4px; letter-spacing: 0.05em;">Groups</div>`;
+                filteredGroups.forEach(g => {
+                    const count = contacts.filter(c => c.groupIds && c.groupIds.includes(g.id)).length;
+                    listHtml += `
+                        <div class="apple-dropdown-item" style="display:flex; justify-content:space-between; align-items:center;" onclick="window.SendSMSView.addContactNumbers(this, 'group', ${g.id})">
+                            <span style="font-size: 0.85rem; display:flex; align-items:center; gap: 8px; font-weight:500; color:#f5f5f7;">
+                                <div style="width:12px; height:12px; border-radius:4px; background:${g.color}; box-shadow: 0 0 0 1px rgba(255,255,255,0.1)"></div> 
+                                ${g.name}
+                            </span>
+                            <span style="font-size: 0.7rem; color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 10px; font-weight:600;">${count}</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            // Filter Contacts
+            const filteredContacts = contacts.filter(c => c.name.toLowerCase().includes(term) || c.phone.includes(term));
+            if (filteredContacts.length > 0) {
+                listHtml += `<div style="font-size: 0.65rem; text-transform: uppercase; color: rgba(255,255,255,0.4); font-weight: 700; padding: 12px 10px 4px; letter-spacing: 0.05em;">Individual Contacts</div>`;
+                filteredContacts.forEach(c => {
+                    listHtml += `
+                        <div class="apple-dropdown-item" onclick="window.SendSMSView.addContactNumbers(this, 'contact', '${c.phone}')">
+                            <div style="font-size: 0.85rem; font-weight: 600; color:#f5f5f7; margin-bottom:2px;">${c.name}</div>
+                            <div style="font-size: 0.75rem; color: #0a84ff; font-family: monospace; opacity:0.9;">${c.phone}</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            if (listHtml === '') listHtml = '<div style="font-size:0.8rem; color:rgba(255,255,255,0.4); padding:30px 10px; text-align:center;">No match found</div>';
+            
+            html += listHtml + `</div>`;
+            menu.innerHTML = html;
+            
+            // Rebind search event & logic to retain focus
+            const searchInput = document.getElementById('contactSearchInput');
+            if (searchInput) {
+                searchInput.focus();
+                searchInput.setSelectionRange(searchTerm.length, searchTerm.length); // keep cursor at end
+                searchInput.oninput = (e) => {
+                    window.SendSMSView.renderContactDropdownItems(e.target.value);
+                };
             }
         };
 
