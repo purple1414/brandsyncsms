@@ -2,7 +2,7 @@ window.BrandSyncConfig = {
     // -----------------------------------------------------
     // GitHub Cloud Repository (Database)
     // -----------------------------------------------------
-    DEFAULT_GITHUB_TOKEN: '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', 
+    DEFAULT_GITHUB_TOKEN: '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', 
     DEFAULT_GIST_ID: 'c52093a8a3f31054c052dffe24ae793b',
 
     // -----------------------------------------------------
