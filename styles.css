@@ -95,7 +95,7 @@ body {
     padding: 0 24px;
     flex-shrink: 0;
     position: relative;
-    z-index: 1000000; /* Elevated Layer Stacking */
+    z-index: 100;
 }
 
 .content-area {

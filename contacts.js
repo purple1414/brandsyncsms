@@ -2,7 +2,7 @@
 window.ContactsView = {
     async render(container) {
         container.innerHTML = `
-            <div class="view-container active fade-in" style="display: flex; flex-direction: column; gap: 20px; min-height: 100%; padding: 24px; background: transparent; overflow-y: auto; user-select: none;">
+            <div class="view-container active fade-in" style="display: flex; flex-direction: column; gap: 20px; min-height: 100%; padding: 24px; background: transparent; user-select: none;">
                 
                 <!-- Apple Glass Group Cards (Ultra-Smooth Spatial Scroll) -->
                 <div style="display: flex; flex-direction: column; gap: 12px; position: relative;">
@@ -64,125 +64,132 @@ window.ContactsView = {
                     </div>
                 </div>
 
-                <!-- Authorization Modal -->
-                <div id="authModal" style="display:none; position:fixed; inset:0; z-index:40000; background:rgba(0,0,0,0.6); backdrop-filter:blur(40px) saturate(250%); align-items:center; justify-content:center; padding:20px;">
-                    <div class="glass-panel" style="width:340px; padding:32px; border-radius:32px; border:1px solid rgba(255,69,58,0.3); background:rgba(30,10,10,0.85); text-align:center;">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5"></circle>
-                        <h3 style="font-size:1.2rem; font-weight:800; color:#fff; margin-bottom:10px;">Security Override</h3>
-                        <p style="font-size:0.8rem; color:rgba(255,255,255,0.5); margin-bottom:24px;">Enter authorization password to permanently purge this group.</p>
-                        <input id="auth_password" type="password" placeholder="••••••••" style="width:100%; height:48px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); border-radius:14px; text-align:center; color:#fff; font-size:1.2rem; letter-spacing:0.3em; outline:none; margin-bottom:20px;">
-                        <div style="display:flex; gap:10px;">
-                            <button onclick="document.getElementById('authModal').style.display='none'" style="flex:1; height:48px; background:rgba(255,255,255,0.05); border-radius:14px; color:#fff; font-weight:700;">Cancel</button>
-                            <button id="auth_confirmBtn" style="flex:1.5; height:48px; background:#ff453a; border-radius:14px; color:#fff; font-weight:800;">EXECUTE</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Contact Modal -->
-                <div id="contactModal" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.4); backdrop-filter:blur(30px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
-                    <div class="glass-panel" style="width:520px; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.78); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
-                        <button onclick="window.ContactsView.closeEditModal()" style="position: absolute; top: 20px; right: 20px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem;">&times;</button>
-                        <h3 id="contactModalTitle" style="font-size:1.35rem; font-weight:800; color:#fff; margin-bottom:28px;">Identity Profile</h3>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-                            <input type="hidden" id="edit_contactId">
-                            <div style="grid-column: span 2; display: grid; grid-template-columns: 2fr 0.6fr 2fr; gap: 12px;">
-                                <div>
-                                    <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">First Name</label>
-                                    <input id="edit_contactFirstName" type="text" placeholder="John" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
-                                </div>
-                                <div>
-                                    <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">M.I.</label>
-                                    <input id="edit_contactMI" type="text" placeholder="D." maxlength="2" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 8px; color:#fff; font-size:0.95rem; outline:none; text-align:center;">
-                                </div>
-                                <div>
-                                    <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Last Name</label>
-                                    <input id="edit_contactLastName" type="text" placeholder="Doe" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
-                                </div>
-                            </div>
-                            <div>
-                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Mobile Number</label>
-                                <input id="edit_contactPhone" type="text" placeholder="63917..." style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
-                            </div>
-                            <div>
-                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Event</label>
-                                <input id="edit_contactEvent" type="text" placeholder="Convention 2024" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
-                            </div>
-                            <div>
-                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Brand Interest</label>
-                                <input id="edit_contactInterest" type="text" placeholder="SaaS, Mobile" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
-                            </div>
-                            <div>
-                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Awareness</label>
-                                <input id="edit_contactAwareness" type="text" placeholder="Social Media" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
-                            </div>
-                            <div>
-                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Position</label>
-                                <input id="edit_contactPosition" type="text" placeholder="CEO / Manager" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
-                            </div>
-                            <div>
-                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Sales Person</label>
-                                <input id="edit_contactSales" type="text" placeholder="Agent 007" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
-                            </div>
-                            <div style="grid-column: span 2;">
-                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Company</label>
-                                <input id="edit_contactCompany" type="text" placeholder="Acme Corp" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
-                            </div>
-                            <div style="grid-column: span 2;">
-                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Tags / Groups</label>
-                                <div id="groupCheckboxes" style="display: flex; flex-direction: column; gap: 6px; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 16px; max-height: 120px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08);"></div>
-                            </div>
-                        </div>
-                        <div style="display:flex; gap:10px; margin-top:32px;">
-                            <button onclick="window.ContactsView.closeEditModal()" style="flex:1; height:48px; background:rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius:14px; color:#fff; font-weight:700;">Cancel</button>
-                            <button onclick="window.ContactsView.saveContact()" style="flex:1.8; height:48px; background:var(--accent-color); border:none; border-radius:14px; color:#fff; font-weight:800;">Sync Profile</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Group Modal -->
-                <div id="groupModal" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.6); backdrop-filter:blur(40px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
-                    <div class="glass-panel" style="width:720px; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.78); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
-                        <button onclick="document.getElementById('groupModal').style.display='none'" style="position: absolute; top: 20px; right: 20px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem;">&times;</button>
-                        <input type="hidden" id="edit_groupId">
-                        <h3 id="groupModalTitle" style="font-size:1.4rem; font-weight:800; color:#fff; margin-bottom:24px;">Customize Group</h3>
-                        
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px;">
-                            <!-- Left: Identity -->
-                            <div style="display:flex; flex-direction:column; gap:20px;">
-                                <div><label style="display:block; font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:10px;">Group Identity</label><input id="newGroupName" type="text" placeholder="Group Name" style="width:100%; height:48px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:0 16px; color:#fff; font-size:1rem; outline:none; font-weight:700;"></div>
-                                <div><label style="display:block; font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:10px;">Description</label><textarea id="newGroupDesc" placeholder="Optional description..." style="width:100%; height:60px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:12px 16px; color:#fff; font-size:0.9rem; outline:none; resize:none;"></textarea></div>
-                                <div><label style="display:block; font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:12px;">Brand Palette</label><div id="colorPicker" style="display:flex; flex-wrap:wrap; gap:10px;"></div></div>
-                                <div><label style="display:block; font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:12px;">Symbol Glyph</label><div id="iconPicker" style="display:flex; flex-wrap:wrap; gap:8px; background:rgba(0,0,0,0.2); padding:12px; border-radius:20px;"></div></div>
-                            </div>
-                            
-                            <!-- Right: Global Pool Filter -->
-                            <div style="display:flex; flex-direction:column; background: rgba(0,0,0,0.15); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);">
-                                <label style="display:block; font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:10px;">Add Numbers from Global Pool</label>
-                                <div style="position: relative; margin-bottom: 12px;">
-                                    <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.3);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                    <input type="text" id="groupPoolFilter" oninput="window.ContactsView.filterGroupPool()" placeholder="Filter global pool..." style="width:100%; height:40px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 36px; color:#fff; font-size:0.85rem; outline:none;">
-                                </div>
-                                <div id="groupPoolList" style="flex:1; max-height: 240px; overflow-y: auto; display:flex; flex-direction:column; gap:6px; padding-right: 4px;">
-                                    <!-- Contacts dynamically injected -->
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div style="display:flex; gap:12px; margin-top:32px;">
-                            <button onclick="document.getElementById('groupModal').style.display='none'" style="flex:1; height:48px; background:rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius:14px; color:#fff; font-weight:700;">Cancel</button>
-                            <button onclick="window.ContactsView.saveGroup()" style="flex:1.8; height:48px; background:var(--accent-color); border:none; border-radius:14px; color:#fff; font-weight:800;">Apply Changes</button>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         `;
 
+        this._injectModals();
         this._renderPickers();
         this.loadGroups();
         this.loadData();
         this.setupHeavyImport();
         setTimeout(() => this._initUltraSpatialScroll(), 200);
+    },
+
+    _injectModals() {
+        // Remove old modal instances to avoid duplicates on re-render
+        ['authModal', 'contactModal', 'groupModal'].forEach(id => {
+            const old = document.getElementById(id);
+            if (old) old.remove();
+        });
+
+        // Inject modals directly into body so position:fixed is viewport-relative
+        const modalHTML = `
+            <!-- Authorization Modal -->
+            <div id="authModal" style="display:none; position:fixed; inset:0; z-index:40000; background:rgba(0,0,0,0.6); backdrop-filter:blur(40px) saturate(250%); align-items:center; justify-content:center; padding:20px;">
+                <div class="glass-panel" style="width:340px; padding:32px; border-radius:32px; border:1px solid rgba(255,69,58,0.3); background:rgba(30,10,10,0.85); text-align:center;">
+                    <h3 style="font-size:1.2rem; font-weight:800; color:#fff; margin-bottom:10px;">Security Override</h3>
+                    <p style="font-size:0.8rem; color:rgba(255,255,255,0.5); margin-bottom:24px;">Enter authorization password to permanently purge this group.</p>
+                    <input id="auth_password" type="password" placeholder="••••••••" style="width:100%; height:48px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); border-radius:14px; text-align:center; color:#fff; font-size:1.2rem; letter-spacing:0.3em; outline:none; margin-bottom:20px;">
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="document.getElementById('authModal').style.display='none'" style="flex:1; height:48px; background:rgba(255,255,255,0.05); border-radius:14px; color:#fff; font-weight:700;">Cancel</button>
+                        <button id="auth_confirmBtn" style="flex:1.5; height:48px; background:#ff453a; border-radius:14px; color:#fff; font-weight:800;">EXECUTE</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Modal -->
+            <div id="contactModal" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.4); backdrop-filter:blur(30px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
+                <div class="glass-panel" style="width:520px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
+                    <button onclick="window.ContactsView.closeEditModal()" style="position: absolute; top: 20px; right: 20px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem;">&times;</button>
+                    <h3 id="contactModalTitle" style="font-size:1.35rem; font-weight:800; color:#fff; margin-bottom:28px;">Identity Profile</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                        <input type="hidden" id="edit_contactId">
+                        <div style="grid-column: span 2; display: grid; grid-template-columns: 2fr 0.6fr 2fr; gap: 12px;">
+                            <div>
+                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">First Name</label>
+                                <input id="edit_contactFirstName" type="text" placeholder="John" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
+                            </div>
+                            <div>
+                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">M.I.</label>
+                                <input id="edit_contactMI" type="text" placeholder="D." maxlength="2" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 8px; color:#fff; font-size:0.95rem; outline:none; text-align:center;">
+                            </div>
+                            <div>
+                                <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Last Name</label>
+                                <input id="edit_contactLastName" type="text" placeholder="Doe" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Mobile Number</label>
+                            <input id="edit_contactPhone" type="text" placeholder="63917..." style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Event</label>
+                            <input id="edit_contactEvent" type="text" placeholder="Convention 2024" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Brand Interest</label>
+                            <input id="edit_contactInterest" type="text" placeholder="SaaS, Mobile" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Awareness</label>
+                            <input id="edit_contactAwareness" type="text" placeholder="Social Media" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Position</label>
+                            <input id="edit_contactPosition" type="text" placeholder="CEO / Manager" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Sales Person</label>
+                            <input id="edit_contactSales" type="text" placeholder="Agent 007" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Company</label>
+                            <input id="edit_contactCompany" type="text" placeholder="Acme Corp" style="width:100%; height:44px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 16px; color:#fff; font-size:0.95rem; outline:none;">
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label style="font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; display:block; margin-bottom:6px; margin-left:4px;">Tags / Groups</label>
+                            <div id="groupCheckboxes" style="display: flex; flex-direction: column; gap: 6px; background: rgba(0,0,0,0.25); padding: 12px; border-radius: 16px; max-height: 120px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08);"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:32px;">
+                        <button onclick="window.ContactsView.closeEditModal()" style="flex:1; height:48px; background:rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius:14px; color:#fff; font-weight:700;">Cancel</button>
+                        <button onclick="window.ContactsView.saveContact()" style="flex:1.8; height:48px; background:var(--accent-color); border:none; border-radius:14px; color:#fff; font-weight:800;">Sync Profile</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Modal -->
+            <div id="groupModal" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.6); backdrop-filter:blur(40px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
+                <div class="glass-panel" style="width:720px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
+                    <button onclick="document.getElementById('groupModal').style.display='none'" style="position: absolute; top: 20px; right: 20px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem;">&times;</button>
+                    <input type="hidden" id="edit_groupId">
+                    <h3 id="groupModalTitle" style="font-size:1.4rem; font-weight:800; color:#fff; margin-bottom:24px;">Customize Group</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px;">
+                        <div style="display:flex; flex-direction:column; gap:20px;">
+                            <div><label style="display:block; font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:10px;">Group Identity</label><input id="newGroupName" type="text" placeholder="Group Name" style="width:100%; height:48px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:0 16px; color:#fff; font-size:1rem; outline:none; font-weight:700;"></div>
+                            <div><label style="display:block; font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:10px;">Description</label><textarea id="newGroupDesc" placeholder="Optional description..." style="width:100%; height:60px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:12px 16px; color:#fff; font-size:0.9rem; outline:none; resize:none;"></textarea></div>
+                            <div><label style="display:block; font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:12px;">Brand Palette</label><div id="colorPicker" style="display:flex; flex-wrap:wrap; gap:10px;"></div></div>
+                            <div><label style="display:block; font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:12px;">Symbol Glyph</label><div id="iconPicker" style="display:flex; flex-wrap:wrap; gap:8px; background:rgba(0,0,0,0.2); padding:12px; border-radius:20px;"></div></div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; background: rgba(0,0,0,0.15); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label style="display:block; font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:10px;">Add Numbers from Global Pool</label>
+                            <div style="position: relative; margin-bottom: 12px;">
+                                <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.3);" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" id="groupPoolFilter" oninput="window.ContactsView.filterGroupPool()" placeholder="Filter global pool..." style="width:100%; height:40px; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:0 36px; color:#fff; font-size:0.85rem; outline:none;">
+                            </div>
+                            <div id="groupPoolList" style="flex:1; max-height: 240px; overflow-y: auto; display:flex; flex-direction:column; gap:6px; padding-right: 4px;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-top:32px;">
+                        <button onclick="document.getElementById('groupModal').style.display='none'" style="flex:1; height:48px; background:rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius:14px; color:#fff; font-weight:700;">Cancel</button>
+                        <button onclick="window.ContactsView.saveGroup()" style="flex:1.8; height:48px; background:var(--accent-color); border:none; border-radius:14px; color:#fff; font-weight:800;">Apply Changes</button>
+                    </div>
+                </div>
+            </div>`;
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = modalHTML;
+        while (wrapper.firstChild) document.body.appendChild(wrapper.firstChild);
     },
 
     activeGroupId: null, selectedColor: '#0a84ff', selectedIcon: 'Users', cachedGroups: [], activePoolContacts: [], selectedPoolContacts: new Set(),
