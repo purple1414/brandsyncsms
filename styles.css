@@ -95,7 +95,7 @@ body {
     padding: 0 24px;
     flex-shrink: 0;
     position: relative;
-    z-index: 100;
+    z-index: 9995; /* Above phone preview (9990) but below modals (20000+) */
 }
 
 .content-area {
