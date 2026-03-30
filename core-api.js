@@ -141,11 +141,23 @@ window.BrandSyncAPI = {
             if (!file || !file.content) return { success: false, status: 204 }; // No Content
             
             const data = JSON.parse(file.content);
+            let changed = false;
             Object.keys(data).forEach(storageKey => {
-                localStorage.setItem(storageKey, JSON.stringify(data[storageKey]));
+                const existing = localStorage.getItem(storageKey);
+                const incoming = JSON.stringify(data[storageKey]);
+                if (existing !== incoming) changed = true;
+                localStorage.setItem(storageKey, incoming);
             });
             this.runHealth();
-            return { success: true, status: 200 };
+
+            // If scheduled data changed, refresh the scheduled view if it's open
+            if (changed) {
+                if (window.ScheduledView && document.getElementById('scheduled-list')) {
+                    window.ScheduledView.renderList();
+                }
+            }
+
+            return { success: true, status: 200, changed };
         } catch (e) { console.error("GH Pull Exception", e); return { success: false, status: 0 }; }
     },
 

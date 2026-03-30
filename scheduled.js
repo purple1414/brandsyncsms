@@ -245,7 +245,16 @@ window.ScheduledView = {
             const el = document.getElementById(id); if(el) document.body.appendChild(el);
         });
 
-        setTimeout(() => this.renderList(), 0);
+        // Pull from GitHub first so other users see latest scheduled data
+        setTimeout(async () => {
+            const config = JSON.parse(localStorage.getItem('BS_GH_CONFIG') || '{}');
+            const token = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN) || config.token;
+            const gistId = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GIST_ID) || config.gistId;
+            if (token && gistId) {
+                await window.BrandSyncAPI.githubPull(token, gistId);
+            }
+            this.renderList();
+        }, 0);
     },
 
     toggleRecurringUI(on) {
