@@ -739,63 +739,51 @@ window.BrandSyncAPI = {
         const KEY_API = "OUp6qm8VbX7rrJm5".trim();
         const KEY_PASS = "Sfgroup@2023!".trim();
 
-        // Standardized Proxy Tunnel (Proxy is used for the entire handshake to maintain IP parity)
-        const PROXY = "https://corsproxy.io/?";
-
-        const proxyFetch = async (target, opts = {}) => {
-            // Append cache busting timestamp to EVERY request to prevent stale tokens
-            const bust = `_v=${Date.now()}`;
-            const finalUrl = target.includes('?') ? `${target}&${bust}` : `${target}?${bust}`;
-            const proxied = PROXY + encodeURIComponent(finalUrl);
-            
-            const res = await fetch(proxied, {
-                ...opts,
-                cache: 'no-store', // Force no-cache across the chain
-                headers: { ...opts.headers, 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
-            });
-            if (!res.ok) throw new Error("Proxy connection failed.");
-            return await res.json();
+        // High-Stability Proxy Tunnel
+        const proxyFetch = async (target) => {
+            const proxied = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}&_=${Date.now()}`;
+            const res = await fetch(proxied, { cache: 'no-store' });
+            if (!res.ok) throw new Error(`Proxy Bridge Down (${res.status})`);
+            const data = await res.json();
+            if (!data || !data.contents) throw new Error("Remote server returned an empty tunnel.");
+            return JSON.parse(data.contents);
         };
 
         const runAuth = async (candidateKey) => {
-            // --- Step 1: Atomic Challenge ---
-            const chalUrl = `${BASE_URL}?operation=getchallenge&username=${USERNAME}`;
-            const chal = await proxyFetch(chalUrl);
-            if (!chal.success) throw new Error("Handshake Rejected: " + (chal.error ? chal.error.message : "Access error"));
+            // --- Step 1: Challenge ---
+            const chal = await proxyFetch(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
+            if (!chal.success) throw new Error("Handshake Rejected: " + (chal.error ? chal.error.message : "Internal Auth Failure"));
             
             const token = chal.result.token;
-            // md5 is now global from blueimp-md5 in index.html
             const accessKey = window.md5(token + candidateKey);
 
-            // --- Step 2: Atomic Login (Maintaining Same Proxy IP) ---
-            const authUrl = `${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`;
-            const auth = await proxyFetch(authUrl);
-            if (!auth.success) return { success: false, msg: auth.error ? auth.error.message : "Credential Mismatch" };
-            
-            return { success: true, session: auth.result.sessionName };
+            // --- Step 2: Session Creation (Using GET to maximize proxy stability) ---
+            const auth = await proxyFetch(`${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`);
+            return auth;
         };
 
         try {
-            window.showToast("Handshaking with Central Warehouse...", "info");
+            window.showToast("Authenticating High-Security Identity...", "info");
             
-            // Try with primary API key
-            let res = await runAuth(KEY_API);
-            if (!res.success) {
-                console.warn("API Key Auth failed, próbál password fallback...");
-                res = await runAuth(KEY_PASS);
+            let auth = await runAuth(KEY_API);
+            if (!auth.success) {
+                console.warn("Primary Identity failed, trying Password override...");
+                auth = await runAuth(KEY_PASS);
             }
 
-            if (!res.success) throw new Error(res.msg);
+            if (!auth.success) {
+                const errMsg = auth.error ? auth.error.message : "Access Denied";
+                throw new Error(errMsg);
+            }
             
-            const sessionName = res.session;
-            window.showToast("Connection Secure. Pulling Identities...", "info");
+            const sessionName = auth.result.sessionName;
+            window.showToast(`Identified as ${auth.result.first_name}! Pulling Global Data...`, "info");
 
-            // --- Step 3: Global Sweep ---
-            // Verified target fields: firstname, lastname, mobile, phone, farm_name (Company)
+            // --- Step 3: Identity Reconstruction ---
             const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 500;");
             const qData = await proxyFetch(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
 
-            if (!qData.success) throw new Error("Database query rejected.");
+            if (!qData.success) throw new Error("Identity sweep rejected: " + (qData.error ? qData.error.message : "Table restricted"));
 
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
@@ -811,10 +799,10 @@ window.BrandSyncAPI = {
                 if (!existsPending && !existsMain) {
                     pending.unshift({
                         id: 'PEND_CRM_' + item.id.replace(/:/g, '_'),
-                        name: item.firstname || item.farm_name || 'CRM Lead',
+                        name: item.firstname || item.farm_name || 'CRM Contact',
                         phone: phone,
-                        company: item.farm_name || 'Agridom Farm',
-                        position: item.lastname || '',
+                        company: item.farm_name || 'Central Warehouse',
+                        position: item.lastname || 'Lead',
                         interest: '',
                         added: new Date().toISOString().substring(0, 10),
                         source: 'Central CRM'
@@ -828,7 +816,7 @@ window.BrandSyncAPI = {
 
         } catch (err) {
             console.error("Centralized CRM Error:", err);
-            return { success: false, message: err.message };
+            return { success: false, message: `CRM: ${err.message}` };
         }
     },
 
