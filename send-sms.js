@@ -422,9 +422,18 @@ window.SendSMSView = {
         const addFormattedNumbers = (rawNumbers) => {
             let valid = [];
             rawNumbers.forEach(n => {
-                let num = String(n).replace(/[^\d]/g, '');
+                // Remove decimals if Excel exported as float (.0)
+                let num = String(n).split('.')[0].replace(/[^\d]/g, '');
+                
+                // If it already starts with 639 and is the correct length, keep it
+                if (num.startsWith('639') && num.length === 12) {
+                    valid.push(num);
+                    return;
+                }
+
                 if (num.startsWith('09') && num.length === 11) num = '63' + num.substring(1);
                 else if (num.startsWith('9') && num.length === 10) num = '63' + num;
+                
                 if (/^639\d{9}$/.test(num)) valid.push(num);
             });
             let existing = recipientsArea.value ? recipientsArea.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
@@ -447,27 +456,31 @@ window.SendSMSView = {
                 let foundNumbers = [];
 
                 if (okExcel) {
-                    // Modern Excel Parsing via SheetJS
+                    // Multi-Sheet Deep-Scan Engine (SheetJS)
                     const data = new Uint8Array(event.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    // Iterate through ALL sheets in the workbook
+                    workbook.SheetNames.forEach(sheetName => {
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-                    // Scan every single cell for phone number patterns
-                    jsonData.forEach(row => {
-                        row.forEach(cell => {
-                            if (cell) {
-                                const str = String(cell);
-                                const matches = str.match(/(?:\+?63|0)?9\d{9}/g);
-                                if (matches) foundNumbers = [...foundNumbers, ...matches];
-                            }
+                        jsonData.forEach(row => {
+                            if(!Array.isArray(row)) return;
+                            row.forEach(cell => {
+                                if (cell !== undefined && cell !== null) {
+                                    // Robust extraction: remove spaces/dashes before regex
+                                    let str = String(cell).trim().replace(/[\s\-]/g, '').split('.')[0]; 
+                                    const matches = str.match(/(?:63|0)?9\d{9}/g);
+                                    if (matches) foundNumbers = [...foundNumbers, ...matches];
+                                }
+                            });
                         });
                     });
                 } else {
                     // Generic CSV / Text Parsing
                     const text = event.target.result;
-                    const matches = text.match(/(?:\+?63|0|9)\d{9}/g);
+                    const matches = text.match(/(?:63|0)?9\d{9}/g);
                     if (matches) foundNumbers = matches;
                 }
 
