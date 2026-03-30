@@ -581,34 +581,19 @@ window.BrandSyncAPI = {
         health.scheduledCount = health.scheduledCount || 0;
         health.campaignsCount = health.campaignsCount || 0;
 
-        // 1. High-Speed Internet Trace (Ping to GitHub Landing Page)
+        // 1. High-Speed Internet Trace (Ping to CDN as landing page)
         const startNet = performance.now();
         try {
-            await fetch('https://github.com', { mode: 'no-cors', cache: 'no-store' });
+            await fetch('https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js', { mode: 'no-cors' });
             health.latencyNet = Math.round(performance.now() - startNet);
             health.internet = true;
         } catch (e) { health.internet = false; }
 
-        // 2. GitHub Cloud Pulse
-        if (ghToken && ghGistId) {
-            const startGh = performance.now();
-            try {
-                const res = await fetch(`https://api.github.com/gists/${ghGistId}`, {
-                    headers: { 'Authorization': `token ${ghToken}` }
-                });
-                health.github = res.ok;
-                health.latencyGh = Math.round(performance.now() - startGh);
-            } catch (e) { health.github = false; }
-        }
-
-        // 3. PhilSMS API & Infrastructure Pulse
+        // 2. PhilSMS API & Infrastructure Pulse
         const startSms = performance.now();
         try {
-            // Use landing page instead of favicon to prevent console 404s
-            await fetch('https://philsms.com', { 
-                mode: 'no-cors', 
-                cache: 'force-cache' 
-            });
+            // Hit domain directly to avoid 404 console noise
+            await fetch('https://philsms.com', { mode: 'no-cors' });
             health.latencySms = Math.round(performance.now() - startSms);
             health.philsms = true;
         } catch (e) { 
@@ -750,26 +735,19 @@ window.BrandSyncAPI = {
             
             if (!chal.success) throw new Error("Warehouse handshake rejected.");
             
-            const token = chal.result.token;
+            const token = (chal.result.token || '').trim();
             // md5 is global from index.html (blueimp-md5)
             const accessKey = window.md5(token + KEY);
 
-            // --- Step 2: Login (Forcing POST for high-security compliance) ---
-            const body = new URLSearchParams();
-            body.append('operation', 'login');
-            body.append('username', USERNAME);
-            body.append('accessKey', accessKey);
-
-            const loginRes = await fetch(PROXY + encodeURIComponent(BASE_URL), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: body
-            });
-            const auth = await loginRes.json();
+            // --- Step 2: Login (Using high-compatibility GET signature) ---
+            // GET is much more reliable for CORS proxies than POST with bodies
+            const authUrl = PROXY + encodeURIComponent(`${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`);
+            const authRes = await fetch(authUrl);
+            const auth = await authRes.json();
 
             if (!auth.success) {
                 const rawMsg = auth.error ? auth.error.message : "Access Denied";
-                throw new Error(`${rawMsg} (Security Exception)`);
+                throw new Error(rawMsg);
             }
             
             const sessionName = auth.result.sessionName;
