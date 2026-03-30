@@ -29,8 +29,12 @@ window.ContactsView = {
                         <div style="flex: 1; max-width: 650px; display: flex; gap:12px; align-items: center;">
                             <div style="flex: 1; position: relative;">
                                 <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.3);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                <input type="text" id="contactSearch" placeholder="Filter identity database..." style="width: 100%; height: 40px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 40px; color: #fff; font-size: 0.9rem; outline: none; transition: 0.2s;" oninput="window.ContactsView.loadData()">
+                                <input type="text" id="contactSearch" placeholder="Filter identity database (e.g. 2023-10)..." style="width: 100%; height: 40px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 40px; color: #fff; font-size: 0.9rem; outline: none; transition: 0.2s;" oninput="window.ContactsView.loadData()">
                             </div>
+                            <button id="recentFilterBtn" onclick="window.ContactsView.toggleRecentFilter()" style="height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(10,132,255,0.1); color:#0a84ff; border: 1px solid rgba(10,132,255,0.3); font-weight:700; font-size:0.8rem; align-items:center; gap:6px; display:flex;" title="Show only contacts from the last 7 days">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                Recent
+                            </button>
                             <button id="bulkDeleteBtn" onclick="window.ContactsView.bulkDelete()" style="display:none; height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(255,69,58,0.12); color:#ff453a; border: 1px solid rgba(255,69,58,0.2); font-weight:700; font-size:0.8rem; align-items:center; gap:6px;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
                                 <span id="selectedCount">0</span> selected
@@ -115,7 +119,8 @@ window.ContactsView = {
             <div id="contactModal" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.4); backdrop-filter:blur(30px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
                 <div class="glass-panel" style="width:520px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
                     <button onclick="window.ContactsView.closeEditModal()" style="position: absolute; top: 20px; right: 20px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem;">&times;</button>
-                    <h3 id="contactModalTitle" style="font-size:1.35rem; font-weight:800; color:#fff; margin-bottom:28px;">Identity Profile</h3>
+                    <h3 id="contactModalTitle" style="font-size:1.35rem; font-weight:800; color:#fff; margin-bottom:4px;">Identity Profile</h3>
+                    <p id="contactAddedLabel" style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-bottom:24px;">Added: Unknown</p>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
                         <input type="hidden" id="edit_contactId">
                         <div style="grid-column: span 2; display: grid; grid-template-columns: 2fr 0.6fr 2fr; gap: 12px;">
@@ -479,6 +484,23 @@ window.ContactsView = {
         });
     },
 
+    isRecentFilterActive: false,
+
+    toggleRecentFilter() {
+        this.isRecentFilterActive = !this.isRecentFilterActive;
+        const btn = document.getElementById('recentFilterBtn');
+        if (btn) {
+            if (this.isRecentFilterActive) {
+                btn.style.background = 'rgba(10,132,255,0.3)';
+                btn.style.borderColor = 'rgba(10,132,255,0.6)';
+            } else {
+                btn.style.background = 'rgba(10,132,255,0.1)';
+                btn.style.borderColor = 'rgba(10,132,255,0.3)';
+            }
+        }
+        this.loadData();
+    },
+
     async loadData() {
         const tbody = document.getElementById('contactsTableBody'); const searchQuery = (document.getElementById('contactSearch')?.value || '').toLowerCase(); if (!tbody) return;
         let contacts = await window.BrandSyncAPI.getContacts(); const groups = await window.BrandSyncAPI.getGroups(); const grpMap = groups.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
@@ -489,9 +511,20 @@ window.ContactsView = {
                 return (c.name || '').toLowerCase().includes(s) || (c.phone || '').includes(s) || (c.event || '').toLowerCase().includes(s) || 
                        (c.interest || '').toLowerCase().includes(s) || (c.awareness || '').toLowerCase().includes(s) || 
                        (c.position || '').toLowerCase().includes(s) || (c.salesPerson || '').toLowerCase().includes(s) ||
-                       (c.company || '').toLowerCase().includes(s);
+                       (c.company || '').toLowerCase().includes(s) || (c.added || '').includes(s); // added date search
             });
         }
+        
+        const now = Date.now();
+        const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+        
+        if (this.isRecentFilterActive) {
+            contacts = contacts.filter(c => {
+                const addDate = new Date(c.added).getTime();
+                return addDate && (now - addDate) <= sevenDaysMs;
+            });
+        }
+        
         if (this.activeGroupId !== null) contacts = contacts.filter(c => c.groupIds && c.groupIds.includes(this.activeGroupId));
         
         tbody.innerHTML = contacts.length > 0 ? contacts.map(c => {
@@ -509,9 +542,30 @@ window.ContactsView = {
             
             const cellStyle = "padding: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;";
             
+            // Logic for "Recently Added" Tag and formatted string
+            const addDate = new Date(c.added).getTime();
+            const isRecent = addDate && (now - addDate) <= sevenDaysMs;
+            const recentBadge = isRecent ? `<span title="Added within the last 7 days" style="background:rgba(255,159,10,0.15); color:#ff9f0a; border:1px solid rgba(255,159,10,0.3); padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; white-space:nowrap; margin-right:4px;">NEW</span>` : '';
+            
+            // Generate formatted timestamp string nicely
+            let addDisplay = c.added || '';
+            if (addDate) {
+               const dObj = new Date(c.added);
+               const hours = dObj.getHours();
+               const mins = String(dObj.getMinutes()).padStart(2, '0');
+               const ampm = hours >= 12 ? 'PM' : 'AM';
+               const fmtTime = `${hours % 12 || 12}:${mins} ${ampm}`;
+               addDisplay = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')} ${c.added.includes(':') ? fmtTime : ''}`.trim();
+            }
+
             return `<tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.1s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
                 <td style="padding: 12px 24px;"><input type="checkbox" class="contact-checkbox" value="${c.id}" onchange="window.ContactsView.updateBulkUI()" style="width:16px; height:16px; accent-color: var(--accent-color); cursor:pointer;"></td>
-                <td style="${cellStyle} font-weight: 700; color: #fff;" title="${displayName}">${displayName}</td>
+                <td style="${cellStyle} font-weight: 700; color: #fff;" title="${displayName}">
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="margin-bottom:2px; display:flex; align-items:center;">${recentBadge} ${displayName}</span>
+                        ${addDisplay ? `<span style="font-size:0.6rem; color:rgba(255,255,255,0.3); font-weight:600; font-family:monospace;">${addDisplay}</span>` : ''}
+                    </div>
+                </td>
                 <td style="${cellStyle} color: var(--success-color); font-weight: 800; font-family: monospace;">+${c.phone}</td>
                 <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${displayCompany}">${displayCompany}</td>
                 <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${displayEvent}">${displayEvent}</td>
@@ -658,9 +712,16 @@ window.ContactsView = {
             let last = contact.lastName || "";
             
             if(!first && !last && nameParts.length > 0) {
-               first = nameParts[0];
+                first = nameParts[0];
                if(nameParts.length === 3) { mi = nameParts[1]; last = nameParts[2]; }
                else if(nameParts.length === 2) { last = nameParts[1]; }
+            }
+            
+            const addDate = new Date(contact.added).getTime();
+            const isRecent = addDate && (Date.now() - addDate) <= (7 * 24 * 60 * 60 * 1000);
+            const addedLabel = document.getElementById('contactAddedLabel');
+            if(addedLabel) {
+                 addedLabel.innerHTML = `Added: <span style="font-family:monospace; color:#fff; font-weight:700;">${contact.added || 'Unknown'}</span> ${isRecent ? '<span style="color:#ff9f0a; font-weight:800; margin-left:8px; padding:2px 6px; border:1px solid rgba(255,159,10,0.3); background:rgba(255,159,10,0.1); border-radius:4px;">NEW</span>' : ''}`;
             }
 
             document.getElementById('edit_contactFirstName').value = first;
@@ -677,6 +738,9 @@ window.ContactsView = {
         } else {
             ids.forEach(id => document.getElementById('edit' + id).value = "");
             checkboxes.forEach(cb => cb.checked = false);
+            
+            const addedLabel = document.getElementById('contactAddedLabel');
+            if(addedLabel) addedLabel.innerHTML = `Added: <span style="color:rgba(255,255,255,0.2); font-style:italic;">Pending Save...</span>`;
         }
         modal.style.display = 'flex';
     },

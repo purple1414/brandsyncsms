@@ -344,7 +344,12 @@ window.BrandSyncAPI = {
             } else {
                 // Ensure globally unique IDs even for high-velocity loops
                 contact.id = Date.now().toString() + "_" + Math.random().toString(36).slice(2, 11);
-                contact.added = new Date().toISOString().split('T')[0];
+                
+                // Format: YYYY-MM-DD HH:MM
+                const d = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                contact.added = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                
                 cs.unshift(contact);
             }
             this._set(BS_STORAGE_KEYS.CONTACTS, cs);
