@@ -732,44 +732,98 @@ window.BrandSyncAPI = {
         }
     },
 
-    // Agridom Centralized CRM Integration (Pending Approval Workflow)
+    // Agridom Centralized CRM Integration (Vtiger API Edition)
     async fetchCentralizedContacts() {
         const CENTRAL_URL = "https://agridomcorp.com/warehouse/webservice.php";
         const USERNAME = "pcalpas";
         const KEY = "OUp6qm8VbX7rrJm5";
 
+        // Minimal MD5 helper for Vtiger Challenge-Response
+        const md5 = function(string) {
+            function md5cycle(x, k) {
+                var a = x[0], b = x[1], c = x[2], d = x[3];
+                a = ff(a, b, c, d, k[0], 7, -680876936); d = ff(d, a, b, c, k[1], 12, -389564586); c = ff(c, d, a, b, k[2], 17, 606105819); b = ff(b, c, d, a, k[3], 22, -1044525330);
+                a = ff(a, b, c, d, k[4], 7, -176418897); d = ff(d, a, b, c, k[5], 12, 1200080426); c = ff(c, d, a, b, k[6], 17, -1473231341); b = ff(b, c, d, a, k[7], 22, -45705983);
+                a = ff(a, b, c, d, k[8], 7, 1770035416); d = ff(d, a, b, c, k[9], 12, -1958414417); c = ff(c, d, a, b, k[10], 17, -42063); b = ff(b, c, d, a, k[11], 22, -1990404162);
+                a = ff(a, b, c, d, k[12], 7, 1804603682); d = ff(d, a, b, c, k[13], 12, -40341101); c = ff(c, d, a, b, k[14], 17, -1502002290); b = ff(b, c, d, a, k[15], 22, 1236535329);
+                a = gg(a, b, c, d, k[1], 5, -165796510); d = gg(d, a, b, c, k[6], 9, -1069501632); c = gg(c, d, a, b, k[11], 14, 643717713); b = gg(b, c, d, a, k[0], 20, -373897302);
+                a = gg(a, b, c, d, k[5], 5, -701558691); d = gg(d, a, b, c, k[10], 9, 38016083); c = gg(c, d, a, b, k[15], 14, -660478335); b = gg(b, c, d, a, k[4], 20, -405537848);
+                a = gg(a, b, c, d, k[9], 5, 568446438); d = gg(d, a, b, c, k[14], 9, -1019803690); c = gg(c, d, a, b, k[3], 14, -187363961); b = gg(b, c, d, a, k[8], 20, 1163531501);
+                a = gg(a, b, c, d, k[13], 5, -1444681467); d = gg(d, a, b, c, k[2], 9, -51403784); c = gg(c, d, a, b, k[7], 14, 1735328473); b = gg(b, c, d, a, k[12], 20, -1926607734);
+                a = hh(a, b, c, d, k[5], 4, -378558); d = hh(d, a, b, c, k[8], 11, -2022574463); c = hh(c, d, a, b, k[11], 16, 1839030562); b = hh(b, c, d, a, k[14], 23, -35309556);
+                a = hh(a, b, c, d, k[1], 4, -1530992060); d = hh(d, a, b, c, k[4], 11, 1272893353); c = hh(c, d, a, b, k[7], 16, -155497632); b = hh(b, c, d, a, k[10], 23, -1094730640);
+                a = hh(a, b, c, d, k[13], 4, 681279174); d = hh(d, a, b, c, k[0], 11, -358537222); c = hh(c, d, a, b, k[3], 16, -722521979); b = hh(b, c, d, a, k[6], 23, 76029189);
+                a = hh(a, b, c, d, k[9], 4, -640364487); d = hh(d, a, b, c, k[12], 11, -421815835); c = hh(c, d, a, b, k[15], 16, 530742520); b = hh(b, c, d, a, k[2], 23, -995338651);
+                a = ii(a, b, c, d, k[0], 6, -198630844); d = ii(d, a, b, c, k[7], 10, 1126891415); c = ii(c, d, a, b, k[14], 15, -1416354905); b = ii(b, c, d, a, k[5], 21, -57434055);
+                a = ii(a, b, c, d, k[12], 6, 1700485571); d = ii(d, a, b, c, k[3], 10, -1894986606); c = ii(c, d, a, b, k[10], 15, -1051523); b = ii(b, c, d, a, k[1], 21, -2054922799);
+                a = ii(a, b, c, d, k[8], 6, 1873313359); d = ii(d, a, b, c, k[15], 10, -30611744); c = ii(c, d, a, b, k[6], 15, -1560198380); b = ii(b, c, d, a, k[13], 21, 1309151649);
+                a = ii(a, b, c, d, k[4], 6, -145523070); d = ii(d, a, b, c, k[11], 10, -1120210379); c = ii(c, d, a, b, k[2], 15, 718787280); b = ii(b, c, d, a, k[9], 21, -343485551);
+                x[0] = add32(a, x[0]); x[1] = add32(b, x[1]); x[2] = add32(c, x[2]); x[3] = add32(d, x[3]);
+            }
+            function cmn(q, a, b, x, s, t) { a = add32(add32(a, q), add32(x, t)); return add32((a << s) | (a >>> (32 - s)), b); }
+            function ff(a, b, c, d, x, s, t) { return cmn((b & c) | ((~b) & d), a, b, x, s, t); }
+            function gg(a, b, c, d, x, s, t) { return cmn((b & d) | (c & (~d)), a, b, x, s, t); }
+            function hh(a, b, c, d, x, s, t) { return cmn(b ^ c ^ d, a, b, x, s, t); }
+            function ii(a, b, c, d, x, s, t) { return cmn(c ^ (b | (~d)), a, b, x, s, t); }
+            function md51(s) {
+                var txt = '', n = s.length, i, j, k, l, m, x = [1732584193, -271733879, -1732584194, 271733878];
+                for (i = 64; i <= n; i += 64) { md5cycle(x, md5blk(s.substring(i - 64, i))); }
+                s = s.substring(i - 64);
+                var tail = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+                for (j = 0; j < s.length; j++) tail[j >> 2] |= s.charCodeAt(j) << ((j % 4) << 3);
+                tail[j >> 2] |= 0x80 << ((j % 4) << 3);
+                if (j > 55) { md5cycle(x, tail); for (k = 0; k < 16; k++) tail[k] = 0; }
+                tail[14] = n * 8; md5cycle(x, tail);
+                for (l = 0; l < 4; l++) for (m = 0; m < 4; m++) txt += hex_chr.charAt((x[l] >> (m * 8 + 4)) & 0x0F) + hex_chr.charAt((x[l] >> (m * 8)) & 0x0F);
+                return txt;
+            }
+            function md5blk(s) { var md5blks = [], i; for (i = 0; i < 64; i += 4) md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24); return md5blks; }
+            var hex_chr = '0123456789abcdef';
+            function add32(a, b) { return (a + b) & 0xFFFFFFFF; }
+            return md51(string);
+        };
+
         try {
-            // Using CORS proxy since external server likely lacks headers for direct browser fetch
             const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(CENTRAL_URL)}`;
             
-            // We use standard URLSearchParams for webservice.php compatibility
-            const params = new URLSearchParams();
-            params.append('username', USERNAME);
-            params.append('key', KEY);
-            params.append('action', 'get_contacts'); // Assumed action based on requirement
+            // --- Step 1: Get Challenge ---
+            const challengeRes = await fetch(`${proxiedUrl}?operation=getchallenge&username=${USERNAME}`);
+            const challengeData = await challengeRes.json();
+            if (!challengeData.success) throw new Error("Challenge failed: " + (challengeData.error ? challengeData.error.message : "Unknown error"));
+            
+            const token = challengeData.result.token;
+            const accessKey = md5(token + KEY);
 
-            const res = await fetch(proxiedUrl, {
+            // --- Step 2: Login ---
+            const loginParams = new URLSearchParams();
+            loginParams.append('operation', 'login');
+            loginParams.append('username', USERNAME);
+            loginParams.append('accessKey', accessKey);
+
+            const loginRes = await fetch(proxiedUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params
+                body: loginParams
             });
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const loginData = await loginRes.json();
+            if (!loginData.success) throw new Error("Login failed: " + (loginData.error ? loginData.error.message : "Access denied"));
             
-            const data = await res.json();
-            // Expected format: array of objects { name, phone, company, etc }
-            if (!Array.isArray(data)) {
-                // Fallback: If API failure, we might get an error object
-                if (data && data.error) throw new Error(data.error);
-                return { success: false, message: "Invalid API response format." };
-            }
+            const sessionName = loginData.result.sessionName;
 
+            // --- Step 3: Query Contacts ---
+            // Note: Vtiger SQL dialect. Fetching Name, Phone, and Company.
+            const query = encodeURIComponent("SELECT id, firstname, lastname, phone, account_name, title FROM Contacts;");
+            const queryRes = await fetch(`${proxiedUrl}?operation=query&sessionName=${sessionName}&query=${query}`);
+            const queryData = await queryRes.json();
+
+            if (!queryData.success) throw new Error("Query failed: " + (queryData.error ? queryData.error.message : "Could not fetch contacts"));
+
+            const data = queryData.result;
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
 
             data.forEach(item => {
-                // Check if already in pending or main contacts to avoid duplicates
-                const phone = String(item.phone || item.mobile || '').replace(/[^0-9]/g, '');
+                const phone = String(item.phone || '').replace(/[^0-9]/g, '');
                 if (!phone) return;
 
                 const existsPending = pending.find(p => String(p.phone).replace(/[^0-9]/g, '') === phone);
@@ -778,14 +832,14 @@ window.BrandSyncAPI = {
 
                 if (!existsPending && !existsMain) {
                     pending.unshift({
-                        id: 'PEND_' + Date.now() + Math.random().toString(36).substr(2, 9),
-                        name: item.name || item.fullname || 'Unknown',
+                        id: 'PEND_CRM_' + item.id.replace(/:/g, '_'),
+                        name: `${item.firstname || ''} ${item.lastname || ''}`.trim() || 'Unknown',
                         phone: phone,
-                        company: item.company || '',
-                        position: item.position || '',
-                        interest: item.interest || '',
+                        company: item.account_name || '',
+                        position: item.title || '',
+                        interest: '',
                         added: new Date().toISOString().substring(0, 10),
-                        source: 'CRM'
+                        source: 'Agridom CRM'
                     });
                     importedCount++;
                 }
@@ -793,8 +847,9 @@ window.BrandSyncAPI = {
 
             this._set(BS_STORAGE_KEYS.PENDING_CONTACTS, pending);
             return { success: true, count: importedCount, totalPending: pending.length };
+
         } catch (err) {
-            console.error("Centralized API Pull Error:", err);
+            console.error("Centralized CRM Error:", err);
             return { success: false, message: err.message };
         }
     },
