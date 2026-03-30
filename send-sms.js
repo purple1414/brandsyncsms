@@ -432,18 +432,58 @@ window.SendSMSView = {
             recipientsArea.dispatchEvent(new Event('input'));
         };
 
-        // File Handler
+        // Fixed File Handler (Supports both CSV and Binary Excel)
         document.getElementById('btnAttachFile').onclick = () => document.getElementById('fileImportInput').click();
         document.getElementById('fileImportInput').onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
+
             const reader = new FileReader();
-            reader.onload = (e) => {
-                const text = e.target.result;
-                const matches = text.match(/(?:\+?63|0)?[\s\-]*9[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*/g);
-                if (matches) addFormattedNumbers(matches);
+            
+            // Check if it's an Excel file or CSV
+            const okExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+            reader.onload = (event) => {
+                let foundNumbers = [];
+
+                if (okExcel) {
+                    // Modern Excel Parsing via SheetJS
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    // Scan every single cell for phone number patterns
+                    jsonData.forEach(row => {
+                        row.forEach(cell => {
+                            if (cell) {
+                                const str = String(cell);
+                                const matches = str.match(/(?:\+?63|0)?9\d{9}/g);
+                                if (matches) foundNumbers = [...foundNumbers, ...matches];
+                            }
+                        });
+                    });
+                } else {
+                    // Generic CSV / Text Parsing
+                    const text = event.target.result;
+                    const matches = text.match(/(?:\+?63|0|9)\d{9}/g);
+                    if (matches) foundNumbers = matches;
+                }
+
+                if (foundNumbers.length > 0) {
+                    addFormattedNumbers(foundNumbers);
+                    window.showToast(`Imported ${new Set(foundNumbers).size} unique numbers from file.`);
+                } else {
+                    window.showToast("No valid phone numbers detected in file.", "error");
+                }
+                
+                // Reset input so the same file can be selected again
+                e.target.value = '';
             };
-            reader.readAsText(file);
+
+            if (okExcel) reader.readAsArrayBuffer(file);
+            else reader.readAsText(file);
         };
 
         // Contacts Dropdown with Search
