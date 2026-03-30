@@ -692,65 +692,95 @@ window.BrandSyncAPI = {
         }
     },
 
-    // Agridom Centralized CRM Integration (Session-Persistence Edition)
-    async fetchCentralizedContacts() {
+    // Agridom Centralized CRM Integration (Session-Persistence + Dual-Auth Edition)
+    async fetchCentralizedContacts(isRetry = false) {
         const BASE_URL = "https://agridomcorp.com/warehouse/webservice.php";
         const USERNAME = "pcalpas";
-        const KEY = "OUp6qm8VbX7rrJm5";
-        const PROXY = "https://corsproxy.io/?";
+        const API_KEY = "OUp6qm8VbX7rrJm5"; // Primary Method A
+        const PASSWORD = "Sfgroup@2023!";     // Fallback Method B
+        const PROXY = "https://api.allorigins.win/get?url=";
 
-        // Internal Lock to prevent token collisions from double-clicks
-        if (this._crmLock) return { success: false, message: "Sync already in progress." };
-        this._crmLock = true;
+        if (this._crmLock && !isRetry) return { success: false, message: "Handshake already active." };
+        if (!isRetry) this._crmLock = true;
 
-        const apiRequest = async (url) => {
-            const finalUrl = PROXY + encodeURIComponent(url);
-            const res = await fetch(finalUrl);
+        const proxyRequest = async (url) => {
+            const tunnelUrl = PROXY + encodeURIComponent(url);
+            const res = await fetch(tunnelUrl, { cache: 'no-store' });
             if (!res.ok) throw new Error(`Tunnel Error: ${res.status}`);
-            return await res.json();
+            const data = await res.json();
+            if (!data.contents) throw new Error("Null Pipeline Output");
+            return typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
         };
 
         try {
-            // Check for valid cached session first (Vtiger sessions last ~24h)
+            // Check for valid cached session first
             let sessionName = localStorage.getItem('BS_CRM_SESSION');
             let sessionTime = parseInt(localStorage.getItem('BS_CRM_SESSION_TIME') || '0');
             const oneHour = 3600000;
 
-            if (!sessionName || (Date.now() - sessionTime > oneHour)) {
-                window.showToast("Handshaking with Central Warehouse...", "info");
+            if (!sessionName || (Date.now() - sessionTime > oneHour) || isRetry) {
+                if (!isRetry) window.showToast("Handshaking with Central Warehouse...", "info");
+                else console.log("CRM: Re-authenticating session...");
                 
-                // --- Step 1: Challenge ---
-                const chalUrl = `${BASE_URL}?operation=getchallenge&username=${USERNAME}`;
-                const chal = await apiRequest(chalUrl);
+                // STEP 1: Fast Handshake
+                const chal = await proxyRequest(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
                 if (!chal.success) throw new Error("Security handshake rejected.");
                 
                 const token = (chal.result.token || '').trim();
-                const accessKey = window.md5(token + KEY);
+                
+                // MULTI-AUTH ATTEMPTOR
+                const tryAuth = async (secret, isPlain = true) => {
+                    // Method A: token + API_KEY
+                    // Method B: token + md5(PASSWORD)
+                    const normalizedSecret = isPlain ? secret : window.md5(secret).toLowerCase();
+                    const accessKey = window.md5(token + normalizedSecret).toLowerCase();
+                    
+                    const loginUrl = `${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`;
+                    const auth = await proxyRequest(loginUrl);
+                    return auth;
+                };
 
-                // --- Step 2: Login ---
-                const loginUrl = `${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`;
-                const auth = await apiRequest(loginUrl);
+                // ATTEMPT A: API Key (Static Method)
+                let auth = await tryAuth(API_KEY, true);
+                
+                // ATTEMPT B: Password MD5 (Legacy fallback for some Vtiger 7 configurations)
+                if (!auth.success) {
+                    console.warn("API Key auth failed, attempting MD5 Password fallback...");
+                    auth = await tryAuth(PASSWORD, false);
+                }
 
-                if (!auth.success) throw new Error(auth.error ? auth.error.message : "Access Denied");
+                if (!auth.success) {
+                    const rawMsg = auth.error ? auth.error.message : "Access Denied";
+                    throw new Error(rawMsg);
+                }
                 
                 sessionName = auth.result.sessionName;
                 localStorage.setItem('BS_CRM_SESSION', sessionName);
                 localStorage.setItem('BS_CRM_SESSION_TIME', Date.now().toString());
-                window.showToast("Secure Tunnel Established.", "info");
+                if (!isRetry) window.showToast("Secure session anchored.", "info");
             }
 
-            // --- Step 3: Global Data Retrieval ---
-            window.showToast("Harvesting Central Identities...", "info");
+            // STEP 3: Identity Reconstruction
+            if (!isRetry) window.showToast("Harvesting records...", "info");
             const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 500;");
-            const qRes = await apiRequest(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
+            const qRes = await proxyRequest(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
 
-            // If the session expired mid-request, clear it for next retry
-            if (!qRes.success && qRes.error && qRes.error.code === 'INVALID_SESSIONID') {
-                localStorage.removeItem('BS_CRM_SESSION');
-                throw new Error("Session expired. Please try once more.");
+            // STEP 4: Session Recovery Logic
+            if (!qRes.success && qRes.error) {
+                const isInvalidSession = qRes.error.code === 'INVALID_SESSIONID' || 
+                                        (qRes.error.message && qRes.error.message.toLowerCase().includes('token is invalid or expired'));
+                
+                if (isInvalidSession && !isRetry) {
+                    console.warn("Centralized CRM: Session expired. Initiating automatic handshake recovery...");
+                    localStorage.removeItem('BS_CRM_SESSION');
+                    return await this.fetchCentralizedContacts(true); // Recursive recovery call
+                }
             }
 
-            if (!qRes.success) throw new Error("Data access denied.");
+            if (!qRes.success) {
+                const errorMsg = qRes.error ? qRes.error.message : "Identity sweep failed.";
+                throw new Error(errorMsg);
+            }
 
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
@@ -766,10 +796,10 @@ window.BrandSyncAPI = {
                 if (!existsPending && !existsMain) {
                     pending.unshift({
                         id: 'PEND_CRM_' + item.id.replace(/:/g, '_'),
-                        name: item.firstname || item.farm_name || 'CRM Contact',
+                        name: item.firstname || item.farm_name || 'CRM Lead',
                         phone: phone,
-                        company: item.farm_name || 'AgriDom Warehouse',
-                        position: item.lastname || 'Identity Verified',
+                        company: item.farm_name || 'Agridom Farm',
+                        position: item.lastname || 'Lead',
                         interest: '',
                         added: new Date().toISOString().substring(0, 10),
                         source: 'Agridom CRM'
@@ -783,9 +813,9 @@ window.BrandSyncAPI = {
 
         } catch (err) {
             console.error("Centralized CRM Error:", err);
-            return { success: false, message: `Access: ${err.message}` };
+            return { success: false, message: `Access Alert: ${err.message}` };
         } finally {
-            this._crmLock = false;
+            if (!isRetry) this._crmLock = false;
         }
     },
 
