@@ -734,60 +734,67 @@ window.BrandSyncAPI = {
 
     // Agridom Centralized CRM Integration (Vtiger API Edition)
     async fetchCentralizedContacts() {
-        const CENTRAL_URL = "https://agridomcorp.com/warehouse/webservice.php";
-        const USERNAME = "pcalpas";
-        const KEY_API = "OUp6qm8VbX7rrJm5";
-        const KEY_PASS = "Sfgroup@2023!";
+        const BASE_URL = "https://agridomcorp.com/warehouse/webservice.php";
+        const USERNAME = "pcalpas".trim();
+        const KEY_API = "OUp6qm8VbX7rrJm5".trim();
+        const KEY_PASS = "Sfgroup@2023!".trim();
 
-        const PROXY = "https://thingproxy.freeboard.io/fetch/";
+        const PROXY = "https://corsproxy.io/?";
 
-        const attemptLogin = async (keyToTry) => {
-            // --- Step 1: Get Challenge ---
-            const challengeRes = await fetch(`${PROXY}${CENTRAL_URL}?operation=getchallenge&username=${USERNAME}`);
-            const challengeData = await challengeRes.json();
-            if (!challengeData.success) throw new Error("Challenge rejected");
+        const smartFetch = async (target, opts = {}) => {
+            // Priority 1: Direct Fetch (Try standard CORS)
+            try {
+                const directUrl = target.includes('?') ? target : target;
+                const dRes = await fetch(directUrl, opts);
+                if (dRes.ok) return await dRes.json();
+            } catch (e) {
+                console.warn("Direct fetch failed, escalating to Proxy...", target);
+            }
+
+            // Priority 2: Proxy Fetch
+            const proxied = PROXY + encodeURIComponent(target);
+            const pRes = await fetch(proxied, opts);
+            if (!pRes.ok) throw new Error("Connection failed (Proxy/Remote Server unreachable)");
+            return await pRes.json();
+        };
+
+        const executeStep = async (key) => {
+            // --- Step 1: Challenge ---
+            const chalUrl = `${BASE_URL}?operation=getchallenge&username=${USERNAME}`;
+            const chal = await smartFetch(chalUrl);
+            if (!chal.success) throw new Error("Handshake Rejected: " + (chal.error ? chal.error.message : "Invalid Username"));
             
-            const token = challengeData.result.token;
-            // md5 is now global from blueimp-md5 in index.html
-            const accessKey = window.md5(token + keyToTry);
+            const token = chal.result.token;
+            const accessKey = window.md5(token + key);
 
-            // --- Step 2: Login ---
-            const lBody = new URLSearchParams();
-            lBody.append('operation', 'login');
-            lBody.append('username', USERNAME);
-            lBody.append('accessKey', accessKey);
-
-            const lRes = await fetch(`${PROXY}${CENTRAL_URL}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: lBody
-            });
-            return await lRes.json();
+            // --- Step 2: Authenticated Session ---
+            // We use standard GET for login here for better Proxy compatibility (since many limit POST)
+            const authUrl = `${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`;
+            const auth = await smartFetch(authUrl);
+            if (!auth.success) return { success: false, msg: auth.error ? auth.error.message : "Access Denied" };
+            
+            return { success: true, session: auth.result.sessionName };
         };
 
         try {
-            window.showToast("Authenticating with Agridom...", "info");
+            window.showToast("Establishing Secure Pipeline...", "info");
             
-            // Try with API Key First
-            let loginData = await attemptLogin(KEY_API);
-            
-            // Fallback to Password if API Key fails
-            if (!loginData.success) {
-                console.warn("API Key login failed, trying Password fallback...");
-                loginData = await attemptLogin(KEY_PASS);
+            let res = await executeStep(KEY_API);
+            if (!res.success) {
+                console.warn("API Key Auth failed, próbál password fallback...");
+                res = await executeStep(KEY_PASS);
             }
 
-            if (!loginData.success) throw new Error("Authentication Failed: " + (loginData.error ? loginData.error.message : "Invalid Credentials"));
+            if (!res.success) throw new Error("Authentication failed: " + res.msg);
             
-            const sessionName = loginData.result.sessionName;
-            window.showToast("Authenticated! Retrieving identities...", "info");
+            const sessionName = res.session;
+            window.showToast("Tunnel Established!", "info");
 
-            // --- Step 3: Query ---
-            const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name, account_id FROM Contacts LIMIT 500;");
-            const qRes = await fetch(`${PROXY}${CENTRAL_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
-            const qData = await qRes.json();
+            // --- Step 3: Global Identity Sweep ---
+            const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 200;");
+            const qData = await smartFetch(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
 
-            if (!qData.success) throw new Error("Query rejected: " + (qData.error ? qData.error.message : "Access error"));
+            if (!qData.success) throw new Error("Sweep failed: " + (qData.error ? qData.error.message : "Table locked"));
 
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
