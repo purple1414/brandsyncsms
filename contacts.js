@@ -35,6 +35,10 @@ window.ContactsView = {
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
                                 <span id="selectedCount">0</span> selected
                             </button>
+                            <button id="groupFromSelectionBtn" onclick="window.ContactsView.createGroupFromSelection()" style="display:none; height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(191,90,242,0.12); color:#bf5af2; border: 1px solid rgba(191,90,242,0.25); font-weight:700; font-size:0.8rem; align-items:center; gap:6px;" title="Create a group from selected contacts">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><line x1="12" y1="14" x2="12" y2="20"></line><line x1="9" y1="17" x2="15" y2="17"></line></svg>
+                                Group (<span id="groupSelCount">0</span>)
+                            </button>
                         </div>
 
                         <div style="display: flex; gap: 10px; align-items: center;">
@@ -314,8 +318,44 @@ window.ContactsView = {
 
     updateBulkUI() {
         const count = document.querySelectorAll('.contact-checkbox:checked').length;
-        const btn = document.getElementById('bulkDeleteBtn'); const span = document.getElementById('selectedCount');
-        if(btn) { btn.style.display = count > 0 ? 'flex' : 'none'; span.innerText = count; }
+        const btn = document.getElementById('bulkDeleteBtn');
+        const span = document.getElementById('selectedCount');
+        const groupBtn = document.getElementById('groupFromSelectionBtn');
+        const groupSpan = document.getElementById('groupSelCount');
+        if (btn) { btn.style.display = count > 0 ? 'flex' : 'none'; if(span) span.innerText = count; }
+        if (groupBtn) { groupBtn.style.display = count > 0 ? 'flex' : 'none'; if(groupSpan) groupSpan.innerText = count; }
+    },
+
+    async createGroupFromSelection() {
+        // Gather selected contact IDs from visible checkboxes
+        const checkedIds = Array.from(document.querySelectorAll('.contact-checkbox:checked')).map(cb => String(cb.value));
+        if (checkedIds.length === 0) return;
+
+        // Load all contacts to pre-fill the pool
+        this.activePoolContacts = await window.BrandSyncAPI.getContacts();
+        // Pre-select only the chosen ones
+        this.selectedPoolContacts = new Set(checkedIds);
+
+        // Reset group form fields
+        const modal = document.getElementById('groupModal');
+        const nameInp = document.getElementById('newGroupName');
+        const descInp = document.getElementById('newGroupDesc');
+        document.getElementById('groupModalTitle').innerText = 'New Group from Selection';
+        nameInp.value = '';
+        descInp.value = '';
+        document.getElementById('edit_groupId').value = '';
+        this.selectColor('#0a84ff');
+        this.selectIcon('Users');
+
+        // Render the pool list with pre-selected contacts at top
+        document.getElementById('groupPoolFilter').value = '';
+        this.filterGroupPool();
+
+        // Show modal
+        modal.style.display = 'flex';
+
+        // Flash a hint toast
+        window.showToast(`${checkedIds.length} contacts pre-selected. Name your group and save!`, 'info');
     },
 
     async bulkDelete() {
@@ -427,21 +467,37 @@ window.ContactsView = {
     },
 
     filterGroupPool() {
-        const query = (document.getElementById('groupPoolFilter').value || "").toLowerCase();
+        const query = (document.getElementById('groupPoolFilter').value || '').toLowerCase();
         const list = document.getElementById('groupPoolList');
         
-        const filtered = this.activePoolContacts.filter(c => {
+        let filtered = this.activePoolContacts.filter(c => {
             return (c.name || '').toLowerCase().includes(query) || (c.phone || '').includes(query);
         });
+
+        // Sort: pre-selected contacts float to the top
+        filtered.sort((a, b) => {
+            const aChecked = this.selectedPoolContacts.has(String(a.id)) ? 0 : 1;
+            const bChecked = this.selectedPoolContacts.has(String(b.id)) ? 0 : 1;
+            return aChecked - bChecked;
+        });
+
+        const selectedCount = this.selectedPoolContacts.size;
+        const countBadge = selectedCount > 0
+            ? `<div style="font-size:0.65rem; color:#bf5af2; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; padding: 6px 10px 4px; display:flex; align-items:center; gap:6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                ${selectedCount} Selected for Group
+               </div>`
+            : '';
         
-        list.innerHTML = filtered.map(c => {
+        list.innerHTML = countBadge + filtered.map(c => {
             const isChecked = this.selectedPoolContacts.has(String(c.id));
-            return `<label style="display:flex; align-items:center; gap:12px; padding:10px; border-radius:12px; background:rgba(255,255,255,0.03); cursor:pointer; transition:0.2s; border:1px solid ${isChecked ? 'rgba(10,132,255,0.3)' : 'transparent'};">
-                <input type="checkbox" onchange="window.ContactsView.togglePoolContact('${c.id}')" ${isChecked ? 'checked' : ''} style="width:16px; height:16px; accent-color:var(--accent-color);">
+            return `<label style="display:flex; align-items:center; gap:12px; padding:10px; border-radius:12px; background:${isChecked ? 'rgba(191,90,242,0.08)' : 'rgba(255,255,255,0.03)'}; cursor:pointer; transition:0.2s; border:1px solid ${isChecked ? 'rgba(191,90,242,0.35)' : 'transparent'}; margin-bottom:2px;">
+                <input type="checkbox" onchange="window.ContactsView.togglePoolContact('${c.id}')" ${isChecked ? 'checked' : ''} style="width:16px; height:16px; accent-color:#bf5af2;">
                 <div style="flex:1;">
                     <div style="color:#fff; font-size:0.85rem; font-weight:700;">${c.name || 'Unknown'}</div>
-                    <div style="color:rgba(255,255,255,0.5); font-size:0.75rem; font-family:monospace;">+${c.phone}</div>
+                    <div style="color:${isChecked ? '#bf5af2' : 'rgba(255,255,255,0.5)'}; font-size:0.75rem; font-family:monospace;">+${c.phone}</div>
                 </div>
+                ${isChecked ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#bf5af2" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
             </label>`;
         }).join('');
     },
