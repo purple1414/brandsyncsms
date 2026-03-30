@@ -711,10 +711,13 @@ window.BrandSyncAPI = {
         if (!isRetry) this._crmLock = true;
 
         const proxyRequest = async (url) => {
+            // Append a cache-buster to prevent public proxies from serving stale responses (crucial for tokens)
+            const cacheBustedUrl = url.includes('?') ? `${url}&_cb=${Date.now()}` : `${url}?_cb=${Date.now()}`;
+            
             let lastErr = null;
             for (const proxy of PROXY_POOL) {
                 try {
-                    const tunnelUrl = proxy + encodeURIComponent(url);
+                    const tunnelUrl = proxy + encodeURIComponent(cacheBustedUrl);
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second lookup timeout
 
