@@ -54,6 +54,7 @@ window.BrandSyncAPI = {
         initStorage(BS_STORAGE_KEYS.TEMPLATES, DEFAULT_TEMPLATES);
         initStorage(BS_STORAGE_KEYS.TEMPLATE_FOLDERS, DEFAULT_TEMPLATE_FOLDERS);
         initStorage(BS_STORAGE_KEYS.MESSAGES, DEFAULT_MESSAGES);
+        initStorage(BS_STORAGE_KEYS.SCHEDULED, []);
         
         this.initCloud();
     },
@@ -150,8 +151,11 @@ window.BrandSyncAPI = {
             });
             this.runHealth();
 
-            // If scheduled data changed, refresh the scheduled view if it's open
+            // If scheduled data changed, refresh the scheduled view if it's open and re-arm timers
             if (changed) {
+                if(window.Scheduler && window.Scheduler.restoreTimers) {
+                    window.Scheduler.restoreTimers(); // Ensure the background worker registers the new tasks!
+                }
                 if (window.ScheduledView && document.getElementById('scheduled-list')) {
                     window.ScheduledView.renderList();
                 }

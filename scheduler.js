@@ -92,6 +92,12 @@ window.Scheduler = {
     armTimer(entry) {
         if(!this._timers) this._timers = {};
 
+        // Cancel existing timer to prevent double firing on sync/restore
+        if(this._timers[entry.id]) {
+            clearTimeout(this._timers[entry.id]);
+            delete this._timers[entry.id];
+        }
+
         const fireAt = new Date(entry.scheduleTime).getTime();
         const now = Date.now();
         const delay = fireAt - now;
