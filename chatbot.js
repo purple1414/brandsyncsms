@@ -1,64 +1,97 @@
-// BrandSync AI Chatbot Assistant (Multilingual & Context-Aware)
+// BrandSync AI Super-Agent Assistant
 window.BrandSyncChatbot = {
     isOpen: false,
-    lang: 'en', // 'en' or 'tl'
+    lang: 'en',
+    lastContext: '',
     
+    // Core Centralized Knowledge Base & Workflow Directory
     KNOWLEDGE_BASE: {
         'contact': {
-            en: "To manage contacts, go to the 'Contacts' menu on the left. You can add one manually, or use 'Heavy Import' for CSV files. Need to group them? Select contacts and click 'Create Group'. <br><br><button onclick=\"window.location.hash='contacts'; window.BrandSyncChatbot.toggle()\" style='margin-top:8px; background:var(--accent-color); border:none; border-radius:8px; color:#fff; padding:6px 12px; font-size:0.75rem; font-weight:700; cursor:pointer;'>Go to Contacts</button>",
-            tl: "Para i-manage ang contacts, pumunta sa 'Contacts' menu sa kaliwa. Pwede kang mag-add isa-isa, o gumamit ng 'Heavy Import' para sa CSV. Gusto mong i-group? I-check ang contacts tapos i-click ang 'Create Group'. <br><br><button onclick=\"window.location.hash='contacts'; window.BrandSyncChatbot.toggle()\" style='margin-top:8px; background:var(--accent-color); border:none; border-radius:8px; color:#fff; padding:6px 12px; font-size:0.75rem; font-weight:700; cursor:pointer;'>Pumunta sa Contacts</button>"
+            en: "Here's how to manage your database. Do you want me to guide you step-by-step on how to add a contact?",
+            tl: "Ito ay para sa pag-manage ng database. Gusto mo bang ituro ko sayo step-by-step kung paano mag-add ng contact?",
+            actionName: "Guide me (Add Contact)",
+            actionId: "add_contact"
         },
         'send': {
-            en: "To send an SMS, go to 'Send SMS'. You can type numbers directly, or click 'Select Contacts' to pull from your database or groups. You can also use Spintax like {Hello|Hi} to avoid spam filters!",
-            tl: "Para mag-send ng SMS, pumunta sa 'Send SMS'. Pwedeng i-type ang number, o i-click ang 'Select Contacts' para pumili sa database mo. Pwede rin gumamit ng Spintax tulad ng {Hello|Hi} para iwas spam!"
+            en: "To dispatch an SMS, navigate to 'Send SMS'. You can define a Spintax payload to automatically rotate words. Do you want a quick walkthrough?",
+            tl: "Para mag-send ng SMS, pumunta sa 'Send SMS'. Pwede kang gumamit ng Spintax para umikot ang mga words. Gusto mo ba ng walkthrough?",
+            actionName: "Start Sending Tour",
+            actionId: "send_sms"
         },
         'schedule': {
-            en: "Scheduled messages let you automate texts! To schedule, go to 'Send SMS', compose your message, and click the 'Send Later (Clock)' icon next to the send button.",
-            tl: "Sa Scheduled messages, pwede mong i-automate ang text! Para mag-schedule, pumunta sa 'Send SMS', gawin ang text, at i-click ang 'Send Later (Orasan)' na icon sa tabi ng send button."
+            en: "Running scheduled campaigns is incredibly easy. Just compile your message in 'Send SMS', but click the Clock icon instead of Send. It will queue into the 'Scheduled' automation queue.",
+            tl: "Napakadaling gumawa ng scheduled campaigns. Gumawa lang ng message sa 'Send SMS', pero i-click ang Clock icon imbis na Send.",
+            actionName: "Go to Automation",
+            actionNavigate: "scheduled"
         },
         'template': {
-            en: "Templates save you time! Go to 'Templates' to create reusable message structures. You can organize them into categories like 'Promos' or 'Follow-ups'.",
-            tl: "Makatipid sa oras gamit ang Templates! Pumunta sa 'Templates' para gumawa ng reusable texts. Pwede mo silang i-organize sa mga categories tulad ng 'Promos' o 'Follow-ups'."
+            en: "Templates are stored configurations you can reuse instantly. Go to 'Templates', define a name, write your Spintax body, and save it. It will securely sync to the cloud.",
+            tl: "Ang templates ay reusable na messages. Pumunta sa 'Templates', ilagay ang pangalan at mensahe, at i-save. Mag-sy-sync ito sa cloud."
         },
-        'group': {
-            en: "Groups are powerful! You can send bulk messages to entire groups at once. Just jump to Contacts, select multiple rows, and hit 'Create Group' or 'Add To...'.",
-            tl: "Napaka-useful ng Groups! Pwede kang mag-send ng bulk messages sa buong grupo nang sabay-sabay. Pumunta lang sa Contacts, i-select ang rows, at i-click ang 'Create Group' o 'Add To...'."
+        'import': {
+            en: "Got massive data? The system supports importing MS Excel (.xlsx) and generic CSV files. Want me to point out the button?",
+            tl: "Maraming data? Supported ng system ang pag-import ng MS Excel (.xlsx) at CSV files. Gusto mong ituro ko yung button?",
+            actionName: "Show me where",
+            actionId: "heavy_import"
         },
-        'inbox': {
-            en: "The 'Inbox' module shows all your historical data and replies from the PhilSMS gateway. Keep an eye out for Failed statuses so you can retry them.",
-            tl: "Makikita sa 'Inbox' ang lahat ng historical data at replies galing sa PhilSMS gateway. Bantayan ang mga Failed statuses para ma-retry mo sila."
+        'github': {
+            en: "We use a sophisticated GitHub Sync Engine to persist your data locally in the browser, yet securely sync it globally across devices for your entire team. Look at the Heart Pulse on the top right!",
+            tl: "Gumagamit kami ng GitHub Sync Engine para ma-save ang data sa browser at ma-sync globally para sa team mo. Tiyaking berde ang Heart Pulse!"
         },
-        'hello': {
-            en: "Hello! I'm your BrandSync Assistant. What can I help you with today? I can teach you about Contacts, Sending SMS, Scheduling, or Templates.",
-            tl: "Kumusta! Ako ang iyong BrandSync Assistant. Ano ang maitutulong ko ngayon? Pwede kitang turuan tungkol sa Contacts, Pag-send ng SMS, Scheduling, o Templates."
-        },
-        'fallback': {
-            en: "I didn't quite catch that. Try asking about 'Contacts', 'Send SMS', 'Templates', or 'Scheduling'!",
-            tl: "Hindi ko masyadong naintindihan. Subukan mong magtanong tungkol sa 'Contacts', 'Send SMS', 'Templates', o 'Scheduling'!"
+        'unsure': {
+            en: "I'm not completely sure I have the latest update on that specific topic. Try asking me about 'Contacts', 'Sending SMS', 'Templates', or 'Imports'.",
+            tl: "Hindi ako sigurado kung nakuha ko ang pinakabagong update para diyan. Subukan magtanong tungkol sa 'Contacts', 'Sending SMS', 'Templates', o 'Imports'."
         }
     },
-    
+
     PAGE_CONTEXT: {
         'contacts': {
-            en: "I see you're on the Contacts page! Did you know you can use the 'Filter' button at the top to search by exact Date bounds or Companies?",
-            tl: "Nasa Contacts page ka ngayon! Alam mo bang pwede mong gamitin ang 'Filter' button sa itaas para mag-search gamit ang Date o Company?"
+            en: "You are inside the Database root. Notice the global search bar—you can simultaneously search matching Names natively alongside applying active group filters.",
+            tl: "Nasa Database root ka ngayon. Gamitin ang global search bar para sabay makapag-search ng pangalan at mag-apply ng group filters."
         },
         'send-sms': {
-            en: "You are preparing to Send an SMS. Pro tip: Always check your 'Network Payload' estimator before sending to ensure you don't accidentally over-consume your credits!",
-            tl: "Magse-send ka ata ng SMS. Tip: Palaging i-check ang 'Network Payload' estimator bago mag-send para hindi maubos nang aksidente ang credits mo!"
+            en: "System alert: To maximize credit efficiency on this page, strictly monitor the Network Payload UI beneath the text editor. A single standard SMS supports 160 GSM characters.",
+            tl: "System alert: Para ma-maximize ang credits dito, palaging bantayan ang Network Payload limit sa ibaba ng text space. 160 GSM characters ang limit."
         },
         'scheduled': {
-            en: "You're viewing Scheduled Automation. Click the circular Refresh icon above to immediately pull the latest timings from the GitHub cloud database if they aren't showing up.",
-            tl: "Nasa Scheduled Automation ka ngayon. I-click ang Refresh icon sa itaas para agad makuha ang pinakabagong data mula sa GitHub kapag hindi nagpapakita."
+            en: "Automation engine loaded. All pending dispatches here exist universally across your synced cloud instance.",
+            tl: "Automation engine loaded. Lahat ng pending messages dito ay universal na naka-sync sa cloud system ninyo."
         }
     },
 
     init() {
         this.injectHTML();
         this.addEventListeners();
+        this.scanSystem(); // Execute initial Deep Scan
         
         // Expose to window for global access
         window.BrandSyncChatbot = this;
+
+        // Monitor hash changes for context
+        window.addEventListener('hashchange', () => {
+            if (this.isOpen) this.evaluateContext();
+        });
+    },
+
+    // Safely scan the DOM to map available features and buttons dynamically
+    scanSystem() {
+        console.log("[AI Super-Agent] Deep Scan Initiated...");
+        this.discoveredFeatures = [];
+        
+        // Scan main navigation items
+        document.querySelectorAll('#mainNav li').forEach(el => {
+            const txt = el.innerText.trim();
+            if (txt) this.discoveredFeatures.push(txt.toLowerCase());
+        });
+
+        // Scan operational actions currently mounted in DOM
+        document.querySelectorAll('button').forEach(btn => {
+            if (btn.innerText && btn.innerText.length < 20 && !btn.innerText.includes('<')) {
+                this.discoveredFeatures.push(btn.innerText.trim().toLowerCase());
+            }
+        });
+
+        console.log("[AI Super-Agent] System Map Index acquired:", [...new Set(this.discoveredFeatures)]);
     },
 
     injectHTML() {
@@ -83,33 +116,33 @@ window.BrandSyncChatbot = {
             <div id="aiChatWindow" style="
                 display: none;
                 pointer-events: auto;
-                width: 340px;
-                height: 480px;
+                width: 360px;
+                height: 520px;
                 background: rgba(25, 25, 30, 0.95);
                 backdrop-filter: blur(40px) saturate(200%);
                 border: 1px solid rgba(255,255,255,0.1);
                 border-radius: 24px;
-                box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+                box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 100px rgba(10,132,255,0.1) inset;
                 margin-bottom: 20px;
                 flex-direction: column;
                 overflow: hidden;
                 transform-origin: bottom right;
-                animation: chatPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                animation: chatPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.25);
             ">
                 <!-- Header -->
-                <div style="padding: 16px 20px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0a84ff, #bf5af2); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(10,132,255,0.3);">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+                <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #0a84ff, #bf5af2); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(10,132,255,0.4);">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c-.11.66.69 1.15 1.14.65l.5-.5a2 2 0 0 1 2.82 2.82l-.5.5c-.5.45-.01 1.25.65 1.14a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2c-.66-.11-1.15.69-.65 1.14l.5.5a2 2 0 0 1-2.82 2.82l-.5-.5c-.45-.5-1.25-.01-1.14.65a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2c.11-.66-.69-1.15-1.14-.65l-.5.5a2 2 0 0 1-2.82-2.82l.5-.5c.5-.45.01-1.25-.65-1.14a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2c.66.11 1.15-.69.65-1.14l-.5-.5a2 2 0 0 1 2.82-2.82l.5.5c.45.5 1.25.01 1.14-.65a2 2 0 0 1-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </div>
                         <div>
-                            <span style="font-weight: 800; color: #fff; font-size: 0.95rem; display: block; line-height: 1;">BrandSync AI</span>
-                            <span style="font-size: 0.65rem; color: #32d74b; font-weight: 700; text-transform: uppercase;">Online Assistant</span>
+                            <span style="font-weight: 800; color: #fff; font-size: 0.95rem; display: flex; align-items: center; gap:6px;">BrandSync Core <div style="width:6px; height:6px; border-radius:50%; background:#32d74b; box-shadow:0 0 8px #32d74b;"></div></span>
+                            <span style="font-size: 0.65rem; color: rgba(255,255,255,0.5); font-weight: 700; text-transform: uppercase;">Agent Interface</span>
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button id="aiLangBtn" onclick="window.BrandSyncChatbot.toggleLanguage()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 6px; padding: 2px 6px; font-size: 0.65rem; font-weight: 800; cursor: pointer;">EN</button>
-                        <button onclick="window.BrandSyncChatbot.toggle()" style="background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 0;">
+                        <button id="aiLangBtn" onclick="window.BrandSyncChatbot.toggleLanguage()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 0.65rem; font-weight: 800; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">EN</button>
+                        <button onclick="window.BrandSyncChatbot.toggle()" style="background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 0; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.5)'">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
                     </div>
@@ -117,20 +150,22 @@ window.BrandSyncChatbot = {
 
                 <!-- Chat Body -->
                 <div id="aiChatBody" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth;">
-                    <!-- Messages go here -->
+                    <!-- Messages render here -->
                 </div>
 
-                <!-- Suggestions / Chips -->
+                <!-- Smart Suggestions -->
                 <div id="aiChatSuggestions" style="padding: 0 16px 12px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;">
-                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('How do I add contacts?')" style="white-space:nowrap; background: rgba(10,132,255,0.1); border: 1px solid rgba(10,132,255,0.3); color: #0a84ff; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">+ Add Contacts</button>
-                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('Teach me templates')" style="white-space:nowrap; background: rgba(191,90,242,0.1); border: 1px solid rgba(191,90,242,0.3); color: #bf5af2; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">🎨 Templates</button>
-                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('Send SMS help')" style="white-space:nowrap; background: rgba(50,215,75,0.1); border: 1px solid rgba(50,215,75,0.3); color: #32d74b; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">✉️ Send SMS</button>
+                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('Guide me to add contacts')" style="white-space:nowrap; background: rgba(10,132,255,0.1); border: 1px solid rgba(10,132,255,0.3); color: #0a84ff; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">🎯 Guide: Add Contacts</button>
+                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('What is GitHub Sync?')" style="white-space:nowrap; background: rgba(255,159,10,0.1); border: 1px solid rgba(255,159,10,0.3); color: #ff9f0a; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">☁️ Cloud Logic</button>
+                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('How do I send scheduled?')" style="white-space:nowrap; background: rgba(50,215,75,0.1); border: 1px solid rgba(50,215,75,0.3); color: #32d74b; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">⏱️ Automations</button>
                 </div>
 
-                <!-- Input Area -->
-                <div style="padding: 16px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px;">
-                    <input type="text" id="aiChatInput" placeholder="Ask for guidance..." style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 0 16px; color: #fff; font-size: 0.85rem; outline: none; transition: 0.2s;">
-                    <button onclick="window.BrandSyncChatbot.submit()" style="width: 44px; height: 44px; background: var(--accent-color); border: none; border-radius: 14px; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(10,132,255,0.3);">
+                <!-- Input Context -->
+                <div style="padding: 16px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 10px; align-items:center;">
+                    <div style="flex: 1; position:relative;">
+                        <input type="text" id="aiChatInput" placeholder="Interrogate the core system..." autocomplete="off" style="width:100%; height:44px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 14px; padding: 0 16px; color: #fff; font-size: 0.85rem; outline: none; transition: 0.2s;">
+                    </div>
+                    <button onclick="window.BrandSyncChatbot.submit()" style="width: 44px; height: 44px; background: linear-gradient(135deg, #0a84ff, #005bb5); border: none; border-radius: 14px; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(10,132,255,0.3);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                     </button>
                 </div>
@@ -140,17 +175,17 @@ window.BrandSyncChatbot = {
             <button onclick="window.BrandSyncChatbot.toggle()" style="
                 pointer-events: auto;
                 width: 65px; height: 65px; 
-                background: linear-gradient(135deg, #0a84ff, #005bb5); 
+                background: linear-gradient(135deg, #1c1c1e, #2c2c30); 
                 border: 2px solid rgba(255,255,255,0.2); 
                 border-radius: 50%; 
                 display: flex; align-items: center; justify-content: center; 
                 cursor: pointer; 
-                box-shadow: 0 10px 30px rgba(10,132,255,0.5);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.8);
                 transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 position: relative;
-            " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                <div id="aiToggleBadge" style="position: absolute; top: -2px; right: -2px; width: 22px; height: 22px; background: #ff453a; color: #fff; border-radius: 50%; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid #1c1c1e; box-shadow: 0 2px 8px rgba(255,69,58,0.5);">1</div>
+            " onmouseover="this.style.transform='scale(1.1)'; this.style.borderColor='rgba(10,132,255,0.6)'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='rgba(255,255,255,0.2)'">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <div id="aiToggleBadge" style="position: absolute; top: -2px; right: -2px; width: 22px; height: 22px; background: #0a84ff; color: #fff; border-radius: 50%; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid #1c1c1e; box-shadow: 0 4px 10px rgba(10,132,255,0.5);">1</div>
             </button>
         `;
         
@@ -173,18 +208,14 @@ window.BrandSyncChatbot = {
         
         if(this.isOpen) {
             windowEl.style.display = 'flex';
-            if(badge) badge.style.display = 'none'; // Clear notification
-            
-            // Check context upon opening if chat is empty or rarely opened
+            if(badge) badge.style.display = 'none'; // Unread status clear
             this.evaluateContext();
-            
-            setTimeout(() => {
-                document.getElementById('aiChatInput')?.focus();
-            }, 100);
+            setTimeout(() => document.getElementById('aiChatInput')?.focus(), 100);
             
             if(this.isFirstOpen === undefined) {
                 this.isFirstOpen = false;
-                this.addBotMessage(this.KNOWLEDGE_BASE['hello'][this.lang]);
+                const txt = this.lang === 'en' ? "System Core initialized. I am deeply integrated with BrandSync modules. How may I accelerate your workflow today?" : "System Core activated. Konektado ako sa lahat ng modules ng BrandSync. Paano ko mapapabilis ang trabaho mo ngayon?";
+                this.addBotMessage(txt);
             }
         } else {
             windowEl.style.display = 'none';
@@ -194,20 +225,20 @@ window.BrandSyncChatbot = {
     toggleLanguage() {
         this.lang = this.lang === 'en' ? 'tl' : 'en';
         document.getElementById('aiLangBtn').innerText = this.lang.toUpperCase();
-        this.addBotMessage(this.lang === 'en' ? "Language switched to English. How can I assist?" : "Pinalitan ko ang wika sa Tagalog. Paano ako makakatulong?");
+        this.addBotMessage(this.lang === 'en' ? "Language switched to English. Knowledge base re-indexing complete." : "Pinalitan ang wika sa Tagalog. Handang tumulong muli.");
     },
 
     evaluateContext() {
-        // Find current page via hash
         const hash = (window.location.hash || '').replace('#', '');
-        if(this.PAGE_CONTEXT[hash]) {
-            // Check if we haven't already given this tip recently
-            if(this.lastContext !== hash) {
-                this.lastContext = hash;
-                setTimeout(() => {
-                    this.addBotMessage("💡 " + this.PAGE_CONTEXT[hash][this.lang]);
-                }, 800);
-            }
+        
+        // Don't repeat identical context tips to prevent spam
+        if(this.PAGE_CONTEXT[hash] && this.lastContext !== hash) {
+            this.lastContext = hash;
+            
+            // Artificial delay to simulate scanning current view
+            setTimeout(() => {
+                this.addBotMessage(`👁️ <b>Context Scan:</b> ${this.PAGE_CONTEXT[hash][this.lang]}`);
+            }, 500);
         }
     },
 
@@ -221,26 +252,157 @@ window.BrandSyncChatbot = {
         const text = input.value.trim();
         if(!text) return;
 
-        // Add user message
         this.addUserMessage(text);
         input.value = '';
 
-        // Process intents via NLP keywords
+        // NLP Cognitive Engine Processing Array
         const lower = text.toLowerCase();
-        let intent = 'fallback';
+        let intentKey = 'unsure';
 
-        if(lower.includes('contact') || lower.includes('people') || lower.includes('number')) intent = 'contact';
-        else if(lower.includes('send') || lower.includes('sms') || lower.includes('message')) intent = 'send';
-        else if(lower.includes('schedule') || lower.includes('later') || lower.includes('automate') || lower.includes('automation')) intent = 'schedule';
-        else if(lower.includes('template') || lower.includes('spintax') || lower.includes('save time')) intent = 'template';
-        else if(lower.includes('group') || lower.includes('bulk')) intent = 'group';
-        else if(lower.includes('inbox') || lower.includes('reply') || lower.includes('replies') || lower.includes('history')) intent = 'inbox';
-        else if(lower.includes('hi') || lower.includes('hello') || lower.includes('kumusta')) intent = 'hello';
+        // Deep Analysis matching
+        if(lower.includes('contact') || lower.includes('add') || lower.includes('people') || lower.includes('database')) intentKey = 'contact';
+        else if(lower.includes('send') || lower.includes('dispatch') || lower.includes('blast')) intentKey = 'send';
+        else if(lower.includes('schedule') || lower.includes('automate') || lower.includes('later')) intentKey = 'schedule';
+        else if(lower.includes('template') || lower.includes('spintax') || lower.includes('reuse') || lower.includes('save time')) intentKey = 'template';
+        else if(lower.includes('import') || lower.includes('csv') || lower.includes('excel')) intentKey = 'import';
+        else if(lower.includes('sync') || lower.includes('github') || lower.includes('cloud') || lower.includes('save')) intentKey = 'github';
 
-        // Simulate thinking delay
+        // Render response artificially later
         setTimeout(() => {
-            this.addBotMessage(this.KNOWLEDGE_BASE[intent][this.lang]);
-        }, 600 + Math.random() * 400); // 600-1000ms delay
+            const kbItem = this.KNOWLEDGE_BASE[intentKey];
+            
+            // Generate interactive HTML buttons if actions exist in Knowledge Base definition
+            let actionHtml = '';
+            if (kbItem.actionNavigate) {
+                 actionHtml = `<div style="margin-top:10px;"><button onclick="window.location.hash='${kbItem.actionNavigate}'; window.BrandSyncChatbot.toggle()" style="background:var(--accent-color); border:none; padding:6px 14px; border-radius:8px; color:#fff; font-size:0.75rem; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(10,132,255,0.3);">${kbItem.actionName}</button></div>`;
+            } else if (kbItem.actionId) {
+                 actionHtml = `<div style="margin-top:10px;"><button onclick="window.BrandSyncChatbot.runOnScreenWalkthrough('${kbItem.actionId}')" style="background:#bf5af2; border:none; padding:6px 14px; border-radius:8px; color:#fff; font-size:0.75rem; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(191,90,242,0.3);"><i class="icon-lucide-navigation"></i> ${kbItem.actionName}</button></div>`;
+            }
+
+            this.addBotMessage(kbItem[this.lang] + actionHtml);
+        }, 500 + Math.random() * 500); // Compute cycle delay
+    },
+
+    // ON-SCREEN INTERACTIVE TUTORIAL ENGINE
+    // Physically hooks onto DOM elements and guides the user via pulsing halos
+    runOnScreenWalkthrough(flowId) {
+        this.toggle(); // Hide chat
+        
+        let steps = [];
+        // Walkthrough Definitions Registry
+        if (flowId === 'add_contact') {
+            window.location.hash = 'contacts';
+            steps = [
+                { jsAction: () => true, selector: "button[onclick*='openEditModal']", msg: "Step 1: Click this primary button to invoke the secure Contact Entry modal." },
+                { jsAction: () => window.ContactsView.openEditModal(), awaitSelector: "#contactModal", msg: "Step 2: You've penetrated the modal. Fill in the parameters (Name, Phone, etc). Notice we have validation." },
+                { jsAction: () => true, selector: "#saveContactBtn", msg: "Step 3: Finally, hit Save to commit to the local indexedDB and globally sync to GitHub." }
+            ];
+        } else if (flowId === 'heavy_import') {
+            window.location.hash = 'contacts';
+            steps = [
+                { jsAction: () => true, selector: "button[onclick*='importContacts']", msg: "Look here. This button bridges your raw Excel sheets directly into our structured database." }
+            ];
+        } else if (flowId === 'send_sms') {
+            window.location.hash = 'send-sms';
+            steps = [
+                { jsAction: () => true, selector: "#chooseContactsBtn", msg: "Step 1: Extract target identities from your synced database." },
+                { jsAction: () => true, selector: "#smsMessage", msg: "Step 2: Formulate your Spintax payload in the syntax editor." },
+                { jsAction: () => true, selector: "#sendSmsBtn", msg: "Step 3: Establish connection and blast to the PhilSMS remote gateway." }
+            ];
+        } else {
+             window.showToast("Walkthrough parameters missing or misconfigured.", "error"); return;
+        }
+
+        // Delay to allow hash navigation mounting
+        setTimeout(() => this._orchestrateSteps(steps, 0), 400); 
+    },
+
+    _orchestrateSteps(steps, index) {
+        if (index >= steps.length) {
+            this._clearWalkthrough();
+            window.showToast("Walkthrough simulation terminated successfully.", "success");
+            return;
+        }
+        
+        this._clearWalkthrough(); // clear previous
+        const step = steps[index];
+
+        // Execute JS requirement if defined (e.g., opening a modal)
+        if (step.jsAction) step.jsAction();
+
+        setTimeout(() => {
+            const target = document.querySelector(step.awaitSelector || step.selector);
+            if (!target) {
+                console.warn("[AI Guide] Hook failed element unmounted for:", step.selector);
+                window.showToast("Cannot find DOM reference. Ensure module is loaded.", "error");
+                return;
+            }
+
+            // Create Visual Halo
+            const halo = document.createElement('div');
+            halo.id = 'aiWalkthroughHalo';
+            const rect = target.getBoundingClientRect();
+            
+            halo.style.cssText = `
+                position: fixed;
+                top: ${rect.top - 6}px;
+                left: ${rect.left - 6}px;
+                width: ${rect.width + 12}px;
+                height: ${rect.height + 12}px;
+                border: 3px solid #bf5af2;
+                border-radius: ${window.getComputedStyle(target).borderRadius || '12px'};
+                box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px #bf5af2 inset;
+                z-index: 100000;
+                pointer-events: none;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                animation: pulseHalo 2s infinite;
+            `;
+
+            // Create Tooltip Overlay Dialog
+            const dialog = document.createElement('div');
+            dialog.id = 'aiWalkthroughDialog';
+            dialog.style.cssText = `
+                position: fixed;
+                top: ${rect.bottom + 20 < window.innerHeight - 100 ? rect.bottom + 20 : rect.top - 120}px;
+                left: ${Math.max(20, rect.left + (rect.width/2) - 150)}px;
+                width: 300px;
+                background: rgba(30,30,35,0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(191,90,242,0.4);
+                border-radius: 16px;
+                padding: 20px;
+                color: #fff;
+                z-index: 100001;
+                box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+                animation: fadeIn 0.3s ease-out;
+            `;
+
+            dialog.innerHTML = `
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                    <div style="width:20px;height:20px;border-radius:50%;background:#bf5af2;display:flex;align-items:center;justify-content:center;"><i class="icon-lucide-bot" style="font-size:10px;"></i></div>
+                    <span style="font-weight:800; font-size:0.8rem; text-transform:uppercase; color:#bf5af2;">BrandSync Guide</span>
+                </div>
+                <p style="font-size:0.85rem; line-height:1.5; margin:0 0 16px 0; color:rgba(255,255,255,0.8);">${step.msg}</p>
+                <div style="display:flex; justify-content:space-between;">
+                    <button id="aiWalkCancelBtn" style="background:transparent; border:none; color:rgba(255,255,255,0.4); font-size:0.75rem; font-weight:700; cursor:pointer;">Exit Protocol</button>
+                    <button id="aiWalkNextBtn" style="background:#bf5af2; border:none; padding:8px 16px; border-radius:8px; color:#fff; font-size:0.8rem; font-weight:800; cursor:pointer;">${index === steps.length - 1 ? 'Finish' : 'Next Step'}</button>
+                </div>
+            `;
+
+            document.body.appendChild(halo);
+            document.body.appendChild(dialog);
+
+            document.getElementById('aiWalkNextBtn').onclick = () => this._orchestrateSteps(steps, index + 1);
+            document.getElementById('aiWalkCancelBtn').onclick = () => this._clearWalkthrough();
+
+        }, 300); // 300ms dom mount buffer
+    },
+
+    _clearWalkthrough() {
+        const h = document.getElementById('aiWalkthroughHalo');
+        const d = document.getElementById('aiWalkthroughDialog');
+        if(h) document.body.removeChild(h);
+        if(d) document.body.removeChild(d);
     },
 
     addUserMessage(text) {
@@ -248,7 +410,7 @@ window.BrandSyncChatbot = {
         const msg = document.createElement('div');
         msg.style.cssText = `
             align-self: flex-end;
-            background: var(--accent-color);
+            background: linear-gradient(135deg, #0a84ff, #005bb5);
             color: #fff;
             padding: 10px 14px;
             border-radius: 18px;
@@ -277,11 +439,12 @@ window.BrandSyncChatbot = {
         `;
 
         wrapper.innerHTML = `
-            <div style="flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #0a84ff, #bf5af2); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect></svg>
+            <div style="flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #0a84ff, #bf5af2); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c-.11.66.69 1.15 1.14.65l.5-.5a2 2 0 0 1 2.82 2.82l-.5.5c-.5.45-.01 1.25.65 1.14a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2c-.66-.11-1.15.69-.65 1.14l.5.5a2 2 0 0 1-2.82 2.82l-.5-.5c-.45-.5-1.25-.01-1.14.65a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2c.11-.66-.69-1.15-1.14-.65l-.5.5a2 2 0 0 1-2.82-2.82l.5-.5c.5-.45.01-1.25-.65-1.14a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2c.66.11 1.15-.69.65-1.14l-.5-.5a2 2 0 0 1 2.82-2.82l.5.5c.45.5 1.25.01 1.14-.65a2 2 0 0 1-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </div>
             <div style="
-                background: rgba(255,255,255,0.08);
+                background: rgba(255,255,255,0.06);
+                border: 1px solid rgba(255,255,255,0.05);
                 color: #fff;
                 padding: 12px 16px;
                 border-radius: 18px;
@@ -303,29 +466,18 @@ window.BrandSyncChatbot = {
     }
 };
 
-// Add CSS animations to document head if not existing
+// CSS Injection
 (function() {
-    if(!document.getElementById('aiChatbotStyles')) {
+    if(!document.getElementById('aiSuperAgentStyles')) {
         const style = document.createElement('style');
-        style.id = 'aiChatbotStyles';
+        style.id = 'aiSuperAgentStyles';
         style.innerHTML = `
-            @keyframes chatPop {
-                0% { opacity: 0; transform: scale(0.9) translateY(20px); }
-                100% { opacity: 1; transform: scale(1) translateY(0); }
-            }
-            .ai-chip:hover {
-                background: rgba(255,255,255,0.1) !important;
-                transform: scale(1.05);
-            }
+            @keyframes chatPop { 0% { opacity: 0; transform: scale(0.9) translateY(20px); filter:blur(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); filter:blur(0);} }
+            @keyframes pulseHalo { 0% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 0 0 rgba(191,90,242,0.8) inset; } 50% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px rgba(191,90,242,1) inset; } 100% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 0 0 rgba(191,90,242,0.8) inset; } }
+            .ai-chip:hover { background: rgba(255,255,255,0.1) !important; transform: translateY(-2px); }
         `;
         document.head.appendChild(style);
     }
 })();
 
-// Initialize on DOM Load
-document.addEventListener('DOMContentLoaded', () => {
-    // Delay initialization slightly to let the rest of the app mount
-    setTimeout(() => {
-        window.BrandSyncChatbot.init();
-    }, 1000);
-});
+document.addEventListener('DOMContentLoaded', () => setTimeout(() => window.BrandSyncChatbot.init(), 1000));
