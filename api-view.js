@@ -144,7 +144,7 @@ window.ApiView = {
                             
                             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">Pull synchronized leads directly from your hosted BrandSync engine on Render. This bridge establishes a real-time data tunnel for your identities.</p>
                             
-                            <button id="pull-leads-btn" class="btn" style="width:100%; height:46px; background:#ff9f0a; color:#000; font-weight:800; border-radius:14px; border:none; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            <button onclick="pullLeadsFromBrandSync()" id="pull-leads-btn" class="btn" style="width:100%; height:46px; background:#ff9f0a; color:#000; font-weight:800; border-radius:14px; border:none; display:flex; align-items:center; justify-content:center; gap:8px;">
                                 <i class="icon-lucide-refresh-cw"></i> Pull Identities from Cloud
                             </button>
 
