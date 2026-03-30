@@ -736,54 +736,59 @@ window.BrandSyncAPI = {
     async fetchCentralizedContacts() {
         const BASE_URL = "https://agridomcorp.com/warehouse/webservice.php";
         const USERNAME = "pcalpas".trim();
-        const KEY_API = "OUp6qm8VbX7rrJm5".trim();
-        const KEY_PASS = "Sfgroup@2023!".trim();
+        const PASS = "Sfgroup@2023!".trim(); // Using Password-first as primary strategy
+        const KEY = "OUp6qm8VbX7rrJm5".trim();
 
-        // High-Stability Proxy Tunnel
+        const PROXY = "https://api.allorigins.win/get?url=";
+
         const proxyFetch = async (target) => {
-            const proxied = `https://api.allorigins.win/get?url=${encodeURIComponent(target)}&_=${Date.now()}`;
-            const res = await fetch(proxied, { cache: 'no-store' });
-            if (!res.ok) throw new Error(`Proxy Bridge Down (${res.status})`);
+            // Encode the target tightly
+            const url = PROXY + encodeURIComponent(target);
+            const res = await fetch(url, { cache: 'no-cache' });
+            if (!res.ok) throw new Error(`Tunnel failure (${res.status})`);
             const data = await res.json();
-            if (!data || !data.contents) throw new Error("Remote server returned an empty tunnel.");
-            return JSON.parse(data.contents);
+            if (!data || !data.contents) throw new Error("Null Pipeline");
+            return typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
         };
 
-        const runAuth = async (candidateKey) => {
-            // --- Step 1: Challenge ---
+        const executeHandshake = async (secret) => {
+            // STEP 1: Fast Handshake
             const chal = await proxyFetch(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
-            if (!chal.success) throw new Error("Handshake Rejected: " + (chal.error ? chal.error.message : "Internal Auth Failure"));
+            if (!chal.success) throw new Error("Challenge Rejected: " + (chal.error ? chal.error.message : "Security Block"));
             
             const token = chal.result.token;
-            const accessKey = window.md5(token + candidateKey);
+            const accessKey = window.md5(token + secret);
 
-            // --- Step 2: Session Creation (Using GET to maximize proxy stability) ---
+            // STEP 2: Instant Login
             const auth = await proxyFetch(`${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`);
-            return auth;
+            return { raw: auth, tokenUsed: token };
         };
 
         try {
-            window.showToast("Authenticating High-Security Identity...", "info");
+            window.showToast("Authenticating High-Priority Session...", "info");
             
-            let auth = await runAuth(KEY_API);
-            if (!auth.success) {
-                console.warn("Primary Identity failed, trying Password override...");
-                auth = await runAuth(KEY_PASS);
+            // Try with Password first (Common for Admin Users in Vtiger 7)
+            let authRes = await executeHandshake(PASS);
+            
+            // Fallback to API Key if password fails
+            if (!authRes.raw.success) {
+                console.warn("Primary Auth failed, Trying secondary CRM Key...");
+                authRes = await executeHandshake(KEY);
             }
 
-            if (!auth.success) {
-                const errMsg = auth.error ? auth.error.message : "Access Denied";
-                throw new Error(errMsg);
+            if (!authRes.raw.success) {
+                const msg = authRes.raw.error ? authRes.raw.error.message : "Access Denied";
+                throw new Error(`${msg} (Ref: ${authRes.tokenUsed?authRes.tokenUsed.substr(-4):'N/A'})`);
             }
             
-            const sessionName = auth.result.sessionName;
-            window.showToast(`Identified as ${auth.result.first_name}! Pulling Global Data...`, "info");
+            const sessionName = authRes.raw.result.sessionName;
+            window.showToast(`Welcome Patrick! Harvesting records...`, "info");
 
-            // --- Step 3: Identity Reconstruction ---
+            // STEP 3: Identity Reconstruction
             const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 500;");
             const qData = await proxyFetch(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
 
-            if (!qData.success) throw new Error("Identity sweep rejected: " + (qData.error ? qData.error.message : "Table restricted"));
+            if (!qData.success) throw new Error("Sweep rejected: " + (qData.error ? qData.error.message : "Permissions error"));
 
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
@@ -801,11 +806,11 @@ window.BrandSyncAPI = {
                         id: 'PEND_CRM_' + item.id.replace(/:/g, '_'),
                         name: item.firstname || item.farm_name || 'CRM Contact',
                         phone: phone,
-                        company: item.farm_name || 'Central Warehouse',
-                        position: item.lastname || 'Lead',
+                        company: item.farm_name || 'AgriDom Warehouse',
+                        position: item.lastname || 'Identity Verified',
                         interest: '',
                         added: new Date().toISOString().substring(0, 10),
-                        source: 'Central CRM'
+                        source: 'Agridom CRM'
                     });
                     importedCount++;
                 }
@@ -816,7 +821,7 @@ window.BrandSyncAPI = {
 
         } catch (err) {
             console.error("Centralized CRM Error:", err);
-            return { success: false, message: `CRM: ${err.message}` };
+            return { success: false, message: `ACCESS: ${err.message}` };
         }
     },
 
