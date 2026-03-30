@@ -698,18 +698,40 @@ window.BrandSyncAPI = {
         const USERNAME = "pcalpas";
         const API_KEY = "OUp6qm8VbX7rrJm5"; // Primary Method A
         const PASSWORD = "Sfgroup@2023!";     // Fallback Method B
-        const PROXY = "https://api.allorigins.win/get?url=";
+        
+        // REDUNDANT PROXY POOL: Rotate if primary is blocked or overloaded
+        const PROXY_POOL = [
+            "https://corsproxy.io/?",               // Primary: Transparent
+            "https://api.allorigins.win/get?url="   // Secondary: Wrapped Output
+        ];
 
         if (this._crmLock && !isRetry) return { success: false, message: "Handshake already active." };
         if (!isRetry) this._crmLock = true;
 
         const proxyRequest = async (url) => {
-            const tunnelUrl = PROXY + encodeURIComponent(url);
-            const res = await fetch(tunnelUrl, { cache: 'no-store' });
-            if (!res.ok) throw new Error(`Tunnel Error: ${res.status}`);
-            const data = await res.json();
-            if (!data.contents) throw new Error("Null Pipeline Output");
-            return typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
+            let lastErr = null;
+            for (const proxy of PROXY_POOL) {
+                try {
+                    const tunnelUrl = proxy + encodeURIComponent(url);
+                    const res = await fetch(tunnelUrl, { cache: 'no-store' });
+                    if (!res.ok) throw new Error(`Tunnel Error: ${res.status}`);
+                    
+                    const data = await res.json();
+                    
+                    // Branch: Handle AllOrigins wrapping vs Transparent proxies
+                    if (proxy.includes('allorigins')) {
+                        if (!data.contents) throw new Error("Empty AllOrigins Content");
+                        return typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
+                    }
+                    
+                    // Standard transparent proxy logic
+                    return data;
+                } catch (e) {
+                    console.warn(`CRM Proxy Handshake Failure (${proxy.split('/')[2]}): ${e.message}`);
+                    lastErr = e;
+                }
+            }
+            throw new Error(`All redundant CORS proxies failed. Network isolation suspected: ${lastErr?.message}`);
         };
 
         try {
