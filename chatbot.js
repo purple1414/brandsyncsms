@@ -565,6 +565,10 @@ window.BrandSyncChatbot = {
             animation: pulseHalo 2s infinite;
         `;
 
+        // Create Instruction Dialog
+        const dialog = document.createElement('div');
+        dialog.id = 'aiWalkthroughDialog';
+
         // Smart Positioning Logic (Prevents Viewport Overflow)
         const dialogWidth = 320;
         const dialogHeight = 220; // Estimated max height
