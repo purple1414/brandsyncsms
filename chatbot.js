@@ -477,7 +477,7 @@ window.BrandSyncChatbot = {
             steps = [
                 { jsAction: () => true, selector: "button[onclick*='openEditModal']", msg: "Step 1: Click this primary button to invoke the secure Contact Entry modal." },
                 { jsAction: () => window.ContactsView.openEditModal(), awaitSelector: "#contactModal", msg: "Step 2: You've penetrated the modal. Fill in the parameters (Name, Phone, etc). Notice we have validation." },
-                { jsAction: () => true, selector: "#saveContactBtn", msg: "Step 3: Finally, hit Save to commit to the local indexedDB and globally sync to GitHub." }
+                { jsAction: () => true, selector: "button[onclick*='saveContact']", msg: "Step 3: Finally, hit Save to commit to the local indexedDB and globally sync to GitHub." }
             ];
         } else if (flowId === 'heavy_import') {
             window.location.hash = 'contacts';
@@ -487,9 +487,23 @@ window.BrandSyncChatbot = {
         } else if (flowId === 'send_sms') {
             window.location.hash = 'send-sms';
             steps = [
-                { jsAction: () => true, selector: "#chooseContactsBtn", msg: "Step 1: Extract target identities from your synced database." },
-                { jsAction: () => true, selector: "#smsMessage", msg: "Step 2: Formulate your Spintax payload in the syntax editor." },
-                { jsAction: () => true, selector: "#sendSmsBtn", msg: "Step 3: Establish connection and blast to the PhilSMS remote gateway." }
+                { jsAction: () => true, selector: "#btnContactsDropdown", msg: "Step 1: Extract target identities from your synced database." },
+                { jsAction: () => true, selector: "#messageArea", msg: "Step 2: Formulate your Spintax payload in the syntax editor." },
+                { jsAction: () => true, selector: "#sendBtn", msg: "Step 3: Establish connection and blast to the PhilSMS remote gateway." }
+            ];
+        } else if (flowId === 'schedule_sms') {
+            window.location.hash = 'send-sms';
+            steps = [
+                { jsAction: () => true, selector: "#scheduleToggleBtn", msg: "Step 1: Click the Send Later toggle to unlock temporal scheduling." },
+                { jsAction: () => true, selector: "#scheduleTime", msg: "Step 2: Select the precise Date and Time your campaign should execute." },
+                { jsAction: () => true, selector: "#sendBtn", msg: "Step 3: Commit the scheduled campaign payload to the server." }
+            ];
+        } else if (flowId === 'create_template') {
+            window.location.hash = 'templates';
+            steps = [
+                { jsAction: () => true, selector: "button[onclick*='openModal']", msg: "Step 1: Initiate a new blank resource matrix by clicking Create Resource." },
+                { jsAction: () => window.TemplatesView.openModal(), awaitSelector: "#edit_templateName", msg: "Step 2: Assign a memorable signature and construct your spintax data body." },
+                { jsAction: () => true, selector: "button[onclick*='saveTemplate']", msg: "Step 3: Finalize and sync the template back to the global GitHub server." }
             ];
         } else {
              window.showToast("Walkthrough parameters missing or misconfigured.", "error"); return;
@@ -512,72 +526,98 @@ window.BrandSyncChatbot = {
         // Execute JS requirement if defined (e.g., opening a modal)
         if (step.jsAction) step.jsAction();
 
-        setTimeout(() => {
+        let attempts = 0;
+        const domPoller = setInterval(() => {
             const target = document.querySelector(step.awaitSelector || step.selector);
-            if (!target) {
-                console.warn("[AI Guide] Hook failed element unmounted for:", step.selector);
-                window.showToast("Cannot find DOM reference. Ensure module is loaded.", "error");
-                return;
-            }
-
-            // Create Visual Halo
-            const halo = document.createElement('div');
-            halo.id = 'aiWalkthroughHalo';
-            const rect = target.getBoundingClientRect();
             
-            halo.style.cssText = `
-                position: fixed;
-                top: ${rect.top - 6}px;
-                left: ${rect.left - 6}px;
-                width: ${rect.width + 12}px;
-                height: ${rect.height + 12}px;
-                border: 3px solid #bf5af2;
-                border-radius: ${window.getComputedStyle(target).borderRadius || '12px'};
-                box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px #bf5af2 inset;
-                z-index: 100000;
-                pointer-events: none;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                animation: pulseHalo 2s infinite;
-            `;
+            if (target) {
+                clearInterval(domPoller);
+                this._renderWalkthroughHalo(target, step, steps, index);
+            } else {
+                attempts++;
+                if (attempts > 40) { // 40 * 100ms = 4 seconds max threshold
+                    clearInterval(domPoller);
+                    console.warn("[AI Guide] Target Node Missing:", step.selector);
+                    window.showToast("Walkthrough terminated: Awaited UI component failed to mount.", "error");
+                }
+            }
+        }, 100);
+    },
 
-            // Create Tooltip Overlay Dialog
-            const dialog = document.createElement('div');
-            dialog.id = 'aiWalkthroughDialog';
-            dialog.style.cssText = `
-                position: fixed;
-                top: ${rect.bottom + 20 < window.innerHeight - 100 ? rect.bottom + 20 : rect.top - 120}px;
-                left: ${Math.max(20, rect.left + (rect.width/2) - 150)}px;
-                width: 300px;
-                background: rgba(30,30,35,0.95);
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(191,90,242,0.4);
-                border-radius: 16px;
-                padding: 20px;
-                color: #fff;
-                z-index: 100001;
-                box-shadow: 0 30px 60px rgba(0,0,0,0.6);
-                animation: fadeIn 0.3s ease-out;
-            `;
+    _renderWalkthroughHalo(target, step, steps, index) {
+        // Create Visual Halo
+        const halo = document.createElement('div');
+        halo.id = 'aiWalkthroughHalo';
+        const rect = target.getBoundingClientRect();
+        
+        halo.style.cssText = `
+            position: fixed;
+            top: ${rect.top - 6}px;
+            left: ${rect.left - 6}px;
+            width: ${rect.width + 12}px;
+            height: ${rect.height + 12}px;
+            border: 3px solid #bf5af2;
+            border-radius: ${window.getComputedStyle(target).borderRadius || '12px'};
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px #bf5af2 inset;
+            z-index: 100000;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: pulseHalo 2s infinite;
+        `;
 
-            dialog.innerHTML = `
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-                    <div style="width:20px;height:20px;border-radius:50%;background:#bf5af2;display:flex;align-items:center;justify-content:center;"><i class="icon-lucide-bot" style="font-size:10px;"></i></div>
-                    <span style="font-weight:800; font-size:0.8rem; text-transform:uppercase; color:#bf5af2;">BrandSync Guide</span>
-                </div>
-                <p style="font-size:0.85rem; line-height:1.5; margin:0 0 16px 0; color:rgba(255,255,255,0.8);">${step.msg}</p>
-                <div style="display:flex; justify-content:space-between;">
-                    <button id="aiWalkCancelBtn" style="background:transparent; border:none; color:rgba(255,255,255,0.4); font-size:0.75rem; font-weight:700; cursor:pointer;">Exit Protocol</button>
-                    <button id="aiWalkNextBtn" style="background:#bf5af2; border:none; padding:8px 16px; border-radius:8px; color:#fff; font-size:0.8rem; font-weight:800; cursor:pointer;">${index === steps.length - 1 ? 'Finish' : 'Next Step'}</button>
-                </div>
-            `;
+        // Create Tooltip Overlay Dialog
+        const dialog = document.createElement('div');
+        dialog.id = 'aiWalkthroughDialog';
+        dialog.style.cssText = `
+            position: fixed;
+            top: ${rect.bottom + 20 < window.innerHeight - 100 ? rect.bottom + 20 : rect.top - 120}px;
+            left: ${Math.max(20, rect.left + (rect.width/2) - 150)}px;
+            width: 300px;
+            background: rgba(30,30,35,0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(191,90,242,0.4);
+            border-radius: 16px;
+            padding: 20px;
+            color: #fff;
+            z-index: 100001;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            animation: fadeIn 0.3s ease-out;
+        `;
 
-            document.body.appendChild(halo);
-            document.body.appendChild(dialog);
+        dialog.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                <div style="width:20px;height:20px;border-radius:50%;background:#bf5af2;display:flex;align-items:center;justify-content:center;"><i class="icon-lucide-bot" style="font-size:10px;"></i></div>
+                <span style="font-weight:800; font-size:0.8rem; text-transform:uppercase; color:#bf5af2;">BrandSync Guide</span>
+            </div>
+            <p style="font-size:0.85rem; line-height:1.5; margin:0 0 16px 0; color:rgba(255,255,255,0.8);">${step.msg}</p>
+            <div style="display:flex; justify-content:space-between;">
+                <button id="aiWalkCancelBtn" style="background:transparent; border:none; color:rgba(255,255,255,0.4); font-size:0.75rem; font-weight:700; cursor:pointer;">Exit Protocol</button>
+                <button id="aiWalkNextBtn" style="background:#bf5af2; border:none; padding:8px 16px; border-radius:8px; color:#fff; font-size:0.8rem; font-weight:800; cursor:pointer;box-shadow:0 6px 15px rgba(191,90,242,0.3); transition:0.2s;">${index === steps.length - 1 ? 'Finish' : 'Next Step'}</button>
+            </div>
+        `;
 
-            document.getElementById('aiWalkNextBtn').onclick = () => this._orchestrateSteps(steps, index + 1);
-            document.getElementById('aiWalkCancelBtn').onclick = () => this._clearWalkthrough();
+        document.body.appendChild(halo);
+        document.body.appendChild(dialog);
 
-        }, 300); // 300ms dom mount buffer
+        let advanced = false;
+        const advanceStep = () => {
+            if (advanced) return;
+            advanced = true;
+            if (index < steps.length - 1) {
+                setTimeout(() => this._orchestrateSteps(steps, index + 1), 500);
+            } else {
+                this._clearWalkthrough();
+                window.showToast("Walkthrough successfully completed.", "success");
+            }
+        };
+
+        // Bridge native click interactions to auto-advance
+        if (target.tagName.toLowerCase() === 'button' || target.tagName.toLowerCase() === 'input' || target.tagName.toLowerCase() === 'a') {
+            target.addEventListener('click', advanceStep, { once: true });
+        }
+
+        document.getElementById('aiWalkNextBtn').onclick = () => advanceStep();
+        document.getElementById('aiWalkCancelBtn').onclick = () => this._clearWalkthrough();
     },
 
     _clearWalkthrough() {
