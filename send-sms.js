@@ -663,18 +663,31 @@ window.SendSMSView = {
             }
         };
 
-        // GSM Check
-        const isCharGSM = (c) => /^[@£$¥èéùìòÇ\n\rΔ_ΦΓΛΩΠΨΣΘΞ !"#¤%&'()*+,\-./0-9:;<=>?¡A-ZÄÖÑÜ§¿a-zäöñüà€\{\}\[\]\|]*$/.test(c);
+        // GSM Integrity Guardian
+        const gsmRegex = /^[@£$¥èéùìòÇ\n\rΔ_ΦΓΛΩΠΨΣΘΞ !"#¤%&'()*+,\-./0-9:;<=>?¡A-ZÄÖÑÜ§¿a-zäöñüà€\{\}\[\]\|]*$/;
+        const isGSM = (text) => gsmRegex.test(text);
 
         const updateMetrics = () => {
             const text = textInput.value;
             previewText.innerText = text || 'Your message preview will appear here.';
+            
+            // Highlight Non-GSM Characters in Backdrop
+            let highlighted = '';
+            for (let char of text) {
+                if (!gsmRegex.test(char)) {
+                    highlighted += `<span class="bad-char">${char === ' ' ? '&nbsp;' : char}</span>`;
+                } else {
+                    highlighted += char === '\n' ? '<br>' : (char === ' ' ? '&nbsp;' : char);
+                }
+            }
+            document.getElementById('backdrop').innerHTML = highlighted + (text.endsWith('\n') ? '<br>' : '');
+
             const calc = window.calculateSMSLength(text);
             charCount.innerText = calc.length;
             segmentCount.innerText = calc.segments;
             encodingType.innerText = calc.encoding;
             const validRecipients = recipientsArea.value.split(',').map(r => r.trim()).filter(r => r.length >= 10);
-            const totalCost = validRecipients.length * calc.segments;
+            const totalCost = validRecipients.length * Math.max(1, calc.segments);
             creditCost.innerText = totalCost;
             document.getElementById('recipientCountBadge').innerText = validRecipients.length + ' Contacts';
             
@@ -683,8 +696,33 @@ window.SendSMSView = {
         };
 
         textInput.oninput = updateMetrics;
+        textInput.onscroll = () => {
+            document.getElementById('backdrop').scrollTop = textInput.scrollTop;
+        };
+
+        btnIgnoreGsm.onclick = () => {
+            userIgnoredGsmWarning = true;
+            gsmWarningBar.style.display = 'none';
+        };
+
+        btnFixGsm.onclick = () => {
+            let val = textInput.value;
+            // Common replacements to salvage GSM segments
+            val = val.replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/[—–]/g, '-').replace(/[…]/g, '...');
+            
+            // Strip any remaining non-GSM using a filter
+            let filtered = '';
+            for (let char of val) {
+                if (gsmRegex.test(char)) filtered += char;
+            }
+            
+            textInput.value = filtered;
+            updateMetrics();
+            window.showToast("Converted to standard GSM-7!");
+        };
+
         recipientsArea.oninput = updateMetrics;
-        senderId.onchange = () => previewSender.innerText = senderId.value;
+        senderId.onchange = () => previewSender.innerText = senderId.options[senderId.selectedIndex].text.split(' ')[0];
 
         scheduleToggleBtn.onclick = () => {
             if (scheduleTime.style.display === 'none') {
