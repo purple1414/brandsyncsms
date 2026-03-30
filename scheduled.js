@@ -629,8 +629,14 @@ window.ScheduledView = {
     _bindEditEvents() {
         const msgEl=document.getElementById('edit_message'), recEl=document.getElementById('edit_recipients'), backdrop=document.getElementById('edit_backdrop');
         const update=()=>{
-            const calc=window.calculateSMSLength(msgEl.value);
-            document.getElementById('edit_charCount').innerText=calc.length; document.getElementById('edit_segCount').innerText=calc.segments; document.getElementById('edit_encoding').innerText=calc.encoding;
+            const calc = window.calculateSMSLength(msgEl.value);
+            const limit = calc.segments > 1 
+                ? (calc.encoding === 'GSM-7' ? 153 : 67) 
+                : (calc.encoding === 'GSM-7' ? 160 : 70);
+
+            document.getElementById('edit_charCount').innerText = `${calc.length}/${limit}`; 
+            document.getElementById('edit_segCount').innerText = calc.segments; 
+            document.getElementById('edit_encoding').innerText = calc.encoding;
             const recs=recEl.value ? recEl.value.split(',').filter(r=>r.trim().length>=10) : [];
             document.getElementById('edit_recipientBadge').innerText=recs.length+' Contacts';
             document.getElementById('edit_cost').innerText=recs.length*calc.segments;

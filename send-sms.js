@@ -697,9 +697,16 @@ window.SendSMSView = {
             document.getElementById('backdrop').innerHTML = highlighted + (text.endsWith('\n') ? '<br>' : '');
 
             const calc = window.calculateSMSLength(text);
-            charCount.innerText = calc.length;
+            
+            // Dynamic limit labels
+            const limit = calc.segments > 1 
+                ? (calc.encoding === 'GSM-7' ? 153 : 67) 
+                : (calc.encoding === 'GSM-7' ? 160 : 70);
+            
+            charCount.innerText = `${calc.length}/${limit}`;
             segmentCount.innerText = calc.segments;
             encodingType.innerText = calc.encoding;
+            
             const validRecipients = recipientsArea.value.split(',').map(r => r.trim()).filter(r => r.length >= 10);
             const totalCost = validRecipients.length * Math.max(1, calc.segments);
             creditCost.innerText = totalCost;

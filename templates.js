@@ -240,7 +240,12 @@ window.TemplatesView = {
                  backdrop.innerHTML = html;
              }
              const calc = window.calculateSMSLength(text);
-             document.getElementById('charCount').innerText = calc.length;
+             
+             const limit = calc.segments > 1 
+                ? (calc.encoding === 'GSM-7' ? 153 : 67) 
+                : (calc.encoding === 'GSM-7' ? 160 : 70);
+
+             document.getElementById('charCount').innerText = `${calc.length}/${limit}`;
              document.getElementById('segmentCount').innerText = calc.segments;
              document.getElementById('encodingType').innerText = calc.encoding;
              document.getElementById('creditCost').innerText = calc.segments.toFixed(2);
