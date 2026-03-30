@@ -8,7 +8,8 @@ const BS_STORAGE_KEYS = {
     GROUPS: 'brandsync_groups',
     TEMPLATES: 'brandsync_templates',
     TEMPLATE_FOLDERS: 'brandsync_template_folders',
-    MESSAGES: 'brandsync_messages'
+    MESSAGES: 'brandsync_messages',
+    SCHEDULED: 'brandsync_scheduled_messages'
 };
 
 const initStorage = (key, defaults) => {

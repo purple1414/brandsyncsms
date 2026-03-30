@@ -19,7 +19,7 @@ window.Scheduler = {
             recurring: payload.recurring || { type: 'none' }
         };
         messages.push(entry);
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(messages));
+        this._persist(messages);
         
         // Arm the timer immediately
         this.armTimer(entry);
@@ -39,7 +39,7 @@ window.Scheduler = {
     // Delete a scheduled message by ID
     cancel(id) {
         const messages = this.getAll().filter(m => m.id !== id);
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(messages));
+        this._persist(messages);
         // Clear the timer if stored
         if(this._timers && this._timers[id]) {
             clearTimeout(this._timers[id]);
@@ -58,7 +58,7 @@ window.Scheduler = {
             delete this._timers[id];
         }
         Object.assign(messages[idx], changes);
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(messages));
+        this._persist(messages);
         // Re-arm with new time
         this.armTimer(messages[idx]);
         return true;
@@ -71,10 +71,20 @@ window.Scheduler = {
         if(idx !== -1) {
             messages[idx].status = status;
             if(errorReason) messages[idx].errorReason = errorReason;
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(messages));
+            this._persist(messages);
             
             // Sync UI counters globally
             if(window.BrandSyncAppInstance) window.BrandSyncAppInstance.updateSidebarCounts();
+        }
+    },
+
+    // Persist to localStorage AND trigger GitHub sync
+    _persist(messages) {
+        if (window.BrandSyncAPI && window.BrandSyncAPI._set) {
+            window.BrandSyncAPI._set(this.STORAGE_KEY, messages);
+        } else {
+            // Fallback during early boot before API is ready
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(messages));
         }
     },
 
