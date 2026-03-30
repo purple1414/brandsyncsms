@@ -30,9 +30,10 @@ window.ContactsView = {
                             
                             <!-- Default State (Search & Filters) -->
                             <div id="defaultActionControls" style="display: flex; gap:12px; align-items: center; justify-content: flex-end; width:100%; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); opacity: 1; transform: translateY(0);">
-                                <div style="width: 300px; position: relative;">
+                                <div style="width: 320px; position: relative; display: flex; align-items: center;">
                                     <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.3);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                    <input type="text" id="contactSearch" placeholder="Filter database..." style="width: 100%; height: 40px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 40px; color: #fff; font-size: 0.9rem; outline: none; transition: 0.2s;" oninput="window.ContactsView.loadData()">
+                                    <input type="text" id="contactSearch" placeholder="Search identities, tags, companies..." style="width: 100%; height: 40px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 40px; color: #fff; font-size: 0.9rem; outline: none; transition: 0.2s;" oninput="window.ContactsView.loadData()">
+                                    <button id="clearSearchBtn" onclick="document.getElementById('contactSearch').value=''; window.ContactsView.loadData();" style="display:none; position:absolute; right:12px; top: 50%; transform: translateY(-50%); background:rgba(255,255,255,0.15); border:none; width:18px; height:18px; border-radius:50%; color:#fff; cursor:pointer; align-items:center; justify-content:center; font-size:0.6rem; font-weight:900; opacity:0.6; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✕</button>
                                 </div>
                                 <button id="advFilterToggleBtn" onclick="window.ContactsView.toggleAdvancedFilters()" style="height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(255,255,255,0.05); color:#fff; border: 1px solid rgba(255,255,255,0.1); font-weight:700; font-size:0.8rem; align-items:center; gap:6px; display:flex;" title="Advanced Filter Options">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
@@ -595,7 +596,12 @@ window.ContactsView = {
 
     async loadData() {
         const tbody = document.getElementById('contactsTableBody'); 
-        const searchQuery = (document.getElementById('contactSearch')?.value || '').toLowerCase(); 
+        
+        const searchInput = document.getElementById('contactSearch');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        const searchQuery = (searchInput?.value || '').trim();
+        
+        if (clearBtn) clearBtn.style.display = searchQuery ? 'flex' : 'none';
         
         const dateFrom = document.getElementById('filterDateFrom')?.value;
         const dateTo = document.getElementById('filterDateTo')?.value;
@@ -613,13 +619,31 @@ window.ContactsView = {
 
         let activeFilterCount = 0;
         
+        // Multi-keyword tokenization for Global Search AND logic
+        const keywords = searchQuery ? searchQuery.toLowerCase().split(/\s+/).filter(k => k.length > 0) : [];
+        
         // Multi-dimensional constraint rendering
         contacts = contacts.filter(c => {
-            // General Keyword
+            // Global Keyword Matching (Tolerant & Scope-Expanded)
             let passGeneral = true;
-            if (searchQuery) {
-                const s = searchQuery;
-                passGeneral = (c.name || '').toLowerCase().includes(s) || (c.phone || '').includes(s) || (c.added || '').includes(s);
+            if (keywords.length > 0) {
+                const gNames = (c.groupIds || []).map(gid => grpMap[gid]?.name).join(' ');
+                const searchablePool = [
+                    c.name,
+                    c.phone,
+                    c.company,
+                    c.position,
+                    c.event,
+                    c.interest,
+                    c.awareness,
+                    c.salesPerson,
+                    (c.tags || []).join(' '),
+                    gNames,
+                    c.added
+                ].join(' ').toLowerCase();
+
+                // Every typed word must be found SOMEWHERE in the contact object
+                passGeneral = keywords.every(kw => searchablePool.includes(kw));
             }
             if(!passGeneral) return false;
 
@@ -684,58 +708,107 @@ window.ContactsView = {
         }
 
         if (this.activeGroupId !== null) contacts = contacts.filter(c => c.groupIds && c.groupIds.includes(this.activeGroupId));
+        // Reorder results slightly: Exact match on name goes to the absolute top
+        if (keywords.length > 0) {
+            const rawSearch = keywords.join(' ');
+            contacts.sort((a, b) => {
+                const aName = (a.name || '').toLowerCase();
+                const bName = (b.name || '').toLowerCase();
+                if (aName.startsWith(rawSearch) && !bName.startsWith(rawSearch)) return -1;
+                if (!aName.startsWith(rawSearch) && bName.startsWith(rawSearch)) return 1;
+                return 0;
+            });
+        }
         
-        tbody.innerHTML = contacts.length > 0 ? contacts.map(c => {
-            const grps = (c.groupIds || []).map(gid => grpMap[gid]).filter(Boolean);
-            const contactJson = JSON.stringify(c).replace(/"/g, '&quot;');
+        // Intelligent HTML highlighting function
+        const _highlight = (str) => {
+            if (!str) return '—';
+            let res = String(str);
+            if (keywords.length === 0) return res;
             
-            const _toTitleCase = (str) => String(str || '').trim().toLowerCase().replace(/(^|[ \-\/])([a-z0-9])/g, m => m.toUpperCase());
+            let htmlForm = res;
+            keywords.forEach(kw => {
+                const escKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escKw})`, 'gi');
+                htmlForm = htmlForm.replace(regex, `<span style="background:rgba(255,215,0,0.4); color:#fff; border-radius:3px; padding:0 2px;">$1</span>`);
+            });
+            return htmlForm;
+        };
+        
+        // Generative HTML Table Body
+        if (contacts.length > 0) {
+            tbody.innerHTML = contacts.map(c => {
+                const grps = (c.groupIds || []).map(gid => grpMap[gid]).filter(Boolean);
+                const contactJson = JSON.stringify(c).replace(/"/g, '&quot;');
+                
+                const _toTitleCase = (str) => String(str || '').trim().toLowerCase().replace(/(^|[ \-\/])([a-z0-9])/g, m => m.toUpperCase());
 
-            const displayName = window.ContactsView.parseName(c.name || 'Unknown').full;
-            const safeNameForDelete = displayName.replace(/'/g, "\\'");
-            const displayCompany = c.company ? _toTitleCase(c.company) : '—';
-            const displayEvent = c.event ? _toTitleCase(c.event) : '—';
-            const displayInterest = c.interest ? _toTitleCase(c.interest) : '—';
-            const displayPosition = c.position ? _toTitleCase(c.position) : '—';
-            
-            const cellStyle = "padding: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;";
-            
-            // Logic for "Recently Added" Tag and formatted string
-            const addDate = new Date(c.added).getTime();
-            const isRecent = addDate && (now - addDate) <= sevenDaysMs;
-            const recentBadge = isRecent ? `<span title="Added within the last 7 days" style="background:rgba(255,159,10,0.15); color:#ff9f0a; border:1px solid rgba(255,159,10,0.3); padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; white-space:nowrap; margin-right:4px;">NEW</span>` : '';
-            
-            // Generate formatted timestamp string nicely
-            let addDisplay = c.added || '';
-            if (addDate) {
-               const dObj = new Date(c.added);
-               const hours = dObj.getHours();
-               const mins = String(dObj.getMinutes()).padStart(2, '0');
-               const ampm = hours >= 12 ? 'PM' : 'AM';
-               const fmtTime = `${hours % 12 || 12}:${mins} ${ampm}`;
-               addDisplay = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')} ${c.added.includes(':') ? fmtTime : ''}`.trim();
-            }
+                const rawDisplayName = window.ContactsView.parseName(c.name || 'Unknown').full;
+                const safeNameForDelete = rawDisplayName.replace(/'/g, "\\'");
+                
+                // Construct strings with Title Case, then apply smart highlighting
+                const displayName = _highlight(rawDisplayName);
+                const displayPhone = _highlight(`+${c.phone}`);
+                const displayCompany = c.company ? _highlight(_toTitleCase(c.company)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
+                const displayEvent = c.event ? _highlight(_toTitleCase(c.event)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
+                const displayInterest = c.interest ? _highlight(_toTitleCase(c.interest)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
+                const displayPosition = c.position ? _highlight(_toTitleCase(c.position)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
+                
+                const cellStyle = "padding: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;";
+                
+                // Logic for "Recently Added" Tag and formatted string
+                const addDate = new Date(c.added).getTime();
+                const isRecent = addDate && (now - addDate) <= sevenDaysMs;
+                const recentBadge = isRecent ? `<span title="Added within the last 7 days" style="background:rgba(255,159,10,0.15); color:#ff9f0a; border:1px solid rgba(255,159,10,0.3); padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; white-space:nowrap; margin-right:4px;">NEW</span>` : '';
+                
+                // Generate formatted timestamp string nicely
+                let addDisplay = c.added || '';
+                if (addDate) {
+                   const dObj = new Date(c.added);
+                   const hours = dObj.getHours();
+                   const mins = String(dObj.getMinutes()).padStart(2, '0');
+                   const ampm = hours >= 12 ? 'PM' : 'AM';
+                   const fmtTime = `${hours % 12 || 12}:${mins} ${ampm}`;
+                   addDisplay = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')} ${c.added.includes(':') ? fmtTime : ''}`.trim();
+                }
 
-            return `<tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.1s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
-                <td style="padding: 12px 24px;"><input type="checkbox" class="contact-checkbox" value="${c.id}" onchange="window.ContactsView.updateBulkUI()" style="width:16px; height:16px; accent-color: var(--accent-color); cursor:pointer;"></td>
-                <td style="${cellStyle} font-weight: 700; color: #fff;" title="${displayName}">
-                    <div style="display:flex; flex-direction:column;">
-                        <span style="margin-bottom:2px; display:flex; align-items:center;">${recentBadge} ${displayName}</span>
-                        ${addDisplay ? `<span style="font-size:0.6rem; color:rgba(255,255,255,0.3); font-weight:600; font-family:monospace;">${addDisplay}</span>` : ''}
-                    </div>
-                </td>
-                <td style="${cellStyle} color: var(--success-color); font-weight: 800; font-family: monospace;">+${c.phone}</td>
-                <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${displayCompany}">${displayCompany}</td>
-                <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${displayEvent}">${displayEvent}</td>
-                <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${displayInterest}">${displayInterest}</td>
-                <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${displayPosition}">${displayPosition}</td>
-                <td style="padding: 12px;"><div style="display:flex; gap: 4px; flex-wrap: nowrap; overflow: hidden;">${grps.length > 0 ? grps.map(g => `<span title="${g.name}" style="background:${(g.color || '#fff')+'1a'}; color: ${g.color || '#fff'}; border:1px solid ${(g.color || '#fff')+'33'}; padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px;">${g.name}</span>`).join('') : `<span style="color:rgba(255,255,255,0.1);">—</span>`}</div></td>
-                <td style="padding: 12px 24px; text-align: right;"><div style="display:flex; justify-content:flex-end; gap:6px;">
-                    <button onclick="event.stopPropagation(); window.ContactsView.openEditModal(${contactJson})" style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></button>
-                    <button onclick="event.stopPropagation(); window.ContactsView.deleteIndividual('${c.id}', '${safeNameForDelete}')" style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,69,58,0.15); background:rgba(255,69,58,0.05); color:#ff453a; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
-                </div></td>
-            </tr>`;
-        }).join('') : `<tr><td colspan="9" style="padding:100px; text-align:center; color:rgba(255,255,255,0.2);">Empty buffer.</td></tr>`;
+                return `<tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.1s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 12px 24px;"><input type="checkbox" class="contact-checkbox" value="${c.id}" onchange="window.ContactsView.updateBulkUI()" style="width:16px; height:16px; accent-color: var(--accent-color); cursor:pointer;"></td>
+                    <td style="${cellStyle} font-weight: 700; color: #fff;" title="${rawDisplayName}">
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="margin-bottom:2px; display:flex; align-items:center;">${recentBadge} ${displayName}</span>
+                            ${addDisplay ? `<span style="font-size:0.6rem; color:rgba(255,255,255,0.3); font-weight:600; font-family:monospace;">${_highlight(addDisplay)}</span>` : ''}
+                        </div>
+                    </td>
+                    <td style="${cellStyle} color: var(--success-color); font-weight: 800; font-family: monospace;">${displayPhone}</td>
+                    <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.company || ''}">${displayCompany}</td>
+                    <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.event || ''}">${displayEvent}</td>
+                    <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.interest || ''}">${displayInterest}</td>
+                    <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.position || ''}">${displayPosition}</td>
+                    <td style="padding: 12px;"><div style="display:flex; gap: 4px; flex-wrap: nowrap; overflow: hidden;">${grps.length > 0 ? grps.map(g => `<span title="${g.name}" style="background:${(g.color || '#fff')+'1a'}; color: ${g.color || '#fff'}; border:1px solid ${(g.color || '#fff')+'33'}; padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px;">${_highlight(g.name)}</span>`).join('') : `<span style="color:rgba(255,255,255,0.1);">—</span>`}</div></td>
+                    <td style="padding: 12px 24px; text-align: right;"><div style="display:flex; justify-content:flex-end; gap:6px;">
+                        <button onclick="event.stopPropagation(); window.ContactsView.openEditModal(${contactJson})" style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></button>
+                        <button onclick="event.stopPropagation(); window.ContactsView.deleteIndividual('${c.id}', '${safeNameForDelete}')" style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,69,58,0.15); background:rgba(255,69,58,0.05); color:#ff453a; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
+                    </div></td>
+                </tr>`;
+            }).join('');
+        } else {
+            // Null Results Helpful UI
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="padding:100px 20px; text-align:center;">
+                        <div style="display:flex; flex-direction:column; align-items:center; opacity:0.6; animation: fadeIn 0.4s;">
+                            <div style="width:64px; height:64px; border-radius:18px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; margin-bottom:20px; border:1px solid rgba(255,255,255,0.1);">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            </div>
+                            <h3 style="color:#fff; font-size:1.15rem; margin:0 0 12px 0; font-weight:800; letter-spacing:-0.02em;">No exact records found</h3>
+                            <p style="color:rgba(255,255,255,0.7); font-size:0.85rem; max-width:400px; line-height:1.5;">We couldn't locate any contacts matching your query. Try adjusting your spelling or reducing the number of active filters to broaden your search.</p>
+                            ${(keywords.length > 0 || activeFilterCount > 0) ? `<button onclick="document.getElementById('contactSearch').value=''; window.ContactsView.clearAdvancedFilters();" style="margin-top:24px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; border-radius:10px; padding:10px 20px; font-weight:700; font-size:0.8rem; cursor:pointer; transition:0.2s; display:flex; gap:8px; align-items:center;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Clear Search Engine</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
         
         document.getElementById('selectAllCheckbox').checked = false;
         this.updateBulkUI();
