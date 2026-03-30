@@ -762,28 +762,30 @@ window.BrandSyncAPI = {
                 // STEP 1: Fast Handshake
                 const chal = await proxyRequest(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
                 if (!chal.success) throw new Error("Security handshake rejected.");
+                let token = (chal.result.token || '').trim();
                 
-                const token = (chal.result.token || '').trim();
-                
-                // MULTI-AUTH ATTEMPTOR
-                const tryAuth = async (secret, isPlain = true) => {
-                    // Method A: token + API_KEY
-                    // Method B: token + md5(PASSWORD)
+                // MULTI-AUTH ATTEMPTOR (Token must be passed dynamically because they are single-use)
+                const tryAuth = async (secret, isPlain, currentToken) => {
                     const normalizedSecret = isPlain ? secret : window.md5(secret).toLowerCase();
-                    const accessKey = window.md5(token + normalizedSecret).toLowerCase();
-                    
+                    const accessKey = window.md5(currentToken + normalizedSecret).toLowerCase();
                     const loginUrl = `${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`;
-                    const auth = await proxyRequest(loginUrl);
-                    return auth;
+                    return await proxyRequest(loginUrl);
                 };
 
                 // ATTEMPT A: API Key (Static Method)
-                let auth = await tryAuth(API_KEY, true);
+                let auth = await tryAuth(API_KEY, true, token);
                 
                 // ATTEMPT B: Password MD5 (Legacy fallback for some Vtiger 7 configurations)
                 if (!auth.success) {
-                    console.warn("API Key auth failed, attempting MD5 Password fallback...");
-                    auth = await tryAuth(PASSWORD, false);
+                    const errA = auth.error ? auth.error.message : "Unknown Error";
+                    console.warn(`[CRM] Method A (API Key) rejected: ${errA}. Re-handshaking for Method B (MD5 Password)...`);
+                    
+                    // MUST get a fresh token because Vtiger consumes the token on ANY login attempt
+                    const chal2 = await proxyRequest(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
+                    if (!chal2.success) throw new Error("Secondary security handshake rejected.");
+                    
+                    token = (chal2.result.token || '').trim();
+                    auth = await tryAuth(PASSWORD, false, token);
                 }
 
                 if (!auth.success) {
