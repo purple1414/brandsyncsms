@@ -478,9 +478,10 @@ window.SendSMSView = {
                         });
                     });
                 } else {
-                    // Generic CSV / Text Parsing
+                    // Robust CSV / Text Parsing
                     const text = event.target.result;
-                    const matches = text.match(/(?:63|0)?9\d{9}/g);
+                    // First scan for raw patterns
+                    let matches = text.match(/(?:\+?63|0)?[\s\-]*9[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*\d[\s\-]*/g);
                     if (matches) foundNumbers = matches;
                 }
 
