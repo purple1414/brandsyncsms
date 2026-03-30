@@ -710,7 +710,7 @@ window.BrandSyncAPI = {
         if (this._crmLock && !isRetry) return { success: false, message: "Handshake already active." };
         if (!isRetry) this._crmLock = true;
 
-        const proxyRequest = async (url) => {
+        const proxyRequest = async (url, options = {}) => {
             // Append a cache-buster to prevent public proxies from serving stale responses (crucial for tokens)
             const cacheBustedUrl = url.includes('?') ? `${url}&_cb=${Date.now()}` : `${url}?_cb=${Date.now()}`;
             
@@ -721,11 +721,18 @@ window.BrandSyncAPI = {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second lookup timeout
 
-                    const res = await fetch(tunnelUrl, { 
+                    const fetchOptions = { 
                         cache: 'no-store',
                         signal: controller.signal,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    });
+                        method: options.method || 'GET',
+                        headers: { 
+                            'X-Requested-With': 'XMLHttpRequest',
+                            ...(options.headers || {})
+                        }
+                    };
+                    if (options.body) fetchOptions.body = options.body;
+
+                    const res = await fetch(tunnelUrl, fetchOptions);
                     clearTimeout(timeoutId);
 
                     if (!res.ok) throw new Error(`Tunnel Error: ${res.status}`);
@@ -768,8 +775,16 @@ window.BrandSyncAPI = {
                 const tryAuth = async (secret, isPlain, currentToken) => {
                     const normalizedSecret = isPlain ? secret : window.md5(secret).toLowerCase();
                     const accessKey = window.md5(currentToken + normalizedSecret).toLowerCase();
-                    const loginUrl = `${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`;
-                    return await proxyRequest(loginUrl);
+                    
+                    // Add slight delay to bypass DB Replication Lag in clustered environments
+                    await new Promise(r => setTimeout(r, 1200));
+
+                    // Vtiger 7+ strongly prefers POST for login payload to prevent URL truncation
+                    return await proxyRequest(BASE_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `operation=login&username=${encodeURIComponent(USERNAME)}&accessKey=${encodeURIComponent(accessKey)}`
+                    });
                 };
 
                 // ATTEMPT A: API Key (Static Method)
@@ -802,7 +817,13 @@ window.BrandSyncAPI = {
             // STEP 3: Identity Reconstruction
             if (!isRetry) window.showToast("Harvesting records...", "info");
             const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 500;");
-            const qRes = await proxyRequest(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
+            
+            // Execute as POST request to avoid URI-too-long errors on complex payloads
+            const qRes = await proxyRequest(BASE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `operation=query&sessionName=${encodeURIComponent(sessionName)}&query=${query}`
+            });
 
             // STEP 4: Session Recovery Logic
             if (!qRes.success && qRes.error) {
