@@ -581,10 +581,10 @@ window.BrandSyncAPI = {
         health.scheduledCount = health.scheduledCount || 0;
         health.campaignsCount = health.campaignsCount || 0;
 
-        // 1. High-Speed Internet Trace (Ping to GitHub Backbone)
+        // 1. High-Speed Internet Trace (Ping to GitHub Landing Page)
         const startNet = performance.now();
         try {
-            const netRes = await fetch('https://api.github.com', { mode: 'no-cors', cache: 'no-store' });
+            await fetch('https://github.com', { mode: 'no-cors', cache: 'no-store' });
             health.latencyNet = Math.round(performance.now() - startNet);
             health.internet = true;
         } catch (e) { health.internet = false; }
@@ -604,13 +604,13 @@ window.BrandSyncAPI = {
         // 3. PhilSMS API & Infrastructure Pulse
         const startSms = performance.now();
         try {
-            // Use Opaque Handshake to bypass CORS for latency measurement
-            await fetch('https://philsms.com/favicon.ico', { 
+            // Use landing page instead of favicon to prevent console 404s
+            await fetch('https://philsms.com', { 
                 mode: 'no-cors', 
-                cache: 'no-store' 
+                cache: 'force-cache' 
             });
             health.latencySms = Math.round(performance.now() - startSms);
-            health.philsms = true; // Infrastructure is reachable
+            health.philsms = true;
         } catch (e) { 
             health.philsms = false; 
             health.latencySms = 0;
