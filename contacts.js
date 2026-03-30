@@ -77,6 +77,11 @@ window.ContactsView = {
                         </div>
 
                         <div style="display: flex; gap: 10px; align-items: center;">
+                            <button onclick="window.ContactsView.openPendingModal()" class="btn" style="background: rgba(255, 159, 10, 0.12); color: #ff9f0a; font-weight: 700; border: 1px solid rgba(255, 159, 10, 0.2); height: 40px; border-radius: 12px; padding: 0 16px; font-size: 0.85rem; display:flex; align-items:center; gap:8px;">
+                                <i class="icon-lucide-clock" style="font-size:1rem;"></i>
+                                <span id="pendingBadgeCount" style="background:#ff9f0a; color:#000; padding:1px 6px; border-radius:8px; font-size:0.7rem; font-weight:900; display:none;">0</span>
+                                Pending Review
+                            </button>
                             <input type="file" id="heavyImportInput" accept=".csv,.xlsx,.xls,.ods" style="display:none;">
                             <button onclick="window.ContactsView.importContacts()" class="btn" style="background: rgba(50, 215, 75, 0.12); color: var(--success-color); font-weight: 700; border: 1px solid rgba(50, 215, 75, 0.2); height: 40px; border-radius: 12px; padding: 0 16px; font-size: 0.85rem;">Heavy Import</button>
                             <button onclick="window.ContactsView.openEditModal()" class="btn primary-btn" style="height: 40px; border-radius: 12px; padding: 0 20px; font-weight: 700; font-size: 0.85rem;">Add Contact</button>
@@ -137,6 +142,7 @@ window.ContactsView = {
         this._renderPickers();
         this.loadGroups();
         this.loadData();
+        this.updatePendingCounter();
         this.setupHeavyImport();
         setTimeout(() => this._initUltraSpatialScroll(), 200);
     },
@@ -250,6 +256,52 @@ window.ContactsView = {
                     <div style="display:flex; gap:12px; margin-top:32px;">
                         <button onclick="document.getElementById('groupModal').style.display='none'" style="flex:1; height:48px; background:rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius:14px; color:#fff; font-weight:700;">Cancel</button>
                         <button onclick="window.ContactsView.saveGroup()" style="flex:1.8; height:48px; background:var(--accent-color); border:none; border-radius:14px; color:#fff; font-weight:800;">Apply Changes</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Approval Modal -->
+            <div id="pendingModal" style="display:none; position:fixed; inset:0; z-index:30000; background:rgba(0,0,0,0.6); backdrop-filter:blur(40px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
+                <div class="glass-panel" style="width:1000px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,159,10,0.3); background:rgba(35,25,15,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6); display:flex; flex-direction:column; gap:24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <h3 style="font-size:1.4rem; font-weight:800; color:#ff9f0a; margin-bottom:4px;">Pending Contacts Review</h3>
+                            <p style="font-size:0.8rem; color:rgba(255,159,10,0.5);">Review and approve contacts from Agridom Centralized CRM.</p>
+                        </div>
+                        <div style="display:flex; gap:12px;">
+                            <button onclick="window.ContactsView.pullCentralized()" class="btn" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:10px 18px; border-radius:14px; font-weight:700; display:flex; align-items:center; gap:8px;">
+                                <i class="icon-lucide-refresh-cw"></i> Pull from CRM
+                            </button>
+                            <button onclick="window.ContactsView.closePendingModal()" style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; cursor:pointer;">&times;</button>
+                        </div>
+                    </div>
+
+                    <div id="pendingBulkActions" style="display:none; padding:12px 20px; background:rgba(255,159,10,0.1); border:1px solid rgba(255,159,10,0.2); border-radius:18px; align-items:center; gap:16px;">
+                        <span style="font-size:0.85rem; color:#fff; font-weight:700;"><span id="pendingSelectCount">0</span> selected for action</span>
+                        <div style="flex:1;"></div>
+                        <button onclick="window.ContactsView.bulkDeletePending()" class="btn" style="background:rgba(255,69,58,0.15); border:1px solid rgba(255,69,58,0.3); color:#ff453a; padding:8px 16px; border-radius:12px; font-weight:700; font-size:0.8rem;">Delete Selected</button>
+                        <button onclick="window.ContactsView.bulkApprovePending()" class="btn" style="background:rgba(50,215,75,0.15); border:1px solid rgba(50,215,75,0.3); color:#32d74b; padding:8px 20px; border-radius:12px; font-weight:800; font-size:0.85rem;">Approve Selected</button>
+                    </div>
+
+                    <div style="background:rgba(0,0,0,0.2); border-radius:24px; border:1px solid rgba(255,255,255,0.05); overflow:hidden;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead style="background:rgba(255,255,255,0.02);">
+                                <tr>
+                                    <th style="padding:16px 20px; text-align:left; width:45px;"><input type="checkbox" id="selectAllPending" onchange="window.ContactsView.toggleAllPending(this.checked)" style="width:17px; height:17px; accent-color:#ff9f0a; cursor:pointer;"></th>
+                                    <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Contact Name</th>
+                                    <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Phone Number</th>
+                                    <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Company</th>
+                                    <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Source</th>
+                                    <th style="padding:16px 20px; text-align:right; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingTableBody"></tbody>
+                        </table>
+                        <div id="pendingEmptyState" style="display:none; padding:80px 20px; text-align:center; color:rgba(255,255,255,0.2);">
+                            <i class="icon-lucide-users" style="font-size:3rem; margin-bottom:16px; display:block; opacity:0.3;"></i>
+                            <p style="font-weight:600;">No pending contacts to review.</p>
+                            <p style="font-size:0.8rem; margin-top:4px;">Click 'Pull from CRM' to fetch latest data.</p>
+                        </div>
                     </div>
                 </div>
             </div>`;
@@ -707,6 +759,7 @@ window.ContactsView = {
             chipsContainer.style.display = chipsHtml ? 'flex' : 'none';
         }
 
+        this.updatePendingCounter();
         if (this.activeGroupId !== null) contacts = contacts.filter(c => c.groupIds && c.groupIds.includes(this.activeGroupId));
         // Reorder results slightly: Exact match on name goes to the absolute top
         if (keywords.length > 0) {
@@ -1438,7 +1491,154 @@ window.ContactsView = {
         }
         input.click();
     },
-    exportContacts() { window.showToast("EXPORTING...", "info"); setTimeout(() => window.showToast("EXPORT COMPLETE.", "success"), 1500); }
+    exportContacts() { window.showToast("EXPORTING...", "info"); setTimeout(() => window.showToast("EXPORT COMPLETE.", "success"), 1500); },
+
+    // --- Pending Review Flow ---
+    openPendingModal() {
+        document.getElementById('pendingModal').style.display = 'flex';
+        this.loadPendingData();
+    },
+
+    closePendingModal() {
+        document.getElementById('pendingModal').style.display = 'none';
+        this.loadData(); // Refresh main view to show newly approved contacts
+    },
+
+    async pullCentralized() {
+        window.showToast("Fetching records from Central CRM...", "info");
+        const res = await window.BrandSyncAPI.fetchCentralizedContacts();
+        if (res.success) {
+            window.showToast(`Imported ${res.count} new pending contacts. Total: ${res.totalPending}`, "success");
+            this.loadPendingData();
+        } else {
+            window.showToast(`Pull failed: ${res.message}`, "error");
+        }
+    },
+
+    async loadPendingData() {
+        const tbody = document.getElementById('pendingTableBody');
+        const empty = document.getElementById('pendingEmptyState');
+        if (!tbody) return;
+
+        const pending = window.BrandSyncAPI.getPendingContacts();
+        this.updatePendingCounter(pending.length);
+
+        if (pending.length === 0) {
+            tbody.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+
+        empty.style.display = 'none';
+        tbody.innerHTML = pending.map(p => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04); transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
+                <td style="padding:16px 20px;"><input type="checkbox" class="pending-checkbox" value="${p.id}" onchange="window.ContactsView.updatePendingBulkUI()" style="width:16px; height:16px; accent-color:#ff9f0a; cursor:pointer;"></td>
+                <td style="padding:16px 12px; color:#fff; font-weight:600;">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <input type="text" value="${p.name}" onchange="window.ContactsView.updatePendingField('${p.id}', 'name', this.value)" style="background:transparent; border:none; color:#fff; font-weight:700; outline:none; font-size:0.9rem; padding:2px 4px; border-radius:4px; width:100%; border:1px solid transparent;" onfocus="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
+                        <span style="font-size:0.65rem; color:rgba(255,255,255,0.3); font-weight:700; margin-left:4px;">${p.added}</span>
+                    </div>
+                </td>
+                <td style="padding:16px 12px; font-family:monospace; color:#32d74b; font-weight:800;">
+                    <input type="text" value="${p.phone}" onchange="window.ContactsView.updatePendingField('${p.id}', 'phone', this.value)" style="background:transparent; border:none; color:#32d74b; font-weight:800; outline:none; font-family:monospace; font-size:0.9rem; padding:2px 4px; border-radius:4px; width:100%; border:1px solid transparent;" onfocus="this.style.background='rgba(50,215,75,0.1)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
+                </td>
+                <td style="padding:16px 12px;">
+                    <input type="text" value="${p.company || ''}" placeholder="Company" onchange="window.ContactsView.updatePendingField('${p.id}', 'company', this.value)" style="background:transparent; border:none; color:rgba(255,255,255,0.6); outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent;" onfocus="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
+                </td>
+                <td style="padding:16px 12px;"><span style="background:rgba(255,159,10,0.1); color:#ff9f0a; border:1px solid rgba(255,159,10,0.2); padding:2px 8px; border-radius:6px; font-size:0.65rem; font-weight:800;">${p.source}</span></td>
+                <td style="padding:16px 20px; text-align:right;">
+                    <div style="display:flex; justify-content:flex-end; gap:8px;">
+                        <button onclick="window.ContactsView.approvePending('${p.id}')" style="background:#32d74b; color:#000; border:none; height:32px; padding:0 12px; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer;" title="Approve & Finalize Identity">Approve</button>
+                        <button onclick="window.ContactsView.deletePending('${p.id}')" style="background:rgba(255,69,58,0.1); color:#ff453a; border:1px solid rgba(255,69,58,0.2); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6V6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        this.updatePendingBulkUI();
+    },
+
+    updatePendingCounter(count = null) {
+        if (count === null) count = window.BrandSyncAPI.getPendingContacts().length;
+        const badge = document.getElementById('pendingBadgeCount');
+        if (badge) {
+            badge.innerText = count;
+            badge.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+    },
+
+    async updatePendingField(id, field, value) {
+        const pending = window.BrandSyncAPI.getPendingContacts();
+        const contact = pending.find(p => p.id === id);
+        if (contact) {
+            contact[field] = value;
+            await window.BrandSyncAPI.updatePendingContact(contact);
+        }
+    },
+
+    toggleAllPending(checked) {
+        document.querySelectorAll('.pending-checkbox').forEach(cb => cb.checked = checked);
+        this.updatePendingBulkUI();
+    },
+
+    updatePendingBulkUI() {
+        const checked = document.querySelectorAll('.pending-checkbox:checked');
+        const bulk = document.getElementById('pendingBulkActions');
+        const count = document.getElementById('pendingSelectCount');
+        
+        if (bulk && count) {
+            if (checked.length > 0) {
+                bulk.style.display = 'flex';
+                count.innerText = checked.length;
+            } else {
+                bulk.style.display = 'none';
+                if (document.getElementById('selectAllPending')) document.getElementById('selectAllPending').checked = false;
+            }
+        }
+    },
+
+    async approvePending(id) {
+        const res = await window.BrandSyncAPI.approvePendingContacts([id]);
+        if (res.success) {
+            window.showToast("Identity Approved!", "success");
+            this.loadPendingData();
+            this.updatePendingCounter();
+        }
+    },
+
+    async bulkApprovePending() {
+        const ids = Array.from(document.querySelectorAll('.pending-checkbox:checked')).map(cb => cb.value);
+        if (ids.length === 0) return;
+
+        window.BrandSyncAppInstance.confirmAction(`Approve ${ids.length} Identities?`, "These contacts will be finalized and added to your main global pool.", "#32d74b", async () => {
+            const res = await window.BrandSyncAPI.approvePendingContacts(ids);
+            if (res.success) {
+                window.showToast(`${ids.length} Identities approved!`, "success");
+                this.loadPendingData();
+                this.updatePendingCounter();
+                if (document.getElementById('selectAllPending')) document.getElementById('selectAllPending').checked = false;
+            }
+        });
+    },
+
+    async deletePending(id) {
+        await window.BrandSyncAPI.deletePendingContacts([id]);
+        window.showToast("Pending record discarded.", "info");
+        this.loadPendingData();
+        this.updatePendingCounter();
+    },
+
+    async bulkDeletePending() {
+        const ids = Array.from(document.querySelectorAll('.pending-checkbox:checked')).map(cb => cb.value);
+        if (ids.length === 0) return;
+
+        window.BrandSyncAppInstance.confirmAction(`Discard ${ids.length} Records?`, "This will remove them from the review queue PERMANENTLY.", "#ff453a", async () => {
+            await window.BrandSyncAPI.deletePendingContacts(ids);
+            window.showToast(`${ids.length} Records discarded.`, "success");
+            this.loadPendingData();
+            this.updatePendingCounter();
+            if (document.getElementById('selectAllPending')) document.getElementById('selectAllPending').checked = false;
+        });
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => { setTimeout(() => { if(window.app) window.app.views['contacts'] = () => window.ContactsView.render(window.app.contentArea); }, 1000); });

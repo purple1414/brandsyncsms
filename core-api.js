@@ -9,7 +9,8 @@ const BS_STORAGE_KEYS = {
     TEMPLATES: 'brandsync_templates',
     TEMPLATE_FOLDERS: 'brandsync_template_folders',
     MESSAGES: 'brandsync_messages',
-    SCHEDULED: 'brandsync_scheduled_messages'
+    SCHEDULED: 'brandsync_scheduled_messages',
+    PENDING_CONTACTS: 'brandsync_pending_contacts'
 };
 
 const initStorage = (key, defaults) => {
@@ -55,6 +56,7 @@ window.BrandSyncAPI = {
         initStorage(BS_STORAGE_KEYS.TEMPLATE_FOLDERS, DEFAULT_TEMPLATE_FOLDERS);
         initStorage(BS_STORAGE_KEYS.MESSAGES, DEFAULT_MESSAGES);
         initStorage(BS_STORAGE_KEYS.SCHEDULED, []);
+        initStorage(BS_STORAGE_KEYS.PENDING_CONTACTS, []);
         
         this.initCloud();
     },
@@ -728,6 +730,121 @@ window.BrandSyncAPI = {
         } catch (e) {
             console.error("PhilSMS Live Polling Error:", e);
         }
+    },
+
+    // Agridom Centralized CRM Integration (Pending Approval Workflow)
+    async fetchCentralizedContacts() {
+        const CENTRAL_URL = "https://agridomcorp.com/warehouse/webservice.php";
+        const USERNAME = "pcalpas";
+        const KEY = "OUp6qm8VbX7rrJm5";
+
+        try {
+            // Using CORS proxy since external server likely lacks headers for direct browser fetch
+            const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(CENTRAL_URL)}`;
+            
+            // We use standard URLSearchParams for webservice.php compatibility
+            const params = new URLSearchParams();
+            params.append('username', USERNAME);
+            params.append('key', KEY);
+            params.append('action', 'get_contacts'); // Assumed action based on requirement
+
+            const res = await fetch(proxiedUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            
+            const data = await res.json();
+            // Expected format: array of objects { name, phone, company, etc }
+            if (!Array.isArray(data)) {
+                // Fallback: If API failure, we might get an error object
+                if (data && data.error) throw new Error(data.error);
+                return { success: false, message: "Invalid API response format." };
+            }
+
+            let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
+            let importedCount = 0;
+
+            data.forEach(item => {
+                // Check if already in pending or main contacts to avoid duplicates
+                const phone = String(item.phone || item.mobile || '').replace(/[^0-9]/g, '');
+                if (!phone) return;
+
+                const existsPending = pending.find(p => String(p.phone).replace(/[^0-9]/g, '') === phone);
+                const contacts = this._get(BS_STORAGE_KEYS.CONTACTS);
+                const existsMain = contacts.find(c => String(c.phone).replace(/[^0-9]/g, '') === phone);
+
+                if (!existsPending && !existsMain) {
+                    pending.unshift({
+                        id: 'PEND_' + Date.now() + Math.random().toString(36).substr(2, 9),
+                        name: item.name || item.fullname || 'Unknown',
+                        phone: phone,
+                        company: item.company || '',
+                        position: item.position || '',
+                        interest: item.interest || '',
+                        added: new Date().toISOString().substring(0, 10),
+                        source: 'CRM'
+                    });
+                    importedCount++;
+                }
+            });
+
+            this._set(BS_STORAGE_KEYS.PENDING_CONTACTS, pending);
+            return { success: true, count: importedCount, totalPending: pending.length };
+        } catch (err) {
+            console.error("Centralized API Pull Error:", err);
+            return { success: false, message: err.message };
+        }
+    },
+
+    getPendingContacts() {
+        return this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
+    },
+
+    async approvePendingContacts(ids) {
+        let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
+        let contacts = this._get(BS_STORAGE_KEYS.CONTACTS);
+        let approvedCount = 0;
+
+        const toApprove = pending.filter(p => ids.includes(p.id));
+        const remaining = pending.filter(p => !ids.includes(p.id));
+
+        toApprove.forEach(p => {
+            const newId = Date.now() + Math.random();
+            contacts.unshift({
+                ...p,
+                id: newId,
+                groupIds: []
+            });
+            approvedCount++;
+        });
+
+        this._set(BS_STORAGE_KEYS.CONTACTS, contacts);
+        this._set(BS_STORAGE_KEYS.PENDING_CONTACTS, remaining);
+        
+        // Trigger cloud sync
+        this.runHealth();
+        return { success: true, count: approvedCount };
+    },
+
+    async deletePendingContacts(ids) {
+        let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
+        const remaining = pending.filter(p => !ids.includes(p.id));
+        this._set(BS_STORAGE_KEYS.PENDING_CONTACTS, remaining);
+        return { success: true };
+    },
+
+    async updatePendingContact(item) {
+        let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
+        const idx = pending.findIndex(p => p.id === item.id);
+        if (idx !== -1) {
+            pending[idx] = item;
+            this._set(BS_STORAGE_KEYS.PENDING_CONTACTS, pending);
+            return { success: true };
+        }
+        return { success: false };
     }
 };
 
