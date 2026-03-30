@@ -256,7 +256,7 @@ window.BrandSyncChatbot = {
                 transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 position: relative;
             " onmouseover="this.style.transform='scale(1.1)'; this.style.borderColor='rgba(10,132,255,0.6)'" onmouseout="this.style.transform='scale(1)'; this.style.borderColor='rgba(255,255,255,0.2)'">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 <div id="aiToggleBadge" style="position: absolute; top: -2px; right: -2px; width: 22px; height: 22px; background: #0a84ff; color: #fff; border-radius: 50%; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid #1c1c1e; box-shadow: 0 4px 10px rgba(10,132,255,0.5);">1</div>
             </button>
         `;
