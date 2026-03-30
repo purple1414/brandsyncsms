@@ -738,66 +738,54 @@ window.BrandSyncAPI = {
         const USERNAME = "pcalpas";
         const KEY = "OUp6qm8VbX7rrJm5";
 
-        // Advanced Proxy Pool for high-reliability bypassing
-        const PROXY_POOL = [
-            "https://api.allorigins.win/get?url=",
-            "https://corsproxy.io/?",
-            "https://thingproxy.freeboard.io/fetch/"
-        ];
-
-        let activeProxyIdx = 0;
-
-        const smartRequest = async (target) => {
-            let lastErr = null;
-            // Cycle through available bridges until one breaks through the local firewall
-            for (let i = 0; i < PROXY_POOL.length; i++) {
-                const proxy = PROXY_POOL[i];
-                try {
-                    const url = proxy + encodeURIComponent(target) + (proxy.includes('?') ? '&' : '?') + `_v=${Date.now()}`;
-                    const res = await fetch(url, { cache: 'no-store' });
-                    if (!res.ok) continue;
-                    
-                    const data = await res.json();
-                    // Handle AllOrigins wrapper if necessary
-                    const content = data.contents ? (typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents) : data;
-                    if (content) return content;
-                } catch (e) {
-                    lastErr = e;
-                    console.warn(`Bridge ${i} failed, attempting next node...`);
-                }
-            }
-            throw new Error(lastErr ? lastErr.message : "All secure bridges are currently blocked by the local network policy.");
-        };
+        const PROXY = "https://corsproxy.io/?";
 
         try {
-            window.showToast("Initiating Multi-Node Handshake...", "info");
+            window.showToast("Handshaking through secure relay...", "info");
             
-            // --- Step 1: Challenge ---
-            const chal = await smartRequest(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
-            if (!chal.success) throw new Error("Portal rejected identity broadcast.");
+            // --- Step 1: Challenge (Always GET) ---
+            const chalUrl = PROXY + encodeURIComponent(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
+            const chalRes = await fetch(chalUrl);
+            const chal = await chalRes.json();
+            
+            if (!chal.success) throw new Error("Warehouse handshake rejected.");
             
             const token = chal.result.token;
-            // md5 is now global from blueimp-md5 in index.html
+            // md5 is global from index.html (blueimp-md5)
             const accessKey = window.md5(token + KEY);
-            window.showToast("Handshake established through secure bridge.", "info");
 
-            // --- Step 2: Login (GET signature for proxy compatibility) ---
-            const auth = await smartRequest(`${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`);
-            if (!auth.success) throw new Error("Credentials rejected by CRM logic.");
+            // --- Step 2: Login (Forcing POST for high-security compliance) ---
+            const body = new URLSearchParams();
+            body.append('operation', 'login');
+            body.append('username', USERNAME);
+            body.append('accessKey', accessKey);
+
+            const loginRes = await fetch(PROXY + encodeURIComponent(BASE_URL), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            });
+            const auth = await loginRes.json();
+
+            if (!auth.success) {
+                const rawMsg = auth.error ? auth.error.message : "Access Denied";
+                throw new Error(`${rawMsg} (Security Exception)`);
+            }
             
             const sessionName = auth.result.sessionName;
-            window.showToast("Patrick Identified. Starting data harvest...", "info");
+            window.showToast("Identity Verified. Pulling identities...", "info");
 
-            // --- Step 3: Global identity sweep ---
-            const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 400;");
-            const qRes = await smartRequest(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
+            // --- Step 3: Sweep ---
+            const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 500;");
+            const qRes = await fetch(PROXY + encodeURIComponent(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`));
+            const qData = await qRes.json();
 
-            if (!qRes.success) throw new Error("Table restricted: Data access denied.");
+            if (!qData.success) throw new Error("Sweep rejected: Data access insufficient.");
 
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
 
-            qRes.result.forEach(item => {
+            qData.result.forEach(item => {
                 const phone = String(item.mobile || item.phone || '').replace(/[^0-9]/g, '');
                 if (!phone) return;
 
@@ -808,9 +796,9 @@ window.BrandSyncAPI = {
                 if (!existsPending && !existsMain) {
                     pending.unshift({
                         id: 'PEND_CRM_' + item.id.replace(/:/g, '_'),
-                        name: item.firstname || item.farm_name || 'AgriDom Contact',
+                        name: item.firstname || item.farm_name || 'CRM Contact',
                         phone: phone,
-                        company: item.farm_name || 'Warehouse',
+                        company: item.farm_name || 'AgriDom Warehouse',
                         position: item.lastname || 'Lead',
                         interest: '',
                         added: new Date().toISOString().substring(0, 10),
@@ -825,7 +813,7 @@ window.BrandSyncAPI = {
 
         } catch (err) {
             console.error("Centralized CRM Error:", err);
-            return { success: false, message: `Node Alert: ${err.message}` };
+            return { success: false, message: `ACCESS: ${err.message}` };
         }
     },
 
