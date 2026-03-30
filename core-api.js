@@ -735,65 +735,60 @@ window.BrandSyncAPI = {
     // Agridom Centralized CRM Integration (Vtiger API Edition)
     async fetchCentralizedContacts() {
         const BASE_URL = "https://agridomcorp.com/warehouse/webservice.php";
-        const USERNAME = "pcalpas".trim();
-        const PASS = "Sfgroup@2023!".trim(); // Using Password-first as primary strategy
-        const KEY = "OUp6qm8VbX7rrJm5".trim();
+        const USERNAME = "pcalpas";
+        const ACCESS_KEY = "OUp6qm8VbX7rrJm5";
 
-        const PROXY = "https://api.allorigins.win/get?url=";
+        const PROXY = "https://corsproxy.io/?";
 
-        const proxyFetch = async (target) => {
-            // Encode the target tightly
-            const url = PROXY + encodeURIComponent(target);
-            const res = await fetch(url, { cache: 'no-cache' });
-            if (!res.ok) throw new Error(`Tunnel failure (${res.status})`);
-            const data = await res.json();
-            if (!data || !data.contents) throw new Error("Null Pipeline");
-            return typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
-        };
-
-        const executeHandshake = async (secret) => {
-            // STEP 1: Fast Handshake
-            const chal = await proxyFetch(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
-            if (!chal.success) throw new Error("Challenge Rejected: " + (chal.error ? chal.error.message : "Security Block"));
-            
-            const token = chal.result.token;
-            const accessKey = window.md5(token + secret);
-
-            // STEP 2: Instant Login
-            const auth = await proxyFetch(`${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`);
-            return { raw: auth, tokenUsed: token };
+        const apiRequest = async (url, opts = {}) => {
+            const finalUrl = PROXY + encodeURIComponent(url);
+            const res = await fetch(finalUrl, opts);
+            if (!res.ok) throw new Error(`Tunnel Error: ${res.status}`);
+            return await res.json();
         };
 
         try {
-            window.showToast("Authenticating High-Priority Session...", "info");
+            window.showToast("Opening Secure Tunnel...", "info");
             
-            // Try with Password first (Common for Admin Users in Vtiger 7)
-            let authRes = await executeHandshake(PASS);
+            // --- Step 1: Challenge ---
+            const chal = await apiRequest(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
+            if (!chal.success) throw new Error("Portal rejected handshake.");
             
-            // Fallback to API Key if password fails
-            if (!authRes.raw.success) {
-                console.warn("Primary Auth failed, Trying secondary CRM Key...");
-                authRes = await executeHandshake(KEY);
-            }
+            const token = chal.result.token;
+            // md5 is now global from blueimp-md5 in index.html
+            const accessKey = window.md5(token + ACCESS_KEY);
+            window.showToast("Handshake Verified. Keying in...", "info");
 
-            if (!authRes.raw.success) {
-                const msg = authRes.raw.error ? authRes.raw.error.message : "Access Denied";
-                throw new Error(`${msg} (Ref: ${authRes.tokenUsed?authRes.tokenUsed.substr(-4):'N/A'})`);
+            // --- Step 2: Login (Using POST signature) ---
+            const body = new URLSearchParams();
+            body.append('operation', 'login');
+            body.append('username', USERNAME);
+            body.append('accessKey', accessKey);
+
+            const auth = await apiRequest(`${BASE_URL}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            });
+
+            if (!auth.success) {
+                const err = auth.error ? auth.error.message : "Invalid Credentials";
+                throw new Error(`Auth Denied: ${err}`);
             }
             
-            const sessionName = authRes.raw.result.sessionName;
-            window.showToast(`Welcome Patrick! Harvesting records...`, "info");
+            const sessionName = auth.result.sessionName;
+            window.showToast("Identity Confirmed. Pulling records...", "info");
 
-            // STEP 3: Identity Reconstruction
+            // --- Step 3: Global Data Retrieval ---
             const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 500;");
-            const qData = await proxyFetch(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
+            const qRes = await apiRequest(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
 
-            if (!qData.success) throw new Error("Sweep rejected: " + (qData.error ? qData.error.message : "Permissions error"));
+            if (!qRes.success) throw new Error("Data access denied.");
 
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
 
-            qData.result.forEach(item => {
+            qRes.result.forEach(item => {
                 const phone = String(item.mobile || item.phone || '').replace(/[^0-9]/g, '');
                 if (!phone) return;
 
@@ -804,10 +799,10 @@ window.BrandSyncAPI = {
                 if (!existsPending && !existsMain) {
                     pending.unshift({
                         id: 'PEND_CRM_' + item.id.replace(/:/g, '_'),
-                        name: item.firstname || item.farm_name || 'CRM Contact',
+                        name: item.firstname || item.farm_name || 'CRM Lead',
                         phone: phone,
                         company: item.farm_name || 'AgriDom Warehouse',
-                        position: item.lastname || 'Identity Verified',
+                        position: item.lastname || 'Lead',
                         interest: '',
                         added: new Date().toISOString().substring(0, 10),
                         source: 'Agridom CRM'
@@ -821,7 +816,7 @@ window.BrandSyncAPI = {
 
         } catch (err) {
             console.error("Centralized CRM Error:", err);
-            return { success: false, message: `ACCESS: ${err.message}` };
+            return { success: false, message: `System: ${err.message}` };
         }
     },
 
