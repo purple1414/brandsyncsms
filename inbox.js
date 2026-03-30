@@ -59,7 +59,7 @@ window.InboxView = {
                         </div>
 
                         <!-- Chat Bar -->
-                        <div style="padding: 20px 32px 32px; flex-shrink: 0;">
+                        <div style="padding: 20px 110px 32px 32px; flex-shrink: 0;">
                             <div class="glass-panel" style="padding: 8px 8px 8px 20px; border-radius: 24px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.12); display:flex; align-items: center; gap: 14px; box-shadow: 0 15px 40px rgba(0,0,0,0.3);">
                                 <input id="replyInp" style="flex: 1; background:transparent; border:none; color:#fff; font-size:1rem; outline:none; padding: 10px 0; font-weight:500;" placeholder="iMessage...">
                                 <button onclick="window.InboxView.handleSend()" style="width: 32px; height: 32px; border-radius: 50%; background: #007aff; color:#fff; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transform: rotate(90deg);"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></button>
@@ -247,6 +247,46 @@ window.InboxView = {
         inp.value = '';
         this.loadMessages();
         this.loadConversations();
+        
+        // Auto-reply Bot Logic
+        this.simulateBotReply(this.activeContactId, text);
+    },
+
+    simulateBotReply(contactId, userText) {
+        const lower = userText.toLowerCase();
+        let replyText = '';
+        
+        if (lower.includes('hello') || lower.includes('hi')) {
+            replyText = "Hello! This is the automated system checking in. How can I help you today?";
+        } else if (lower.includes('discount') || lower.includes('promo')) {
+            replyText = "Exciting news! We currently have a 20% discount on all premium upgrades. Reply 'YES' to claim.";
+        } else if (lower.includes('help') || lower.includes('support')) {
+            replyText = "Our human agents are offline right now, but I have logged your request. We'll get back to you within 24 hours.";
+        } else if (lower.includes('status')) {
+            replyText = "All node connections are green. Systems operating at 100% capacity.";
+        } else if (lower.includes('appointment') || lower.includes('schedule')) {
+            replyText = "Let me check our calendar... We have availability tomorrow at 10:00 AM or 2:00 PM. Which works for you?";
+        } else {
+            replyText = "Message safely received. I'm currently acting as an automated responder—a human will review this soon.";
+        }
+
+        setTimeout(async () => {
+            await window.BrandSyncAPI.saveMessage({ contactId: contactId, text: replyText, sender: 'contact' });
+            
+            // If the user hasn't switched chats, update the feed
+            if (String(this.activeContactId) === String(contactId)) {
+                this.loadMessages();
+            }
+            this.loadConversations();
+            
+            // Visual notification trigger
+            if (window.showToast) {
+                window.showToast("New incoming message!", "info");
+            }
+            if (window.BrandSyncAppInstance && window.BrandSyncAppInstance.refreshGatewayStatus) {
+                window.BrandSyncAppInstance.refreshGatewayStatus();
+            }
+        }, 1500 + Math.random() * 1500);
     },
 
     toggleInfo() {
