@@ -26,11 +26,15 @@ window.ContactsView = {
                         <h2 id="viewTitle" style="font-size: 1.1rem; font-weight: 700; color: #fff; white-space: nowrap;">All Contacts</h2>
                         
                         <!-- Search & Multi-Delete Controls -->
-                        <div style="flex: 1; max-width: 650px; display: flex; gap:12px; align-items: center;">
-                            <div style="flex: 1; position: relative;">
+                        <div style="flex: 1; max-width: none; display: flex; gap:12px; align-items: center; justify-content: flex-end;">
+                            <div style="width: 300px; position: relative;">
                                 <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.3);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                <input type="text" id="contactSearch" placeholder="Filter identity database (e.g. 2023-10)..." style="width: 100%; height: 40px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 40px; color: #fff; font-size: 0.9rem; outline: none; transition: 0.2s;" oninput="window.ContactsView.loadData()">
+                                <input type="text" id="contactSearch" placeholder="Filter database..." style="width: 100%; height: 40px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 40px; color: #fff; font-size: 0.9rem; outline: none; transition: 0.2s;" oninput="window.ContactsView.loadData()">
                             </div>
+                            <button id="advFilterToggleBtn" onclick="window.ContactsView.toggleAdvancedFilters()" style="height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(255,255,255,0.05); color:#fff; border: 1px solid rgba(255,255,255,0.1); font-weight:700; font-size:0.8rem; align-items:center; gap:6px; display:flex;" title="Advanced Filter Options">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                                Filter<span id="advFilterCounter" style="display:none; background:#0a84ff; color:#fff; border-radius:10px; padding:2px 6px; font-size:0.65rem; font-weight:800; margin-left:2px;"></span>
+                            </button>
                             <button id="recentFilterBtn" onclick="window.ContactsView.toggleRecentFilter()" style="height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(10,132,255,0.1); color:#0a84ff; border: 1px solid rgba(10,132,255,0.3); font-weight:700; font-size:0.8rem; align-items:center; gap:6px; display:flex;" title="Show only contacts from the last 7 days">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 Recent
@@ -60,6 +64,33 @@ window.ContactsView = {
                             <button onclick="window.ContactsView.importContacts()" class="btn" style="background: rgba(50, 215, 75, 0.12); color: var(--success-color); font-weight: 700; border: 1px solid rgba(50, 215, 75, 0.2); height: 40px; border-radius: 12px; padding: 0 16px; font-size: 0.85rem;">Heavy Import</button>
                             <button onclick="window.ContactsView.openEditModal()" class="btn primary-btn" style="height: 40px; border-radius: 12px; padding: 0 20px; font-weight: 700; font-size: 0.85rem;">Add Contact</button>
                         </div>
+                    </div>
+                    
+                    <!-- ADVANCED FILTERS PANEL (Hidden by Default) -->
+                    <div id="advancedFiltersPanel" style="display:none; padding: 16px 28px; background: rgba(0,0,0,0.15); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div style="display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;">
+                            <div>
+                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Date Added (From)</label>
+                                <input type="date" id="filterDateFrom" onchange="window.ContactsView.loadData()" style="height:36px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; color-scheme:dark;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Date Added (To)</label>
+                                <input type="date" id="filterDateTo" onchange="window.ContactsView.loadData()" style="height:36px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; color-scheme:dark;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Category / Tag / Group</label>
+                                <input type="text" id="filterTag" placeholder="E.g., VIP, Expo..." oninput="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Company</label>
+                                <input type="text" id="filterCompany" placeholder="Search company..." oninput="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none;">
+                            </div>
+                            <div style="flex:1;"></div>
+                            <button onclick="window.ContactsView.clearAdvancedFilters()" style="height: 36px; border-radius: 10px; padding: 0 16px; background: rgba(255,69,58,0.1); color:#ff453a; border: none; font-weight:700; font-size:0.8rem; cursor:pointer; align-self: flex-end;">
+                                Clear All Filters
+                            </button>
+                        </div>
+                        <div id="filterChipsContainer" style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;"></div>
                     </div>
                     
                     <div style="flex: 1; overflow-x: hidden; min-width: 100%;">
@@ -501,30 +532,123 @@ window.ContactsView = {
         this.loadData();
     },
 
-    async loadData() {
-        const tbody = document.getElementById('contactsTableBody'); const searchQuery = (document.getElementById('contactSearch')?.value || '').toLowerCase(); if (!tbody) return;
-        let contacts = await window.BrandSyncAPI.getContacts(); const groups = await window.BrandSyncAPI.getGroups(); const grpMap = groups.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
+    toggleAdvancedFilters() {
+        const panel = document.getElementById('advancedFiltersPanel');
+        const btn = document.getElementById('advFilterToggleBtn');
+        if(!panel) return;
         
-        if (searchQuery) {
-            contacts = contacts.filter(c => {
-                const s = searchQuery;
-                return (c.name || '').toLowerCase().includes(s) || (c.phone || '').includes(s) || (c.event || '').toLowerCase().includes(s) || 
-                       (c.interest || '').toLowerCase().includes(s) || (c.awareness || '').toLowerCase().includes(s) || 
-                       (c.position || '').toLowerCase().includes(s) || (c.salesPerson || '').toLowerCase().includes(s) ||
-                       (c.company || '').toLowerCase().includes(s) || (c.added || '').includes(s); // added date search
-            });
+        if(panel.style.display === 'none') {
+            panel.style.display = 'block';
+            if(btn) btn.style.background = 'rgba(255,255,255,0.15)';
+        } else {
+            panel.style.display = 'none';
+            if(btn) btn.style.background = 'rgba(255,255,255,0.05)';
         }
+    },
+
+    clearAdvancedFilters() {
+        if(document.getElementById('filterDateFrom')) document.getElementById('filterDateFrom').value = '';
+        if(document.getElementById('filterDateTo')) document.getElementById('filterDateTo').value = '';
+        if(document.getElementById('filterTag')) document.getElementById('filterTag').value = '';
+        if(document.getElementById('filterCompany')) document.getElementById('filterCompany').value = '';
+        
+        if (this.isRecentFilterActive) {
+            this.toggleRecentFilter(); // This natively re-renders loadData
+        } else {
+            this.loadData();
+        }
+    },
+
+    async loadData() {
+        const tbody = document.getElementById('contactsTableBody'); 
+        const searchQuery = (document.getElementById('contactSearch')?.value || '').toLowerCase(); 
+        
+        const dateFrom = document.getElementById('filterDateFrom')?.value;
+        const dateTo = document.getElementById('filterDateTo')?.value;
+        const filterTag = (document.getElementById('filterTag')?.value || '').toLowerCase();
+        const filterCompany = (document.getElementById('filterCompany')?.value || '').toLowerCase();
+        
+        if (!tbody) return;
+        
+        let contacts = await window.BrandSyncAPI.getContacts(); 
+        const groups = await window.BrandSyncAPI.getGroups(); 
+        const grpMap = groups.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
         
         const now = Date.now();
         const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+
+        let activeFilterCount = 0;
         
-        if (this.isRecentFilterActive) {
-            contacts = contacts.filter(c => {
-                const addDate = new Date(c.added).getTime();
-                return addDate && (now - addDate) <= sevenDaysMs;
-            });
+        // Multi-dimensional constraint rendering
+        contacts = contacts.filter(c => {
+            // General Keyword
+            let passGeneral = true;
+            if (searchQuery) {
+                const s = searchQuery;
+                passGeneral = (c.name || '').toLowerCase().includes(s) || (c.phone || '').includes(s) || (c.added || '').includes(s);
+            }
+            if(!passGeneral) return false;
+
+            // Spatial/Temporal Checks
+            const addDateMs = new Date(c.added).getTime();
+            if (this.isRecentFilterActive) {
+                if (!addDateMs || (now - addDateMs) > sevenDaysMs) return false;
+            }
+            if (dateFrom) {
+                const fromMs = new Date(dateFrom).getTime();
+                if (!addDateMs || addDateMs < fromMs) return false;
+            }
+            if (dateTo) {
+                // To-date includes the entire end day mathematically
+                const toMs = new Date(dateTo).getTime() + (24 * 60 * 60 * 1000) - 1;
+                if (!addDateMs || addDateMs > toMs) return false;
+            }
+
+            // Categorical Checks
+            if (filterTag) {
+                const gNames = (c.groupIds || []).map(gid => grpMap[gid]?.name).join(' ').toLowerCase();
+                const passTag = (c.event || '').toLowerCase().includes(filterTag) || 
+                                (c.interest || '').toLowerCase().includes(filterTag) ||
+                                (c.tags || []).join(' ').toLowerCase().includes(filterTag) || 
+                                gNames.includes(filterTag);
+                if (!passTag) return false;
+            }
+
+            if (filterCompany) {
+                if (!(c.company || '').toLowerCase().includes(filterCompany)) return false;
+            }
+
+            return true;
+        });
+        
+        // Active Filter Counting & UI Chips rendering
+        if (this.isRecentFilterActive) activeFilterCount++;
+        if (dateFrom) activeFilterCount++;
+        if (dateTo) activeFilterCount++;
+        if (filterTag) activeFilterCount++;
+        if (filterCompany) activeFilterCount++;
+        
+        const counterSpan = document.getElementById('advFilterCounter');
+        if (counterSpan) {
+            counterSpan.style.display = activeFilterCount > 0 ? 'inline-block' : 'none';
+            counterSpan.innerText = activeFilterCount;
         }
-        
+
+        const chipsContainer = document.getElementById('filterChipsContainer');
+        if (chipsContainer) {
+            let chipsHtml = '';
+            const chipStyle = `padding: 4px 12px; background: rgba(10,132,255,0.15); border: 1px solid rgba(10,132,255,0.3); border-radius: 8px; font-size: 0.7rem; color: #0a84ff; font-weight: 700; display:flex; align-items:center; gap:6px;`;
+            
+            if (this.isRecentFilterActive) chipsHtml += `<div style="${chipStyle}"><span>🚀</span> Recently Added</div>`;
+            if (dateFrom) chipsHtml += `<div style="${chipStyle}"><span>📅</span> From: ${dateFrom}</div>`;
+            if (dateTo) chipsHtml += `<div style="${chipStyle}"><span>📅</span> To: ${dateTo}</div>`;
+            if (filterTag) chipsHtml += `<div style="${chipStyle}"><span>🏷️</span> Tag: ${filterTag}</div>`;
+            if (filterCompany) chipsHtml += `<div style="${chipStyle}"><span>🏢</span> Company: ${filterCompany}</div>`;
+            
+            chipsContainer.innerHTML = chipsHtml;
+            chipsContainer.style.display = chipsHtml ? 'flex' : 'none';
+        }
+
         if (this.activeGroupId !== null) contacts = contacts.filter(c => c.groupIds && c.groupIds.includes(this.activeGroupId));
         
         tbody.innerHTML = contacts.length > 0 ? contacts.map(c => {
