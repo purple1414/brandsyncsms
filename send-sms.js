@@ -386,19 +386,37 @@ window.SendSMSView = {
 
         let userIgnoredGsmWarning = false;
 
-        // Load Senders
+        // Load Senders with Smart Session Caching
         const loadSenderIds = async () => {
+            // Check session cache first for instant UI response
+            if (window._cachedSenderIds && window._cachedSenderIds.length > 0) {
+                renderSenderOptions(window._cachedSenderIds);
+            }
+
             try {
                 const ids = await window.BrandSyncAPI.getSenderIds();
-                senderId.innerHTML = '<option value="" disabled selected>-- Select Sender ID --</option>';
-                ids.forEach(item => {
-                    const opt = document.createElement('option');
-                    opt.value = item.id;
-                    opt.innerText = `${item.id} ${item.status === 'active' ? '(Active)' : '(Pending)'}`;
-                    senderId.appendChild(opt);
-                });
-            } catch (err) { console.error("Sender load fail", err); }
+                window._cachedSenderIds = ids; // Background sync the cache
+                renderSenderOptions(ids);
+            } catch (err) { 
+                console.error("Sender load fail", err); 
+                if (!window._cachedSenderIds) {
+                    senderId.innerHTML = '<option value="PhilSMS">PhilSMS (Default)</option>';
+                }
+            }
         };
+
+        const renderSenderOptions = (ids) => {
+            const currentVal = senderId.value;
+            senderId.innerHTML = '<option value="" disabled ' + (!currentVal ? 'selected' : '') + '>-- Select Sender ID --</option>';
+            ids.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.selected = (item.id === currentVal);
+                opt.innerText = `${item.id} ${item.status === 'active' ? '(Active)' : '(Pending)'}`;
+                senderId.appendChild(opt);
+            });
+        };
+
         loadSenderIds();
 
         const addFormattedNumbers = (rawNumbers) => {
