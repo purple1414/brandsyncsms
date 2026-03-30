@@ -26,7 +26,7 @@ window.ContactsView = {
                         <h2 id="viewTitle" style="font-size: 1.1rem; font-weight: 700; color: #fff; white-space: nowrap;">All Contacts</h2>
                         
                         <!-- Search & Multi-Delete Controls -->
-                        <div style="flex: 1; max-width: 480px; display: flex; gap:12px; align-items: center;">
+                        <div style="flex: 1; max-width: 650px; display: flex; gap:12px; align-items: center;">
                             <div style="flex: 1; position: relative;">
                                 <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.3);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                 <input type="text" id="contactSearch" placeholder="Filter identity database..." style="width: 100%; height: 40px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 40px; color: #fff; font-size: 0.9rem; outline: none; transition: 0.2s;" oninput="window.ContactsView.loadData()">
@@ -35,9 +35,9 @@ window.ContactsView = {
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
                                 <span id="selectedCount">0</span> selected
                             </button>
-                            <button id="groupFromSelectionBtn" onclick="window.ContactsView.createGroupFromSelection()" style="display:none; height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(191,90,242,0.12); color:#bf5af2; border: 1px solid rgba(191,90,242,0.25); font-weight:700; font-size:0.8rem; align-items:center; gap:6px;" title="Create a group from selected contacts">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"></circle><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><line x1="12" y1="14" x2="12" y2="20"></line><line x1="9" y1="17" x2="15" y2="17"></line></svg>
-                                Group (<span id="groupSelCount">0</span>)
+                            <button id="groupFromSelectionBtn" onclick="window.ContactsView.createGroupFromSelection()" style="display:none; height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(191,90,242,0.18); color:#bf5af2; border: 1px solid rgba(191,90,242,0.4); font-weight:800; font-size:0.8rem; align-items:center; gap:8px; box-shadow: 0 4px 15px rgba(191,90,242,0.15);" title="Create a new group with these selected contacts">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                                Create Group (<span id="groupSelCount">0</span>)
                             </button>
                         </div>
 
