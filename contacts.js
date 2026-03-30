@@ -37,8 +37,18 @@ window.ContactsView = {
                             </button>
                             <button id="groupFromSelectionBtn" onclick="window.ContactsView.createGroupFromSelection()" style="display:none; height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(191,90,242,0.18); color:#bf5af2; border: 1px solid rgba(191,90,242,0.4); font-weight:800; font-size:0.8rem; align-items:center; gap:8px; box-shadow: 0 4px 15px rgba(191,90,242,0.15);" title="Create a new group with these selected contacts">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
-                                Create Group (<span id="groupSelCount">0</span>)
+                                Create Group
                             </button>
+                            <div id="addToGroupContainer" style="display:none; position:relative;">
+                                <button id="addToGroupBtn" onclick="window.ContactsView.toggleAddToGroupMenu()" style="height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(50,215,75,0.15); color:var(--success-color); border: 1px solid rgba(50,215,75,0.3); font-weight:800; font-size:0.8rem; align-items:center; gap:8px; display:flex;" title="Add selected to an existing group">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+                                    Add To...
+                                </button>
+                                <div id="addToGroupMenu" style="display:none; position:absolute; top:calc(100% + 8px); right:0; width:220px; background:rgba(30,30,35,0.98); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:8px; box-shadow:0 10px 40px rgba(0,0,0,0.8); z-index:100; backdrop-filter:blur(24px); max-height: 280px; overflow-y: auto;">
+                                    <div style="font-size:0.7rem; color:rgba(255,255,255,0.4); font-weight:700; text-transform:uppercase; padding:4px 8px; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">Select Group</div>
+                                    <div id="addToGroupList"></div>
+                                </div>
+                            </div>
                         </div>
 
                         <div style="display: flex; gap: 10px; align-items: center;">
@@ -321,9 +331,16 @@ window.ContactsView = {
         const btn = document.getElementById('bulkDeleteBtn');
         const span = document.getElementById('selectedCount');
         const groupBtn = document.getElementById('groupFromSelectionBtn');
-        const groupSpan = document.getElementById('groupSelCount');
+        const addCont = document.getElementById('addToGroupContainer');
+        
         if (btn) { btn.style.display = count > 0 ? 'flex' : 'none'; if(span) span.innerText = count; }
-        if (groupBtn) { groupBtn.style.display = count > 0 ? 'flex' : 'none'; if(groupSpan) groupSpan.innerText = count; }
+        if (groupBtn) { groupBtn.style.display = count > 0 ? 'flex' : 'none'; }
+        if (addCont) { addCont.style.display = count > 0 ? 'block' : 'none'; }
+
+        if (count === 0) {
+            const menu = document.getElementById('addToGroupMenu');
+            if(menu) menu.style.display = 'none';
+        }
     },
 
     async createGroupFromSelection() {
@@ -356,6 +373,80 @@ window.ContactsView = {
 
         // Flash a hint toast
         window.showToast(`${checkedIds.length} contacts pre-selected. Name your group and save!`, 'info');
+    },
+
+    toggleAddToGroupMenu() {
+        const menu = document.getElementById('addToGroupMenu');
+        const list = document.getElementById('addToGroupList');
+        if(!menu || !list) return;
+
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+            return;
+        }
+
+        // Show spinner while fetching groups
+        list.innerHTML = `<div style="padding:10px; color:#fff; text-align:center;"><svg class="spin" style="width:16px;height:16px;opacity:0.3;" xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='2' x2='12' y2='6'/><path d='M12 18v4'/><path d='M4.93 4.93l2.83 2.83'/><path d='M16.24 16.24l2.83 2.83'/><path d='M2 12h4'/><path d='M18 12h4'/><path d='M4.93 19.07l2.83-2.83'/><path d='M16.24 7.76l2.83-2.83'/></svg></div>`;
+        menu.style.display = 'block';
+
+        window.BrandSyncAPI.getGroups().then(groups => {
+            if(!groups || groups.length === 0) {
+                list.innerHTML = `<div style="padding:10px; color:#888; font-size:0.8rem; text-align:center;">No existing groups.</div>`;
+                return;
+            }
+            list.innerHTML = groups.map(g => `
+                <div style="padding:8px 10px; cursor:pointer; font-size:0.85rem; border-radius:8px; transition:0.2s; color:#fff; display:flex; align-items:center; gap:8px;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background=''" onclick="window.ContactsView.confirmAddToGroup(${g.id}, '${g.name.replace(/'/g, "\\'")}')">
+                    <div style="width:12px; height:12px; border-radius:50%; background:${g.color || '#fff'};"></div>
+                    <div style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600;">${g.name}</div>
+                </div>
+            `).join('');
+        });
+        
+        // Auto close handler
+        const closeHandler = (e) => {
+            const btn = document.getElementById('addToGroupBtn');
+            if(btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.style.display = 'none';
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 10);
+    },
+
+    async confirmAddToGroup(groupId, groupName) {
+        const checkedInputs = Array.from(document.querySelectorAll('.contact-checkbox:checked'));
+        const idsToAdd = checkedInputs.map(cb => String(cb.value));
+        if(idsToAdd.length === 0) return;
+
+        document.getElementById('addToGroupMenu').style.display = 'none';
+        window.showToast("Appending contacts to group...", "info");
+
+        const allContacts = await window.BrandSyncAPI.getContacts();
+        let addedCount = 0;
+
+        for(const c of allContacts) {
+            if(idsToAdd.includes(String(c.id))) {
+                let currentGids = c.groupIds || [];
+                if(!currentGids.includes(groupId)) {
+                    currentGids.push(groupId);
+                    c.groupIds = currentGids;
+                    await window.BrandSyncAPI.saveContact(c);
+                    addedCount++;
+                }
+            }
+        }
+
+        if(addedCount > 0) {
+            window.showToast(`Successfully added ${addedCount} new contacts to "${groupName}".`, "success");
+        } else {
+            window.showToast(`Selected contacts are already in "${groupName}".`, "info");
+        }
+        
+        const selectAll = document.getElementById('selectAllCheckbox');
+        if (selectAll) selectAll.checked = false;
+        
+        this.loadGroups();
+        this.loadData();
     },
 
     async bulkDelete() {
