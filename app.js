@@ -7,7 +7,7 @@ class BrandSyncApp {
         this.pageTitle = document.getElementById('page-title');
         this.navItems = document.querySelectorAll('.nav-item[data-path]');
         this.views = {};
-        
+
         // AUTH CHECK
         this.checkAuth();
     }
@@ -27,21 +27,21 @@ class BrandSyncApp {
         localStorage.removeItem('BS_GATEWAY_AUTH');
         // Clear sensitive input immediately
         const input = document.getElementById('masterKeyInput');
-        if(input) input.value = '';
-        
+        if (input) input.value = '';
+
         // Instant visual feedback: hide app, show lock
         document.getElementById('masterLockOverlay').style.display = 'flex';
         document.getElementById('mainAppContainer').style.display = 'none';
-        
+
         // Atomic reload to wipe all memory-based states
-        location.replace(location.pathname); 
+        location.replace(location.pathname);
     }
 
     attemptUnlock() {
         const inputEl = document.getElementById('masterKeyInput');
         const key = inputEl.value.trim();
         const err = document.getElementById('authError');
-        
+
         // Master Password: dadasafa
         if (key === 'dadasafa') {
             localStorage.setItem('BS_GATEWAY_AUTH', 'true');
@@ -65,11 +65,11 @@ class BrandSyncApp {
         this.setupTopUp();
         this.updateSidebarCounts();
         this.refreshGatewayStatus();
-        
+
         setInterval(() => this.refreshGatewayStatus(), 5000);
-        
+
         const badge = document.getElementById('header-credits-badge');
-        if(badge) badge.addEventListener('click', () => {
+        if (badge) badge.addEventListener('click', () => {
             this.refreshBalance();
             this.updateSidebarCounts();
         });
@@ -79,7 +79,7 @@ class BrandSyncApp {
         if (!window.BrandSyncAPI || !window.BrandSyncAPI.getMessages) return;
         const msgs = await window.BrandSyncAPI.getMessages();
         const unreadCount = msgs.filter(m => m.sender === 'contact' && !m.isRead).length;
-        
+
         const badge = document.getElementById('gatewayBadge');
         if (badge) {
             if (unreadCount > 0) {
@@ -93,33 +93,33 @@ class BrandSyncApp {
 
     async toggleGateway() {
         const flyout = document.getElementById('gatewayFlyout');
-        if(!flyout) return;
+        if (!flyout) return;
         const current = flyout.style.display;
         flyout.style.display = current === 'none' ? 'block' : 'none';
-        
+
         if (flyout.style.display === 'block') {
             // 0. Calculate Operational Metrics via Case-Insensitive Storage Reconciliation
-        try {
-            const mKey = BS_STORAGE_KEYS.MESSAGES || 'brandsync_messages';
-            const msgs = JSON.parse(localStorage.getItem(mKey) || '[]');
-            const unreadCount = msgs.filter(m => (m.sender === 'contact' && (m.isRead === false || m.isRead === undefined))).length;
-            
-            const sKey = (window.Scheduler && window.Scheduler.STORAGE_KEY) || 'brandsync_scheduled_messages';
-            const scheduled = JSON.parse(localStorage.getItem(sKey) || '[]');
-            const scheduledCount = scheduled.filter(s => (s.status || '').toLowerCase() === 'pending').length;
-            
-            const campaigns = JSON.parse(localStorage.getItem('brandsync_campaigns') || '[]');
-            const campaignsCount = campaigns.length;
-            
-            // Update UI directly if flyout is open
-            const elInCount = document.getElementById('gateway_inbox_count');
-            const elSched = document.getElementById('gateway_scheduled_count');
-            const elCamp = document.getElementById('gateway_campaigns_count');
-            
-            if (elInCount) elInCount.innerText = unreadCount;
-            if (elSched) elSched.innerText = scheduledCount;
-            if (elCamp) elCamp.innerText = campaignsCount;
-        } catch (e) { console.error("Health Check Metrics Error", e); }
+            try {
+                const mKey = BS_STORAGE_KEYS.MESSAGES || 'brandsync_messages';
+                const msgs = JSON.parse(localStorage.getItem(mKey) || '[]');
+                const unreadCount = msgs.filter(m => (m.sender === 'contact' && (m.isRead === false || m.isRead === undefined))).length;
+
+                const sKey = (window.Scheduler && window.Scheduler.STORAGE_KEY) || 'brandsync_scheduled_messages';
+                const scheduled = JSON.parse(localStorage.getItem(sKey) || '[]');
+                const scheduledCount = scheduled.filter(s => (s.status || '').toLowerCase() === 'pending').length;
+
+                const campaigns = JSON.parse(localStorage.getItem('brandsync_campaigns') || '[]');
+                const campaignsCount = campaigns.length;
+
+                // Update UI directly if flyout is open
+                const elInCount = document.getElementById('gateway_inbox_count');
+                const elSched = document.getElementById('gateway_scheduled_count');
+                const elCamp = document.getElementById('gateway_campaigns_count');
+
+                if (elInCount) elInCount.innerText = unreadCount;
+                if (elSched) elSched.innerText = scheduledCount;
+                if (elCamp) elCamp.innerText = campaignsCount;
+            } catch (e) { console.error("Health Check Metrics Error", e); }
 
             const closer = (e) => {
                 const btn = e.target.closest('button');
@@ -135,10 +135,10 @@ class BrandSyncApp {
     init() {
         // Pre-register views logic to be loaded from components/
         this.registerViews();
-        
+
         // Window hash change event mapping to routes
         window.addEventListener('hashchange', () => this.handleRoute());
-        
+
         // Handle nav clicks
         this.navItems.forEach(item => {
             item.addEventListener('click', (e) => {
@@ -150,7 +150,7 @@ class BrandSyncApp {
         });
 
         // Trigger initial route
-        if(!window.location.hash) {
+        if (!window.location.hash) {
             window.location.hash = '#dashboard';
         } else {
             this.handleRoute();
@@ -159,17 +159,17 @@ class BrandSyncApp {
 
     async handleGlobalSearch(query) {
         const resultsBox = document.getElementById('globalSearchResults');
-        if(!query || query.length < 1) { resultsBox.style.display = 'none'; return; }
-        
+        if (!query || query.length < 1) { resultsBox.style.display = 'none'; return; }
+
         const contacts = await window.BrandSyncAPI.getContacts();
-        const filtered = contacts.filter(c => 
-            (c.name || '').toLowerCase().includes(query.toLowerCase()) || 
+        const filtered = contacts.filter(c =>
+            (c.name || '').toLowerCase().includes(query.toLowerCase()) ||
             (c.phone || '').includes(query)
         ).slice(0, 6);
 
-        if(filtered.length > 0) {
+        if (filtered.length > 0) {
             resultsBox.innerHTML = filtered.map(c => `
-                <div style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px;" onmouseover="this.style.background='rgba(255,159,10,0.1)'" onmouseout="this.style.background='transparent'">
+                <div onclick="window.BrandSyncAppInstance.openDirectEdit('${c.id}'); document.getElementById('globalSearchResults').style.display='none'; document.getElementById('globalSearch').value='';" style="padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px;" onmouseover="this.style.background='rgba(255,159,10,0.1)'" onmouseout="this.style.background='transparent'">
                     <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; color: #fff; font-weight: 800; font-size: 0.75rem;">${(c.name || '?')[0]}</div>
                     <div style="flex:1;">
                         <div style="color: #fff; font-weight: 700; font-size: 0.85rem;">${c.name || 'Unknown'}</div>
@@ -187,15 +187,73 @@ class BrandSyncApp {
     async openDirectEdit(cid) {
         const contacts = await window.BrandSyncAPI.getContacts();
         const contact = contacts.find(c => String(c.id) === String(cid));
-        if(!contact) return;
+        if (!contact) return;
 
+        // Navigate to contacts and show Global Pool
         window.location.hash = '#contacts';
-        // Give time for view to load
-        setTimeout(() => {
-            if(window.ContactsView && window.ContactsView.openEditModal) {
-                window.ContactsView.openEditModal(contact);
+
+        setTimeout(async () => {
+            if (!window.ContactsView) return;
+
+            // Reset to Global Pool
+            window.ContactsView.activeGroupId = null;
+
+            // Pre-fill search with contact name to isolate the row
+            const searchInput = document.getElementById('contactSearch');
+            if (searchInput) {
+                searchInput.value = contact.name || contact.phone || '';
             }
-        }, 350);
+
+            // Reload data with the filter applied
+            await window.ContactsView.loadData();
+
+            // Wait a frame for the DOM to paint the rows
+            setTimeout(() => {
+                // Find the matching row by phone number text
+                const rows = document.querySelectorAll('#contactsTableBody tr');
+                let targetRow = null;
+                rows.forEach(row => {
+                    if (row.innerText.includes(contact.phone)) targetRow = row;
+                });
+
+                if (!targetRow) return;
+
+                // Scroll the row into view
+                targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Add a glowing highlight animation to the phone cell (2nd td with monospace)
+                const phoneTd = targetRow.querySelector('td:nth-child(3)');
+                if (phoneTd) {
+                    phoneTd.style.transition = 'all 0.3s';
+                    phoneTd.style.background = 'rgba(10, 132, 255, 0.25)';
+                    phoneTd.style.borderRadius = '8px';
+                    phoneTd.style.boxShadow = '0 0 20px rgba(10, 132, 255, 0.5)';
+                    phoneTd.style.color = '#fff';
+
+                    // Pulse 3 times then fade out
+                    let count = 0;
+                    const pulse = setInterval(() => {
+                        count++;
+                        phoneTd.style.background = count % 2 === 0
+                            ? 'rgba(10, 132, 255, 0.25)'
+                            : 'rgba(10, 132, 255, 0.5)';
+                        if (count >= 6) {
+                            clearInterval(pulse);
+                            setTimeout(() => {
+                                phoneTd.style.background = '';
+                                phoneTd.style.boxShadow = '';
+                                phoneTd.style.borderRadius = '';
+                            }, 800);
+                        }
+                    }, 300);
+                }
+
+                // Also highlight the full row briefly
+                targetRow.style.background = 'rgba(10, 132, 255, 0.08)';
+                setTimeout(() => targetRow.style.background = '', 2500);
+
+            }, 150);
+        }, 400);
     }
 
     registerViews() {
@@ -216,7 +274,7 @@ class BrandSyncApp {
 
     async handleRoute() {
         const hash = window.location.hash.substring(1) || 'dashboard';
-        
+
         // Update Title via UI mapping
         const titleMap = {
             'dashboard': 'Dashboard',
@@ -233,16 +291,16 @@ class BrandSyncApp {
 
         const currentHash = hash.toLowerCase();
         this.pageTitle.innerText = titleMap[currentHash] || 'Dashboard';
-        
+
         // Show correct nav active state on reload
         this.navItems.forEach(n => n.classList.remove('active'));
         const activeNav = document.querySelector(`.nav-item[data-path="${hash}"]`);
-        if(activeNav) activeNav.classList.add('active');
+        if (activeNav) activeNav.classList.add('active');
 
         // Clear and animate
         this.contentArea.innerHTML = '';
         this.contentArea.classList.remove('fade-in');
-        
+
         // Allow a micro frame reflow to trigger CSS animation restart
         void this.contentArea.offsetWidth;
         this.contentArea.classList.add('fade-in');
@@ -250,7 +308,7 @@ class BrandSyncApp {
         // Load correct view if exists
         const viewMap = {
             'dashboard': window.DashboardView,
-            'send-sms': window.SendSMSView,
+            'send-sms': window.SendSmsView,
             'contacts': window.ContactsView,
             'inbox': window.InboxView,
             'campaigns': window.CampaignsView,
@@ -272,7 +330,7 @@ class BrandSyncApp {
         } else {
             this.contentArea.innerHTML = `<div class="card"><p>404 - View not found</p></div>`;
         }
-        
+
         // Always try to update balance on route change
         this.refreshBalance();
         this.updateSidebarCounts();
@@ -291,21 +349,21 @@ class BrandSyncApp {
         const textEl = document.getElementById('confirmText');
         const cancelBtn = document.getElementById('confirmCancel');
         const proceedBtn = document.getElementById('confirmProceed');
-        
-        if(!modal || !titleEl || !textEl || !cancelBtn || !proceedBtn) return;
-        
+
+        if (!modal || !titleEl || !textEl || !cancelBtn || !proceedBtn) return;
+
         titleEl.innerText = title;
         textEl.innerText = text;
         proceedBtn.style.background = confirmColor || '#ff453a';
-        
+
         modal.style.display = 'flex';
-        
+
         const close = () => {
             modal.style.display = 'none';
             cancelBtn.onclick = null;
             proceedBtn.onclick = null;
         };
-        
+
         cancelBtn.onclick = close;
         proceedBtn.onclick = () => {
             close();
@@ -315,15 +373,15 @@ class BrandSyncApp {
 
     async refreshBalance() {
         if (!window.BrandSyncAPI) return;
-        
+
         // Show loading state
         const headerVal = document.getElementById('header-credits-val');
         const sidebarVal = document.getElementById('sidebar-credits-val');
-        
+
         try {
             const balance = await window.BrandSyncAPI.getBalance();
             const formatted = new Intl.NumberFormat().format(balance);
-            
+
             if (headerVal) headerVal.innerText = formatted;
             if (sidebarVal) sidebarVal.innerText = formatted;
         } catch (err) {
@@ -384,8 +442,8 @@ class BrandSyncApp {
 
             // PhilSMS native conversion uses standard rounding (e.g. 1 / 0.35 = 2.85 -> 3 units)
             const units = Math.round(php / unitPrice);
-            if(calcUnitsDisplay) calcUnitsDisplay.innerText = new Intl.NumberFormat().format(units);
-            if(calcPriceDisplay) calcPriceDisplay.innerText = `₱ ${unitPrice.toFixed(2)}`;
+            if (calcUnitsDisplay) calcUnitsDisplay.innerText = new Intl.NumberFormat().format(units);
+            if (calcPriceDisplay) calcPriceDisplay.innerText = `₱ ${unitPrice.toFixed(2)}`;
         });
     }
 
@@ -393,7 +451,7 @@ class BrandSyncApp {
         const btn = document.querySelector('button[onclick*="toggleGateway"]');
         const icon = btn?.querySelector('i');
         const mainBadge = document.getElementById('gatewayMainBadge');
-        
+
         const elInt = document.getElementById('health_internet');
         const elGh = document.getElementById('health_github');
         const elSms = document.getElementById('health_philsms');
@@ -420,7 +478,7 @@ class BrandSyncApp {
         // Aggregate Visual Alignment (Button)
         const allConnected = health.internet && health.github && health.philsms;
         const anyDegraded = health.latencyNet > 500 || health.latencyGh > 500 || health.latencySms > 500;
-        
+
         let activeColor = '#32d74b'; // PERFECT / LIME GREEN
         let activeBg = 'rgba(50, 215, 75, 0.25)';
         let activeShadow = '0 0 25px rgba(50, 215, 75, 0.5)';
@@ -525,7 +583,7 @@ class BrandSyncApp {
 // Boot application
 const bootApp = () => {
     window.app = new BrandSyncApp();
-    if(window.Scheduler) {
+    if (window.Scheduler) {
         window.Scheduler.restoreTimers();
     }
 };
