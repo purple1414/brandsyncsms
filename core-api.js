@@ -243,22 +243,62 @@ window.BrandSyncAPI = {
             return parsed;
         };
         
+        let sentCount = 0;
+        let lastError = null;
+
         for (const recipient of payload.recipients) {
             try {
-                await fetch(`${API_URL}sms/send`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}`, 'Accept': 'application/json' },
-                    body: JSON.stringify({
-                        sender_id: payload.senderId,
-                        recipient: recipient.replace(/[^0-9+]/g, ''), 
-                        message: parseSpintax(payload.message),
-                        type: 'plain',
-                        ...(payload.scheduleTime && { schedule_time: payload.scheduleTime.replace('T', ' ').substring(0, 16) })
-                    })
-                });
-            } catch (err) {}
+                let targetNumber = recipient.replace(/[^0-9]/g, '');
+                if (targetNumber.startsWith('09')) targetNumber = '63' + targetNumber.substring(1);
+                else if (targetNumber.startsWith('9')) targetNumber = '63' + targetNumber;
+
+                const reqBody = {
+                    sender_id: payload.senderId || 'PhilSMS',
+                    recipient: targetNumber, 
+                    message: parseSpintax(payload.message),
+                    type: 'plain',
+                    ...(payload.scheduleTime && { schedule_time: payload.scheduleTime.replace('T', ' ').substring(0, 16) })
+                };
+
+                let res;
+                try {
+                    res = await fetch(`${API_URL}sms/send`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}`, 'Accept': 'application/json' },
+                        body: JSON.stringify(reqBody)
+                    });
+                } catch (networkErr) {
+                    // Fallback using CORS proxy if the browser blocked the Preflight OPTIONS request
+                    res = await fetch(`https://corsproxy.io/?${encodeURIComponent(API_URL + 'sms/send')}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}`, 'Accept': 'application/json' },
+                        body: JSON.stringify(reqBody)
+                    });
+                }
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.status === 'success' || data.message) {
+                        sentCount++;
+                    } else {
+                        throw new Error(data.message || 'API rejected formatting.');
+                    }
+                } else {
+                    const errorText = await res.text();
+                    throw new Error(`API Error ${res.status}: ${errorText.substring(0, 100)}`);
+                }
+            } catch (err) {
+                console.error("PhilSMS Dispatch Error:", err);
+                lastError = err.message;
+            }
         }
-        return { success: true, message: `Dispatched to ${payload.recipients.length} recipients.` };
+
+        if (sentCount === 0 && lastError) {
+            if (window.showToast) window.showToast(`Send failed: ${lastError}`, 'error');
+            throw new Error(lastError);
+        }
+        
+        return { success: true, message: `Dispatched to ${sentCount} recipients.` };
     },
 
     async getSenderIds() {
