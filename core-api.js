@@ -736,48 +736,22 @@ window.BrandSyncAPI = {
     async fetchCentralizedContacts() {
         const CENTRAL_URL = "https://agridomcorp.com/warehouse/webservice.php";
         const USERNAME = "pcalpas";
-        const KEY = "OUp6qm8VbX7rrJm5";
-
-        const md5 = function(s) {
-            var k = [], i = 0;
-            for (; i < 64; ) k[i] = 0 | Math.abs(Math.sin(++i)) * 4294967296;
-            var a = 1732584193, b = -271733879, c = -1732584194, d = 271733878;
-            s = unescape(encodeURIComponent(s));
-            var m = s.length, blocks = [(m >> 2) + 2 + ((m + 1) >> 6 << 4)], j = 0;
-            for (; j < m; ) blocks[j >> 2] |= s.charCodeAt(j) << (j++ % 4 << 3);
-            blocks[j >> 2] |= 128 << (j % 4 << 3);
-            blocks[blocks.length - 2] = m * 8;
-            function rot(v, s) { return (v << s) | (v >>> (32 - s)); }
-            for (j = 0; j < blocks.length; j += 16) {
-                var aa = a, bb = b, cc = c, dd = d, l = 0;
-                for (; l < 64; ++l) {
-                    var f = l < 16 ? (b & c) | (~b & d) : l < 32 ? (d & b) | (~d & c) : l < 48 ? b ^ c ^ d : c ^ (b | ~d);
-                    var g = l < 16 ? l : l < 32 ? (5 * l + 1) % 16 : l < 48 ? (3 * l + 5) % 16 : (7 * l) % 16;
-                    var t = d; d = c; c = b;
-                    b = b + rot(a + f + k[l] + (blocks[j + g] || 0), [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21][l >> 4 << 2 | l % 4]);
-                    a = t;
-                }
-                a = (a + aa) | 0; b = (b + bb) | 0; c = (c + cc) | 0; d = (d + dd) | 0;
-            }
-            var res = "";
-            for (var v of [a, b, c, d]) {
-                for (var x = 0; x < 4; x++) res += "0123456789abcdef".charAt((v >> (x * 8 + 4)) & 15) + "0123456789abcdef".charAt((v >> (x * 8)) & 15);
-            }
-            return res;
-        };
+        const KEY_API = "OUp6qm8VbX7rrJm5";
+        const KEY_PASS = "Sfgroup@2023!";
 
         const PROXY = "https://thingproxy.freeboard.io/fetch/";
 
-        try {
+        const attemptLogin = async (keyToTry) => {
             // --- Step 1: Get Challenge ---
-            const cRes = await fetch(`${PROXY}${CENTRAL_URL}?operation=getchallenge&username=${USERNAME}`);
-            const cData = await cRes.json();
-            if (!cData.success) throw new Error("Challenge rejected: " + (cData.error ? cData.error.message : "Handshake error"));
+            const challengeRes = await fetch(`${PROXY}${CENTRAL_URL}?operation=getchallenge&username=${USERNAME}`);
+            const challengeData = await challengeRes.json();
+            if (!challengeData.success) throw new Error("Challenge rejected");
             
-            const token = cData.result.token;
-            const accessKey = md5(token + KEY);
+            const token = challengeData.result.token;
+            // md5 is now global from blueimp-md5 in index.html
+            const accessKey = window.md5(token + keyToTry);
 
-            // --- Step 2: Login (Using POST for security compliance) ---
+            // --- Step 2: Login ---
             const lBody = new URLSearchParams();
             lBody.append('operation', 'login');
             lBody.append('username', USERNAME);
@@ -788,17 +762,32 @@ window.BrandSyncAPI = {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: lBody
             });
-            const lData = await lRes.json();
-            if (!lData.success) throw new Error("Auth Failed: " + (lData.error ? lData.error.message : "Invalid Credentials"));
-            
-            const sessionName = lData.result.sessionName;
+            return await lRes.json();
+        };
 
-            // --- Step 3: Query (fetching actual mobile and naming fields) ---
-            const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name, account_id FROM Contacts LIMIT 200;");
+        try {
+            window.showToast("Authenticating with Agridom...", "info");
+            
+            // Try with API Key First
+            let loginData = await attemptLogin(KEY_API);
+            
+            // Fallback to Password if API Key fails
+            if (!loginData.success) {
+                console.warn("API Key login failed, trying Password fallback...");
+                loginData = await attemptLogin(KEY_PASS);
+            }
+
+            if (!loginData.success) throw new Error("Authentication Failed: " + (loginData.error ? loginData.error.message : "Invalid Credentials"));
+            
+            const sessionName = loginData.result.sessionName;
+            window.showToast("Authenticated! Retrieving identities...", "info");
+
+            // --- Step 3: Query ---
+            const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name, account_id FROM Contacts LIMIT 500;");
             const qRes = await fetch(`${PROXY}${CENTRAL_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
             const qData = await qRes.json();
 
-            if (!qData.success) throw new Error("Query failed: " + (qData.error ? qData.error.message : "Access error"));
+            if (!qData.success) throw new Error("Query rejected: " + (qData.error ? qData.error.message : "Access error"));
 
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
