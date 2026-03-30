@@ -565,14 +565,27 @@ window.BrandSyncChatbot = {
             animation: pulseHalo 2s infinite;
         `;
 
-        // Create Tooltip Overlay Dialog
-        const dialog = document.createElement('div');
-        dialog.id = 'aiWalkthroughDialog';
+        // Smart Positioning Logic (Prevents Viewport Overflow)
+        const dialogWidth = 320;
+        const dialogHeight = 220; // Estimated max height
+        
+        let dLeft = Math.max(20, Math.min(rect.left + (rect.width/2) - (dialogWidth/2), window.innerWidth - dialogWidth - 20));
+        let dTop = rect.bottom + 20;
+        
+        // If bottom space is insufficient, flip to top
+        if (dTop + dialogHeight > window.innerHeight) {
+            dTop = rect.top - dialogHeight - 20;
+        }
+        
+        // Final safety clamp for vertical
+        dTop = Math.max(20, Math.min(dTop, window.innerHeight - dialogHeight - 20));
+
         dialog.style.cssText = `
             position: fixed;
-            top: ${rect.bottom + 20 < window.innerHeight - 100 ? rect.bottom + 20 : rect.top - 120}px;
-            left: ${Math.max(20, rect.left + (rect.width/2) - 150)}px;
-            width: 300px;
+            top: ${dTop}px;
+            left: ${dLeft}px;
+            width: ${dialogWidth}px;
+            max-width: calc(100vw - 40px);
             background: rgba(30,30,35,0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(191,90,242,0.4);
