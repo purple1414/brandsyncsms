@@ -132,6 +132,27 @@ window.ApiView = {
                             </div>
                         </div>
 
+                        <!-- Lead Syndication (External Render Sync) -->
+                        <div class="card" style="border: 1px solid rgba(255, 159, 10, 0.3); background: rgba(255, 159, 10, 0.05);">
+                            <div style="display:flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+                                <div style="width: 36px; height: 36px; background: rgba(255, 159, 10, 0.1); border-radius: 8px; display:flex; align-items:center; justify-content:center; color: #ff9f0a;">
+                                    <i class="icon-lucide-share-2"></i>
+                                </div>
+                                <h3 style="font-size: 1.1rem;">Cloud Lead Syndication</h3>
+                                <div id="sync-status" style="margin-left:auto; font-size:0.65rem; padding:4px 10px; border-radius:100px; background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; letter-spacing:0.05em;">READY TO SYNC</div>
+                            </div>
+                            
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 20px;">Pull synchronized leads directly from your hosted BrandSync engine on Render. This bridge establishes a real-time data tunnel for your identities.</p>
+                            
+                            <button id="pull-leads-btn" class="btn" style="width:100%; height:46px; background:#ff9f0a; color:#000; font-weight:800; border-radius:14px; border:none; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                <i class="icon-lucide-refresh-cw"></i> Pull Identities from Cloud
+                            </button>
+
+                            <div id="contacts" style="margin-top: 20px; max-height: 200px; overflow-y: auto; display:flex; flex-direction:column; gap:8px; border-radius:12px;">
+                                <!-- Synced leads will appear here -->
+                            </div>
+                        </div>
+
                         <!-- Database Management (The 'Real' Database) -->
                         <div class="card" style="border: 1px dashed rgba(50, 215, 75, 0.3); background: rgba(50, 215, 75, 0.05);">
                             <div style="display:flex; gap: 12px; align-items: center; margin-bottom: 16px;">

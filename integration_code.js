@@ -1,4 +1,5 @@
-* BRAND-SYNC: LEAD SYNDICATION SCRIPT
+/**
+ * BRAND-SYNC: LEAD SYNDICATION SCRIPT
  * ----------------------------------------------------
  * Project: brandsyncsms (External Pull)
  * Passcode: dadasafa
@@ -10,8 +11,8 @@
  */
 
 const CONFIG = {
-    // Replace this with your actual Render/Live URL
-    LIVE_URL: 'https://brand-sync.onrender.com', 
+    // Using a CORS proxy for browser development if Render doesn't have CORS headers
+    LIVE_URL: 'https://corsproxy.io/?' + encodeURIComponent('https://brand-sync.onrender.com'), 
     PASSCODE: 'dadasafa'
 };
 
@@ -21,7 +22,15 @@ const CONFIG = {
 async function pullLeadsFromBrandSync() {
     console.log('--- INITIATING LEAD PULL ---');
     const statusEl = document.getElementById('sync-status');
-    if (statusEl) statusEl.textContent = 'Pulling leads...';
+    const btn = document.getElementById('pull-leads-btn');
+    
+    if (statusEl) {
+        statusEl.textContent = 'CONNECTING TO CLOUD...';
+        statusEl.style.color = '#ff9f0a';
+        statusEl.style.background = 'rgba(255,159,10,0.1)';
+    }
+
+    if (btn) btn.disabled = true;
 
     try {
         const url = `${CONFIG.LIVE_URL}/api/external/sync?pass=${CONFIG.PASSCODE}`;
@@ -35,17 +44,50 @@ async function pullLeadsFromBrandSync() {
         const data = await response.json();
         console.log(`Successfully pulled ${data.count} leads.`);
         
+        // Save leads to local database if API is available
+        if (window.BrandSyncAPI && window.BrandSyncAPI.saveContact) {
+            for (const lead of data.leads) {
+                // Ensure name is properly set
+                const first = lead.first_name || lead.firstName || lead.name || '';
+                const last = lead.last_name || lead.lastName || '';
+                const fullName = lead.name || `${first} ${last}`.trim();
+                
+                await window.BrandSyncAPI.saveContact({
+                    name: fullName,
+                    phone: lead.phone || '',
+                    company: lead.company || '',
+                    event: lead.event || 'Cloud Sync',
+                    interest: lead.interest || '',
+                    added: new Date().toISOString(),
+                    groupIds: []
+                });
+            }
+        }
+
         // Render the data on the page
         renderLeads(data.leads);
         
-        if (statusEl) statusEl.textContent = `Last sync: ${new Date().toLocaleTimeString()} (${data.count} leads)`;
+        if (statusEl) {
+            statusEl.textContent = `SYNC SUCCESS: ${data.count} LEADS`;
+            statusEl.style.color = '#32d74b';
+            statusEl.style.background = 'rgba(50,215,75,0.1)';
+        }
+
+        if (window.showToast) window.showToast(`Lead Syndication Success: ${data.count} identities pulled.`, 'success');
+
         return data.leads;
 
     } catch (error) {
         console.error('Lead pull failed:', error.message);
-        if (statusEl) statusEl.textContent = 'Sync failed: ' + error.message;
-        alert('Sync Error: ' + error.message);
+        if (statusEl) {
+            statusEl.textContent = 'SYNC FAILED';
+            statusEl.style.color = '#ff453a';
+            statusEl.style.background = 'rgba(255,69,58,0.1)';
+        }
+        if (window.showToast) window.showToast('Syndication Error: ' + error.message, 'error');
         return null;
+    } finally {
+        if (btn) btn.disabled = false;
     }
 }
 
@@ -54,36 +96,40 @@ async function pullLeadsFromBrandSync() {
  * @param {Array} leads - The list of visitors/leads
  */
 function renderLeads(leads) {
-    const container = document.getElementById('contacts'); // Target your contacts element
-    if (!container) {
-        console.warn('UI Warning: No element with ID "contacts" found to display leads.');
-        return;
-    }
+    const container = document.getElementById('contacts'); 
+    if (!container) return;
 
-    container.innerHTML = ''; // Clear previous entries
+    container.innerHTML = ''; 
 
     if (leads.length === 0) {
-        container.innerHTML = '<div class="no-leads">No leads found to sync.</div>';
+        container.innerHTML = '<div style="padding:20px; text-align:center; color:rgba(255,255,255,0.2); font-size:0.8rem; font-style:italic;">No new leads found in this pulse.</div>';
         return;
     }
 
     leads.forEach(lead => {
         const leadItem = document.createElement('div');
-        leadItem.className = 'lead-card';
-        leadItem.style.borderBottom = '1px solid #ddd';
-        leadItem.style.padding = '10px';
-        leadItem.style.marginBottom = '5px';
+        leadItem.style.cssText = `
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        `;
 
         leadItem.innerHTML = `
-            <div style="font-weight: bold; font-size: 1.1em;">${lead.name || 'Anonymous'}</div>
-            <div style="color: #444;">Phone: ${lead.phone || 'N/A'}</div>
-            <div style="color: #666; font-size: 0.9em;">Email: ${lead.email || 'N/A'}</div>
-            <div style="margin-top: 5px;">
-                <span style="background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">
-                    Status: ${lead.approval_status}
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div style="font-weight: 700; color: #fff; font-size:0.9rem;">${lead.name || 'Anonymous'}</div>
+                <div style="font-size:0.65rem; color:#32d74b; font-weight:800; font-family:monospace;">+${lead.phone || 'N/A'}</div>
+            </div>
+            <div style="color: rgba(255,255,255,0.4); font-size: 0.75rem;">${lead.company || 'Private Entity'}</div>
+            <div style="display:flex; gap:6px; margin-top:4px;">
+                <span style="background: rgba(10,132,255,0.15); color: #0a84ff; padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; border: 1px solid rgba(10,132,255,0.3);">
+                    ${lead.approval_status || 'Synced'}
                 </span>
-                <span style="background: #e3f2fd; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-left: 5px;">
-                    Event: ${lead.event || 'N/A'}
+                <span style="background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:700;">
+                    ${lead.event || 'Unknown Origin'}
                 </span>
             </div>
         `;
@@ -93,7 +139,9 @@ function renderLeads(leads) {
 
 // Optional: Auto-link to a button if it exists
 document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('pull-leads-btn');
-    if (btn) btn.addEventListener('click', pullLeadsFromBrandSync);
+    // Delay initialization to ensure other scripts are ready
+    setTimeout(() => {
+        const btn = document.getElementById('pull-leads-btn');
+        if (btn) btn.addEventListener('click', pullLeadsFromBrandSync);
+    }, 500);
 });
-"
