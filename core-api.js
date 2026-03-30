@@ -699,52 +699,43 @@ window.BrandSyncAPI = {
         const API_KEY = "OUp6qm8VbX7rrJm5"; // Primary Method A
         const PASSWORD = "Sfgroup@2023!";     // Fallback Method B
         
-        // ADVANCED REDUNDANT PROXY POOL: Expanded to include more robust bypass layers
+        // ALLORIGINS IS MANDATORY: It utilizes a static IPv4 egress footprint. 
+        // Vtiger backend load-balancers use IP-Hasing for sticky sessions.
+        // Distributed CDNs like CorsProxy rotate IPs, destroying the token state on the backend replica!
         const PROXY_POOL = [
-            "https://corsproxy.io/?",               // Primary: Transparent
-            "https://thingproxy.freeboard.io/fetch/", // Secondary: Independent
-            "https://api.allorigins.win/get?url=",   // Tertiary: Backup (Wrapped Output)
-            "https://cors-proxy.htmldriven.com/?url=" // Quaternary: Extra Fallback
+            "https://api.allorigins.win/get?url=",   // Primary: Static IP Footprint
+            "https://corsproxy.io/?",               // Secondary: Fast but volatile IP
         ];
 
         if (this._crmLock && !isRetry) return { success: false, message: "Handshake already active." };
         if (!isRetry) this._crmLock = true;
 
-        const proxyRequest = async (url, options = {}) => {
+        const proxyRequest = async (url) => {
             // Append a cache-buster to prevent public proxies from serving stale responses (crucial for tokens)
-            const cacheBustedUrl = url.includes('?') ? `${url}&_cb=${Date.now()}` : `${url}?_cb=${Date.now()}`;
+            const cacheSeparator = url.includes('?') ? '&' : '?';
+            const cacheBustedUrl = `${url}${cacheSeparator}_cb=${Date.now()}`;
             
             let lastErr = null;
             for (const proxy of PROXY_POOL) {
                 try {
                     const tunnelUrl = proxy + encodeURIComponent(cacheBustedUrl);
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second lookup timeout
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); 
 
-                    const fetchOptions = { 
+                    const res = await fetch(tunnelUrl, { 
                         cache: 'no-store',
-                        signal: controller.signal,
-                        method: options.method || 'GET',
-                        headers: { 
-                            'X-Requested-With': 'XMLHttpRequest',
-                            ...(options.headers || {})
-                        }
-                    };
-                    if (options.body) fetchOptions.body = options.body;
-
-                    const res = await fetch(tunnelUrl, fetchOptions);
+                        signal: controller.signal
+                    });
                     clearTimeout(timeoutId);
 
                     if (!res.ok) throw new Error(`Tunnel Error: ${res.status}`);
                     const data = await res.json();
                     
-                    // Branch: Handle AllOrigins wrapping vs Transparent proxies
                     if (proxy.includes('allorigins')) {
                         if (!data.contents) throw new Error("Empty AllOrigins Content");
                         return typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
                     }
                     
-                    // Standard transparent proxy logic
                     return data;
                 } catch (e) {
                     const isTimeout = e.name === 'AbortError';
@@ -776,15 +767,9 @@ window.BrandSyncAPI = {
                     const normalizedSecret = isPlain ? secret : window.md5(secret).toLowerCase();
                     const accessKey = window.md5(currentToken + normalizedSecret).toLowerCase();
                     
-                    // Add slight delay to bypass DB Replication Lag in clustered environments
-                    await new Promise(r => setTimeout(r, 1200));
-
-                    // Vtiger 7+ strongly prefers POST for login payload to prevent URL truncation
-                    return await proxyRequest(BASE_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `operation=login&username=${encodeURIComponent(USERNAME)}&accessKey=${encodeURIComponent(accessKey)}`
-                    });
+                    // Exclusively use GET logic to maintain compatibility with AllOrigins static routing
+                    const loginUrl = `${BASE_URL}?operation=login&username=${encodeURIComponent(USERNAME)}&accessKey=${encodeURIComponent(accessKey)}`;
+                    return await proxyRequest(loginUrl);
                 };
 
                 // ATTEMPT A: API Key (Static Method)
@@ -818,12 +803,8 @@ window.BrandSyncAPI = {
             if (!isRetry) window.showToast("Harvesting records...", "info");
             const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 500;");
             
-            // Execute as POST request to avoid URI-too-long errors on complex payloads
-            const qRes = await proxyRequest(BASE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `operation=query&sessionName=${encodeURIComponent(sessionName)}&query=${query}`
-            });
+            // Execute natively via GET
+            const qRes = await proxyRequest(`${BASE_URL}?operation=query&sessionName=${encodeURIComponent(sessionName)}&query=${query}`);
 
             // STEP 4: Session Recovery Logic
             if (!qRes.success && qRes.error) {
