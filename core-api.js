@@ -738,75 +738,73 @@ window.BrandSyncAPI = {
         const USERNAME = "pcalpas";
         const KEY = "OUp6qm8VbX7rrJm5";
 
-        // Reliable MD5 helper for Vtiger Challenge-Response
-        const md5 = (s) => {
-            let k = [], i = 0;
+        const md5 = function(s) {
+            var k = [], i = 0;
             for (; i < 64; ) k[i] = 0 | Math.abs(Math.sin(++i)) * 4294967296;
-            let a = 1732584193, b = -271733879, c = -1732584194, d = 271733878;
+            var a = 1732584193, b = -271733879, c = -1732584194, d = 271733878;
             s = unescape(encodeURIComponent(s));
-            let m = s.length, blocks = [(m >> 2) + 2 + ((m + 1) >> 6 << 4)], j = 0;
+            var m = s.length, blocks = [(m >> 2) + 2 + ((m + 1) >> 6 << 4)], j = 0;
             for (; j < m; ) blocks[j >> 2] |= s.charCodeAt(j) << (j++ % 4 << 3);
             blocks[j >> 2] |= 128 << (j % 4 << 3);
             blocks[blocks.length - 2] = m * 8;
+            function rot(v, s) { return (v << s) | (v >>> (32 - s)); }
             for (j = 0; j < blocks.length; j += 16) {
-                let aa = a, bb = b, cc = c, dd = d, l = 0;
+                var aa = a, bb = b, cc = c, dd = d, l = 0;
                 for (; l < 64; ++l) {
-                    let f = l < 16 ? (b & c) | (~b & d) : l < 32 ? (d & b) | (~d & c) : l < 48 ? b ^ c ^ d : c ^ (b | ~d);
-                    let g = l < 16 ? l : l < 32 ? (5 * l + 1) % 16 : l < 48 ? (3 * l + 5) % 16 : (7 * l) % 16;
-                    let temp = d;
-                    d = c;
-                    c = b;
-                    b = b + ((a + f + k[l] + (blocks[j + g] || 0)) << (g = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21][l >> 4 << 2 | l % 4]) | (a + f + k[l] + (blocks[j + g] || 0)) >>> (32 - g));
-                    a = temp;
+                    var f = l < 16 ? (b & c) | (~b & d) : l < 32 ? (d & b) | (~d & c) : l < 48 ? b ^ c ^ d : c ^ (b | ~d);
+                    var g = l < 16 ? l : l < 32 ? (5 * l + 1) % 16 : l < 48 ? (3 * l + 5) % 16 : (7 * l) % 16;
+                    var t = d; d = c; c = b;
+                    b = b + rot(a + f + k[l] + (blocks[j + g] || 0), [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21][l >> 4 << 2 | l % 4]);
+                    a = t;
                 }
-                a += aa; b += bb; c += cc; d += dd;
+                a = (a + aa) | 0; b = (b + bb) | 0; c = (c + cc) | 0; d = (d + dd) | 0;
             }
-            let res = "";
-            for (let v of [a, b, c, d]) {
-                for (j = 0; j < 4; j++) res += "0123456789abcdef".charAt((v >> (j * 8 + 4)) & 15) + "0123456789abcdef".charAt((v >> (j * 8)) & 15);
+            var res = "";
+            for (var v of [a, b, c, d]) {
+                for (var x = 0; x < 4; x++) res += "0123456789abcdef".charAt((v >> (x * 8 + 4)) & 15) + "0123456789abcdef".charAt((v >> (x * 8)) & 15);
             }
             return res;
         };
 
-        const fetchProxied = async (url) => {
-            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-            if(!res.ok) throw new Error("Proxy Error: " + res.status);
-            const data = await res.json();
-            // AllOrigins wraps content in a 'contents' field as a string
-            if(data.contents === null) throw new Error("API Connection Failed (Proxy return empty)");
-            return JSON.parse(data.contents);
-        };
+        const PROXY = "https://thingproxy.freeboard.io/fetch/";
 
         try {
             // --- Step 1: Get Challenge ---
-            const challengeData = await fetchProxied(`${CENTRAL_URL}?operation=getchallenge&username=${USERNAME}`);
-            if (!challengeData.success) throw new Error("Challenge failed: " + (challengeData.error ? challengeData.error.message : "Handshake rejected"));
+            const cRes = await fetch(`${PROXY}${CENTRAL_URL}?operation=getchallenge&username=${USERNAME}`);
+            const cData = await cRes.json();
+            if (!cData.success) throw new Error("Challenge rejected: " + (cData.error ? cData.error.message : "Handshake error"));
             
-            const token = challengeData.result.token;
+            const token = cData.result.token;
             const accessKey = md5(token + KEY);
 
-            // --- Step 2: Login ---
-            // Vtiger often supports Login via GET as well for easier integration
-            const loginData = await fetchProxied(`${CENTRAL_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`);
-            if (!loginData.success) throw new Error("Login failed (Check username/accessKey): " + (loginData.error ? loginData.error.message : "Access Denied"));
+            // --- Step 2: Login (Using POST for security compliance) ---
+            const lBody = new URLSearchParams();
+            lBody.append('operation', 'login');
+            lBody.append('username', USERNAME);
+            lBody.append('accessKey', accessKey);
+
+            const lRes = await fetch(`${PROXY}${CENTRAL_URL}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: lBody
+            });
+            const lData = await lRes.json();
+            if (!lData.success) throw new Error("Auth Failed: " + (lData.error ? lData.error.message : "Invalid Credentials"));
             
-            const sessionName = loginData.result.sessionName;
+            const sessionName = lData.result.sessionName;
 
-            // --- Step 3: Query Contacts ---
-            const query = "SELECT id, firstname, lastname, phone, account_name, title FROM Contacts;";
-            const queryData = await fetchProxied(`${CENTRAL_URL}?operation=query&sessionName=${sessionName}&query=${encodeURIComponent(query)}`);
+            // --- Step 3: Query (fetching actual mobile and naming fields) ---
+            const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name, account_id FROM Contacts LIMIT 200;");
+            const qRes = await fetch(`${PROXY}${CENTRAL_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
+            const qData = await qRes.json();
 
-            if (!queryData.success) {
-                // Try fallback to Accounts if Contacts yields an error in this specific CRM build
-                throw new Error("Query failed: " + (queryData.error ? queryData.error.message : "Table rejected"));
-            }
+            if (!qData.success) throw new Error("Query failed: " + (qData.error ? qData.error.message : "Access error"));
 
-            const data = queryData.result;
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
 
-            data.forEach(item => {
-                const phone = String(item.phone || '').replace(/[^0-9]/g, '');
+            qData.result.forEach(item => {
+                const phone = String(item.mobile || item.phone || '').replace(/[^0-9]/g, '');
                 if (!phone) return;
 
                 const existsPending = pending.find(p => String(p.phone).replace(/[^0-9]/g, '') === phone);
@@ -816,10 +814,10 @@ window.BrandSyncAPI = {
                 if (!existsPending && !existsMain) {
                     pending.unshift({
                         id: 'PEND_CRM_' + item.id.replace(/:/g, '_'),
-                        name: `${item.firstname || ''} ${item.lastname || ''}`.trim() || 'Unknown',
+                        name: item.firstname || item.farm_name || 'CRM Lead',
                         phone: phone,
-                        company: item.account_name || '',
-                        position: item.title || '',
+                        company: item.farm_name || '',
+                        position: item.lastname || '',
                         interest: '',
                         added: new Date().toISOString().substring(0, 10),
                         source: 'Agridom CRM'
