@@ -739,62 +739,63 @@ window.BrandSyncAPI = {
         const KEY_API = "OUp6qm8VbX7rrJm5".trim();
         const KEY_PASS = "Sfgroup@2023!".trim();
 
+        // Standardized Proxy Tunnel (Proxy is used for the entire handshake to maintain IP parity)
         const PROXY = "https://corsproxy.io/?";
 
-        const smartFetch = async (target, opts = {}) => {
-            // Priority 1: Direct Fetch (Try standard CORS)
-            try {
-                const directUrl = target.includes('?') ? target : target;
-                const dRes = await fetch(directUrl, opts);
-                if (dRes.ok) return await dRes.json();
-            } catch (e) {
-                console.warn("Direct fetch failed, escalating to Proxy...", target);
-            }
-
-            // Priority 2: Proxy Fetch
-            const proxied = PROXY + encodeURIComponent(target);
-            const pRes = await fetch(proxied, opts);
-            if (!pRes.ok) throw new Error("Connection failed (Proxy/Remote Server unreachable)");
-            return await pRes.json();
+        const proxyFetch = async (target, opts = {}) => {
+            // Append cache busting timestamp to EVERY request to prevent stale tokens
+            const bust = `_v=${Date.now()}`;
+            const finalUrl = target.includes('?') ? `${target}&${bust}` : `${target}?${bust}`;
+            const proxied = PROXY + encodeURIComponent(finalUrl);
+            
+            const res = await fetch(proxied, {
+                ...opts,
+                cache: 'no-store', // Force no-cache across the chain
+                headers: { ...opts.headers, 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }
+            });
+            if (!res.ok) throw new Error("Proxy connection failed.");
+            return await res.json();
         };
 
-        const executeStep = async (key) => {
-            // --- Step 1: Challenge ---
+        const runAuth = async (candidateKey) => {
+            // --- Step 1: Atomic Challenge ---
             const chalUrl = `${BASE_URL}?operation=getchallenge&username=${USERNAME}`;
-            const chal = await smartFetch(chalUrl);
-            if (!chal.success) throw new Error("Handshake Rejected: " + (chal.error ? chal.error.message : "Invalid Username"));
+            const chal = await proxyFetch(chalUrl);
+            if (!chal.success) throw new Error("Handshake Rejected: " + (chal.error ? chal.error.message : "Access error"));
             
             const token = chal.result.token;
-            const accessKey = window.md5(token + key);
+            // md5 is now global from blueimp-md5 in index.html
+            const accessKey = window.md5(token + candidateKey);
 
-            // --- Step 2: Authenticated Session ---
-            // We use standard GET for login here for better Proxy compatibility (since many limit POST)
+            // --- Step 2: Atomic Login (Maintaining Same Proxy IP) ---
             const authUrl = `${BASE_URL}?operation=login&username=${USERNAME}&accessKey=${accessKey}`;
-            const auth = await smartFetch(authUrl);
-            if (!auth.success) return { success: false, msg: auth.error ? auth.error.message : "Access Denied" };
+            const auth = await proxyFetch(authUrl);
+            if (!auth.success) return { success: false, msg: auth.error ? auth.error.message : "Credential Mismatch" };
             
             return { success: true, session: auth.result.sessionName };
         };
 
         try {
-            window.showToast("Establishing Secure Pipeline...", "info");
+            window.showToast("Handshaking with Central Warehouse...", "info");
             
-            let res = await executeStep(KEY_API);
+            // Try with primary API key
+            let res = await runAuth(KEY_API);
             if (!res.success) {
                 console.warn("API Key Auth failed, próbál password fallback...");
-                res = await executeStep(KEY_PASS);
+                res = await runAuth(KEY_PASS);
             }
 
-            if (!res.success) throw new Error("Authentication failed: " + res.msg);
+            if (!res.success) throw new Error(res.msg);
             
             const sessionName = res.session;
-            window.showToast("Tunnel Established!", "info");
+            window.showToast("Connection Secure. Pulling Identities...", "info");
 
-            // --- Step 3: Global Identity Sweep ---
-            const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 200;");
-            const qData = await smartFetch(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
+            // --- Step 3: Global Sweep ---
+            // Verified target fields: firstname, lastname, mobile, phone, farm_name (Company)
+            const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 500;");
+            const qData = await proxyFetch(`${BASE_URL}?operation=query&sessionName=${sessionName}&query=${query}`);
 
-            if (!qData.success) throw new Error("Sweep failed: " + (qData.error ? qData.error.message : "Table locked"));
+            if (!qData.success) throw new Error("Database query rejected.");
 
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
@@ -812,11 +813,11 @@ window.BrandSyncAPI = {
                         id: 'PEND_CRM_' + item.id.replace(/:/g, '_'),
                         name: item.firstname || item.farm_name || 'CRM Lead',
                         phone: phone,
-                        company: item.farm_name || '',
+                        company: item.farm_name || 'Agridom Farm',
                         position: item.lastname || '',
                         interest: '',
                         added: new Date().toISOString().substring(0, 10),
-                        source: 'Agridom CRM'
+                        source: 'Central CRM'
                     });
                     importedCount++;
                 }
