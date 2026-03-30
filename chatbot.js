@@ -4,33 +4,79 @@ window.BrandSyncChatbot = {
     lang: 'en',
     lastContext: '',
     
-    // Core Centralized Knowledge Base & Workflow Directory
+    // Core Centralized Knowledge Base (Structured & Numbered)
     KNOWLEDGE_BASE: {
         'contact': {
-            en: "Here's how to manage your database. Do you want me to guide you step-by-step on how to add a contact?",
-            tl: "Ito ay para sa pag-manage ng database. Gusto mo bang ituro ko sayo step-by-step kung paano mag-add ng contact?",
+            en: `To manage or add a contact, follow these steps:<br><br>
+                 1. Navigate to the <b>Contacts Module</b> on the left.<br>
+                 2. To manually add a single person, click <b>Add Contact</b>.<br>
+                 3. Fill in the data fields (Name, Phone, etc).<br>
+                 4. Click <b>Save</b> to confirm.<br><br>
+                 <i>Note: If you have a bulk list, click 'Heavy Import' instead.</i>`,
+            tl: `Para mag-add ng contact, sundin ito:<br><br>
+                 1. Pumunta sa <b>Contacts Module</b> sa kaliwa.<br>
+                 2. I-click ang <b>Add Contact</b>.<br>
+                 3. Ilagay ang detalye (Pangalan, Numero).<br>
+                 4. I-click ang <b>Save</b>.<br><br>
+                 <i>Note: Kapag marami, gamitin ang 'Heavy Import'.</i>`,
             actionName: "Guide me (Add Contact)",
             actionId: "add_contact"
         },
         'send': {
-            en: "To dispatch an SMS, navigate to 'Send SMS'. You can define a Spintax payload to automatically rotate words. Do you want a quick walkthrough?",
-            tl: "Para mag-send ng SMS, pumunta sa 'Send SMS'. Pwede kang gumamit ng Spintax para umikot ang mga words. Gusto mo ba ng walkthrough?",
+            en: `To dispatch an SMS campaign, follow these steps:<br><br>
+                 1. Go to the <b>Send SMS</b> module.<br>
+                 2. Construct your payload in the main editor. <i>(You can use Spintax like {Hi|Hello})</i><br>
+                 3. Specify targets by clicking <b>Choose Contacts</b> or typing raw numbers.<br>
+                 4. Verify your network payload size.<br>
+                 5. Hit the blue <b>Send SMS</b> button to finalize.`,
+            tl: `Para magpadala ng SMS:<br><br>
+                 1. Pumunta sa <b>Send SMS</b>.<br>
+                 2. I-type ang mensahe mo. <i>(Pwede ang Spintax: {Hi|Hello})</i><br>
+                 3. Pumili ng contacts via <b>Choose Contacts</b>.<br>
+                 4. I-check ang network payload.<br>
+                 5. I-click ang <b>Send SMS</b>.`,
             actionName: "Start Sending Tour",
             actionId: "send_sms"
         },
         'schedule': {
-            en: "Running scheduled campaigns is incredibly easy. Just compile your message in 'Send SMS', but click the Clock icon instead of Send. It will queue into the 'Scheduled' automation queue.",
-            tl: "Napakadaling gumawa ng scheduled campaigns. Gumawa lang ng message sa 'Send SMS', pero i-click ang Clock icon imbis na Send.",
-            actionName: "Go to Automation",
+            en: `To schedule an automated campaign:<br><br>
+                 1. Navigate to <b>Send SMS</b>.<br>
+                 2. Formulate your targets and message body normally.<br>
+                 3. Instead of sending, click the <b>Clock Icon</b> next to the Send button.<br>
+                 4. Define the exact Date and Time.<br>
+                 5. Click <b>Confirm Schedule</b>. It will queue in the background.`,
+            tl: `Para mag-schedule ng text:<br><br>
+                 1. Pumunta sa <b>Send SMS</b>.<br>
+                 2. Ihanda ang message at numbers.<br>
+                 3. I-click ang <b>Clock Icon</b> sa tabi ng Send button.<br>
+                 4. Piliin ang petsa at oras.<br>
+                 5. I-click ang <b>Confirm Schedule</b>.`,
+            actionName: "View Automations",
             actionNavigate: "scheduled"
         },
         'template': {
-            en: "Templates are stored configurations you can reuse instantly. Go to 'Templates', define a name, write your Spintax body, and save it. It will securely sync to the cloud.",
-            tl: "Ang templates ay reusable na messages. Pumunta sa 'Templates', ilagay ang pangalan at mensahe, at i-save. Mag-sy-sync ito sa cloud."
+            en: `To use templates and avoid re-typing:<br><br>
+                 1. Navigate to the <b>Templates</b> panel.<br>
+                 2. Name your template for easy categorization.<br>
+                 3. Input your dynamic text payload.<br>
+                 4. Hit <b>Commit / Save</b>. You can now insert this from the Send SMS view.`,
+            tl: `Para gumamit ng templates:<br><br>
+                 1. Pumunta sa <b>Templates</b>.<br>
+                 2. Bigyan ito ng title.<br>
+                 3. I-type ang mensahe.<br>
+                 4. I-click ang <b>Save</b>. Pwede mo na itong magamit ulit sa pagse-send.`
         },
         'import': {
-            en: "Got massive data? The system supports importing MS Excel (.xlsx) and generic CSV files. Want me to point out the button?",
-            tl: "Maraming data? Supported ng system ang pag-import ng MS Excel (.xlsx) at CSV files. Gusto mong ituro ko yung button?",
+            en: `To bulk import thousands of contacts:<br><br>
+                 1. Open the <b>Contacts Module</b>.<br>
+                 2. Locate the <b>Heavy Import</b> button in the top right.<br>
+                 3. Select an MS Excel (.xlsx) or CSV file.<br>
+                 4. The system will automatically map the columns and sync the cloud.`,
+            tl: `Para mag-import nang maramihan:<br><br>
+                 1. Buksan ang <b>Contacts Module</b>.<br>
+                 2. Hanapin ang <b>Heavy Import</b> sa itaas.<br>
+                 3. Pumili ng Excel o CSV file.<br>
+                 4. Kusa na itong mailalagay sa database.`,
             actionName: "Show me where",
             actionId: "heavy_import"
         },
@@ -39,11 +85,11 @@ window.BrandSyncChatbot = {
             tl: "Gumagamit kami ng GitHub Sync Engine para ma-save ang data sa browser at ma-sync globally para sa team mo. Tiyaking berde ang Heart Pulse!"
         },
         'unsure': {
-            en: "I'm not completely sure I have the latest update on that specific topic. Try asking me about 'Contacts', 'Sending SMS', 'Templates', or 'Imports'.",
-            tl: "Hindi ako sigurado kung nakuha ko ang pinakabagong update para diyan. Subukan magtanong tungkol sa 'Contacts', 'Sending SMS', 'Templates', o 'Imports'."
+            en: "I'm currently unsure, and I don't want to provide inaccurate instructions. Would you like me to scan the system again, or try asking about 'Contacts', 'Send SMS', or 'Scheduling'?",
+            tl: "Hindi ako sigurado at ayokong magbigay ng maling impormasyon. Gusto mo bang i-refresh ko ang kaalaman ko, o magtanong ka tungkol sa 'Contacts', 'Send SMS', o 'Scheduling'?"
         }
     },
-
+    
     PAGE_CONTEXT: {
         'contacts': {
             en: "You are inside the Database root. Notice the global search bar—you can simultaneously search matching Names natively alongside applying active group filters.",
@@ -73,25 +119,50 @@ window.BrandSyncChatbot = {
         });
     },
 
-    // Safely scan the DOM to map available features and buttons dynamically
-    scanSystem() {
-        console.log("[AI Super-Agent] Deep Scan Initiated...");
+    // Controlled Deep Scan Mechanism (Building internal knowledge)
+    scanSystem(force = false) {
+        if (!force && localStorage.getItem('BrandSync_AILearning')) {
+             try {
+                 this.discoveredFeatures = JSON.parse(localStorage.getItem('BrandSync_AILearning'));
+                 console.log("[AI Super-Agent] Loaded System Schema from Memory Map.");
+                 return;
+             } catch(e) { /* fallback to re-scanning */ }
+        }
+
+        console.log("[AI Super-Agent] Deep Scan Initiated. Crawling Application Surface...");
         this.discoveredFeatures = [];
         
-        // Scan main navigation items
+        // Scan structured navigation
         document.querySelectorAll('#mainNav li').forEach(el => {
             const txt = el.innerText.trim();
-            if (txt) this.discoveredFeatures.push(txt.toLowerCase());
+            if (txt) this.discoveredFeatures.push({ type: 'module', name: txt.toLowerCase() });
         });
 
-        // Scan operational actions currently mounted in DOM
+        // Scan operational workflows and UI nodes
         document.querySelectorAll('button').forEach(btn => {
-            if (btn.innerText && btn.innerText.length < 20 && !btn.innerText.includes('<')) {
-                this.discoveredFeatures.push(btn.innerText.trim().toLowerCase());
+            if (btn.innerText && btn.innerText.length < 25 && !btn.innerText.includes('<')) {
+                this.discoveredFeatures.push({
+                    type: 'action',
+                    name: btn.innerText.trim().toLowerCase(),
+                    onclick: btn.getAttribute('onclick') || null
+                });
             }
         });
 
-        console.log("[AI Super-Agent] System Map Index acquired:", [...new Set(this.discoveredFeatures)]);
+        // Save acquired intelligence to local memory
+        localStorage.setItem('BrandSync_AILearning', JSON.stringify(this.discoveredFeatures));
+        console.log(`[AI Super-Agent] Learning Complete. Abstracted ${this.discoveredFeatures.length} endpoints to memory constraint.`);
+    },
+
+    forceSyncKnowledge() {
+        this.addThinkingIndicator();
+        setTimeout(() => {
+            this.scanSystem(true);
+            this.removeThinkingIndicator();
+            this.addBotMessage(this.lang === 'en' ? 
+                "✅ Knowledge Base successfully refreshed. I have re-indexed the DOM schema, modules, and workflows to ensure maximum accuracy." : 
+                "✅ Na-update na ang aking kaalaman. Nakita ko na ang mga bagong buttons at features sa system.");
+        }, 1200);
     },
 
     injectHTML() {
@@ -155,9 +226,10 @@ window.BrandSyncChatbot = {
 
                 <!-- Smart Suggestions -->
                 <div id="aiChatSuggestions" style="padding: 0 16px 12px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;">
-                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('Guide me to add contacts')" style="white-space:nowrap; background: rgba(10,132,255,0.1); border: 1px solid rgba(10,132,255,0.3); color: #0a84ff; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">🎯 Guide: Add Contacts</button>
-                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('What is GitHub Sync?')" style="white-space:nowrap; background: rgba(255,159,10,0.1); border: 1px solid rgba(255,159,10,0.3); color: #ff9f0a; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">☁️ Cloud Logic</button>
+                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('Find David')" style="white-space:nowrap; background: rgba(10,132,255,0.1); border: 1px solid rgba(10,132,255,0.3); color: #0a84ff; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">🔍 Locate Person</button>
+                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('How to add a contact?')" style="white-space:nowrap; background: rgba(10,132,255,0.1); border: 1px solid rgba(10,132,255,0.3); color: #0a84ff; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">🎯 Guide: Contacts</button>
                     <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('How do I send scheduled?')" style="white-space:nowrap; background: rgba(50,215,75,0.1); border: 1px solid rgba(50,215,75,0.3); color: #32d74b; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">⏱️ Automations</button>
+                    <button class="ai-chip" onclick="window.BrandSyncChatbot.submitPredefined('/update')" style="white-space:nowrap; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 12px; padding: 6px 12px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: 0.2s;">🔄 Force Refresh</button>
                 </div>
 
                 <!-- Input Context -->
@@ -247,7 +319,7 @@ window.BrandSyncChatbot = {
         this.submit();
     },
 
-    submit() {
+    async submit() {
         const input = document.getElementById('aiChatInput');
         const text = input.value.trim();
         if(!text) return;
@@ -255,17 +327,33 @@ window.BrandSyncChatbot = {
         this.addUserMessage(text);
         input.value = '';
 
-        // NLP Cognitive Engine Processing Array
+        // NLP Cognitive Engine Processing
         const lower = text.toLowerCase();
+        
+        // INTERCEPT COMMANDS: Deep Admin Refresh
+        if (lower === '/update' || lower === '/refresh' || lower.includes('refresh your knowledge') || lower.includes('update system')) {
+             this.forceSyncKnowledge();
+             return;
+        }
+
+        // INTERCEPT COMMANDS: Natural Language Contact Lookup
+        const isSearchTrigger = lower.startsWith('find ') || lower.startsWith('where is ') || lower.startsWith('search for ') || lower.includes('exist in my contacts');
+        if (isSearchTrigger) {
+             const queryQueryStr = text.replace(/find |where is |search for |do i have /gi, '').replace(/\?/g, '').trim();
+             this.addThinkingIndicator();
+             await this.searchContactNatively(queryQueryStr);
+             return;
+        }
+
         let intentKey = 'unsure';
 
         // Deep Analysis matching
-        if(lower.includes('contact') || lower.includes('add') || lower.includes('people') || lower.includes('database')) intentKey = 'contact';
-        else if(lower.includes('send') || lower.includes('dispatch') || lower.includes('blast')) intentKey = 'send';
-        else if(lower.includes('schedule') || lower.includes('automate') || lower.includes('later')) intentKey = 'schedule';
+        if(lower.includes('contact') || lower.includes('add') || lower.includes('people') || lower.includes('how to put') || lower.includes('database')) intentKey = 'contact';
+        else if(lower.includes('send') || lower.includes('dispatch') || lower.includes('blast') || lower.includes('how to text')) intentKey = 'send';
+        else if(lower.includes('schedule') || lower.includes('automate') || lower.includes('later') || lower.includes('how to automate')) intentKey = 'schedule';
         else if(lower.includes('template') || lower.includes('spintax') || lower.includes('reuse') || lower.includes('save time')) intentKey = 'template';
-        else if(lower.includes('import') || lower.includes('csv') || lower.includes('excel')) intentKey = 'import';
-        else if(lower.includes('sync') || lower.includes('github') || lower.includes('cloud') || lower.includes('save')) intentKey = 'github';
+        else if(lower.includes('import') || lower.includes('csv') || lower.includes('excel') || lower.includes('mass add')) intentKey = 'import';
+        else if(lower.includes('sync') || lower.includes('github') || lower.includes('cloud') || lower.includes('save') || lower.includes('heart')) intentKey = 'github';
 
         // Render response artificially later
         setTimeout(() => {
@@ -281,6 +369,100 @@ window.BrandSyncChatbot = {
 
             this.addBotMessage(kbItem[this.lang] + actionHtml);
         }, 500 + Math.random() * 500); // Compute cycle delay
+    },
+
+    // AUTONOMOUS DB AGENT: Native Contact Mapping Engine
+    async searchContactNatively(query) {
+        if (!query || query.length < 2) {
+             this.removeThinkingIndicator();
+             this.addBotMessage(this.lang === 'en' ? "Please provide a more specific name to scan your database." : "Magbigay ng tiyak na pangalan para mahanap sa database.");
+             return;
+        }
+
+        const contacts = await window.BrandSyncAPI.getContacts();
+        const groups = await window.BrandSyncAPI.getGroups();
+        const grpMap = groups.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
+        
+        const q = query.toLowerCase();
+        const matches = contacts.filter(c => {
+            const groupNames = (c.groupIds || []).map(gid => grpMap[gid]?.name).join(' ').toLowerCase();
+            const searchable = [window.ContactsView.parseName(c.name).full, c.phone, c.company, (c.tags || []).join(' '), groupNames].join(' ').toLowerCase();
+            return searchable.includes(q);
+        });
+
+        setTimeout(() => { // simulate API processing calculation latency
+            this.removeThinkingIndicator();
+
+            if (matches.length === 0) {
+                this.addBotMessage(
+                    this.lang === 'en' ? 
+                    `I couldn't locate any record matching "<b>${query}</b>" in your database.<br><br>Would you like to manually create a new contact?
+                    <div style="margin-top:10px;"><button onclick="window.BrandSyncChatbot.runOnScreenWalkthrough('add_contact')" style="background:#bf5af2; border:none; padding:6px 14px; border-radius:8px; color:#fff; font-size:0.75rem; font-weight:800; cursor:pointer;"><i class="icon-lucide-navigation"></i> Guide Me</button></div>` 
+                    : 
+                    `Wala akong nahanap na record para sa "<b>${query}</b>" sa database.<br><br>Gusto mo bang gumawa ng bagong contact?`
+                );
+                return;
+            }
+
+            if (matches.length === 1) {
+                const c = matches[0];
+                const cleanName = window.ContactsView.parseName(c.name).full;
+                const addedDate = new Date(c.added);
+                const formatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' });
+                const addedDisplay = formatter.format(addedDate);
+                const gNames = (c.groupIds || []).map(gid => `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">${grpMap[gid]?.name}</span>`).join(' ') || '—';
+                
+                this.addBotMessage(
+                    this.lang === 'en' ? 
+                    `Record Located!<br><b>${cleanName}</b> is currently registered in your Active Contacts.<br><br>
+                     <div style="font-size:0.75rem; color:rgba(255,255,255,0.8); background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1); padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:6px;">
+                         <div><span style="opacity:0.5;">Phone:</span> <span style="font-family:monospace;">+${c.phone}</span></div>
+                         <div><span style="opacity:0.5;">Company:</span> ${c.company || '—'}</div>
+                         <div><span style="opacity:0.5;">Groups:</span> ${gNames}</div>
+                         <div style="margin-top:4px; font-size:0.65rem; opacity:0.5;">Added on ${addedDisplay}</div>
+                     </div><br>
+                     Do you want me to navigate you directly to their file so you can edit the geometry?
+                     <div style="margin-top:10px;"><button onclick="window.BrandSyncChatbot.triggerModalOverride('${c.id}')" style="background:#0a84ff; border:none; padding:6px 14px; border-radius:8px; color:#fff; font-size:0.75rem; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(10,132,255,0.3);">Open Contact Details</button></div>` 
+                     : 
+                    `Nahanap ko na!<br>Ang record para kay <b>${cleanName}</b> ay nasa database...`
+                );
+                return;
+            }
+
+            if (matches.length > 1) {
+                let listHtml = matches.slice(0, 4).map(m => `• <b>${window.ContactsView.parseName(m.name).full}</b> <span style="opacity:0.5; font-size:0.7rem;">(+${m.phone})</span>`).join('<br>');
+                if (matches.length > 4) listHtml += `<br><i>...and ${matches.length - 4} more.</i>`;
+
+                this.addBotMessage(
+                    this.lang === 'en' ?
+                    `I encountered <b>${matches.length} matches</b> in the database for "${query}". Which explicit user do you mean?<br>
+                     <div style="margin-top:8px; font-size:0.75rem; color:rgba(255,255,255,0.9); background:rgba(0,0,0,0.2); padding:12px; border:radius:8px; border:1px solid rgba(255,255,255,0.05); line-height:1.6;">${listHtml}</div>
+                     <br>Please refine your search request. Provide their exact surname, company, or international phone number for isolation.`
+                     :
+                    `May nahanap akong <b>${matches.length} contacts</b> para sa "${query}". Alin dito ang tinutukoy mo?<br>Maaari kang magbigay ng karagdagang impormasyon tulad ng apelyido, kumpanya, o numero ng telepono.`
+                );
+            }
+
+        }, 800 + Math.random() * 500);
+    },
+
+    // OVERRIDE: Programmatically jumps to the Contacts view and pops open the Edit Modal.
+    async triggerModalOverride(contactId) {
+        this.toggle(); // Hide Chat
+        window.location.hash = 'contacts';
+        window.showToast("Rerouting to requested contact object...", "info");
+
+        // Give the DOM architectural time to remount
+        setTimeout(async () => {
+            const contacts = await window.BrandSyncAPI.getContacts();
+            const target = contacts.find(x => String(x.id) === String(contactId));
+            if (target) {
+                // Pre-clear any searches to ensure stability
+                if(document.getElementById('contactSearch')) document.getElementById('contactSearch').value = '';
+                await window.ContactsView.loadData();
+                window.ContactsView.openEditModal(target);
+            }
+        }, 500);
     },
 
     // ON-SCREEN INTERACTIVE TUTORIAL ENGINE
@@ -405,6 +587,49 @@ window.BrandSyncChatbot = {
         if(d) document.body.removeChild(d);
     },
 
+    // Render generic visual indicator prior to response completion
+    addThinkingIndicator() {
+        const body = document.getElementById('aiChatBody');
+        const wrapper = document.createElement('div');
+        wrapper.id = 'aiThinkingBubble';
+        wrapper.style.cssText = `
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease-out;
+        `;
+
+        wrapper.innerHTML = `
+            <div style="flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #0a84ff, #bf5af2); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a2 2 0 0 1 2 2c-.11.66.69 1.15 1.14.65l.5-.5a2 2 0 0 1 2.82 2.82l-.5.5c-.5.45-.01 1.25.65 1.14a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2c-.66-.11-1.15.69-.65 1.14l.5.5a2 2 0 0 1-2.82 2.82l-.5-.5c-.45-.5-1.25-.01-1.14.65a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2c.11-.66-.69-1.15-1.14-.65l-.5.5a2 2 0 0 1-2.82-2.82l.5-.5c.5-.45.01-1.25-.65-1.14a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2c.66.11 1.15-.69.65-1.14l-.5-.5a2 2 0 0 1 2.82-2.82l.5.5c.45.5 1.25.01 1.14-.65a2 2 0 0 1-2-2z"></path></svg>
+            </div>
+            <div style="
+                background: rgba(255,255,255,0.06);
+                border: 1px solid rgba(255,255,255,0.05);
+                color: #fff;
+                padding: 12px 16px;
+                border-radius: 18px;
+                border-bottom-left-radius: 4px;
+                font-size: 0.85rem;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            ">
+                <span style="width:4px; height:4px; border-radius:50%; background:#fff; animation: aiDotBounce 1.4s infinite ease-in-out both;"></span>
+                <span style="width:4px; height:4px; border-radius:50%; background:#fff; animation: aiDotBounce 1.4s infinite ease-in-out both 0.16s;"></span>
+                <span style="width:4px; height:4px; border-radius:50%; background:#fff; animation: aiDotBounce 1.4s infinite ease-in-out both 0.32s;"></span>
+            </div>
+        `;
+        body.appendChild(wrapper);
+        this.scrollToBottom();
+    },
+
+    removeThinkingIndicator() {
+         const t = document.getElementById('aiThinkingBubble');
+         if(t) t.remove();
+    },
+
     addUserMessage(text) {
         const body = document.getElementById('aiChatBody');
         const msg = document.createElement('div');
@@ -474,6 +699,7 @@ window.BrandSyncChatbot = {
         style.innerHTML = `
             @keyframes chatPop { 0% { opacity: 0; transform: scale(0.9) translateY(20px); filter:blur(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); filter:blur(0);} }
             @keyframes pulseHalo { 0% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 0 0 rgba(191,90,242,0.8) inset; } 50% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px rgba(191,90,242,1) inset; } 100% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 0 0 rgba(191,90,242,0.8) inset; } }
+            @keyframes aiDotBounce { 0%, 80%, 100% { transform: scale(0); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
             .ai-chip:hover { background: rgba(255,255,255,0.1) !important; transform: translateY(-2px); }
         `;
         document.head.appendChild(style);
