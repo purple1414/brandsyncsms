@@ -247,31 +247,46 @@ window.InboxView = {
         inp.value = '';
         this.loadMessages();
         this.loadConversations();
-        
-        // Auto-reply Bot Logic
-        this.simulateBotReply(this.activeContactId, text);
     },
 
-    simulateBotReply(contactId, userText) {
+    async simulateBotReply(contactId, userText, senderNum) {
         const lower = userText.toLowerCase();
         let replyText = '';
         
         if (lower.includes('hello') || lower.includes('hi')) {
-            replyText = "Hello! This is the automated system checking in. How can I help you today?";
+            replyText = "Hello! This is an automated response from BrandSync. How can we help you today?";
         } else if (lower.includes('discount') || lower.includes('promo')) {
             replyText = "Exciting news! We currently have a 20% discount on all premium upgrades. Reply 'YES' to claim.";
         } else if (lower.includes('help') || lower.includes('support')) {
-            replyText = "Our human agents are offline right now, but I have logged your request. We'll get back to you within 24 hours.";
+            replyText = "Our human agents are offline right now, but your request is logged. We'll get back to you within 24 hours.";
         } else if (lower.includes('status')) {
             replyText = "All node connections are green. Systems operating at 100% capacity.";
         } else if (lower.includes('appointment') || lower.includes('schedule')) {
-            replyText = "Let me check our calendar... We have availability tomorrow at 10:00 AM or 2:00 PM. Which works for you?";
+            replyText = "Checking availability... We have open slots tomorrow at 10:00 AM or 2:00 PM. Reply with your choice!";
         } else {
-            replyText = "Message safely received. I'm currently acting as an automated responder—a human will review this soon.";
+            replyText = "Message safely received. Since I am an automated bot, a human agent will review your text shortly.";
         }
 
         setTimeout(async () => {
-            await window.BrandSyncAPI.saveMessage({ contactId: contactId, text: replyText, sender: 'contact' });
+            // ACTUALLY Dispatch the SMS via PhilSMS API to their real phone number!
+            let phoneTarget = senderNum;
+            if (!phoneTarget || typeof phoneTarget === 'undefined') {
+                 // Fallback: get phone from database if not explicitly parsed
+                 const contacts = await window.BrandSyncAPI.getContacts();
+                 const user = contacts.find(c => String(c.id) === String(contactId));
+                 if (user) phoneTarget = user.phone;
+            }
+
+            if (phoneTarget) {
+                 await window.BrandSyncAPI.sendSMS({
+                     recipients: [phoneTarget],
+                     message: replyText,
+                     senderId: 'PhilSMS' // Or active sender ID
+                 });
+            }
+
+            // Log the bots outbound reply natively
+            await window.BrandSyncAPI.saveMessage({ contactId: contactId, text: replyText, sender: 'user' });
             
             // If the user hasn't switched chats, update the feed
             if (String(this.activeContactId) === String(contactId)) {
@@ -281,7 +296,7 @@ window.InboxView = {
             
             // Visual notification trigger
             if (window.showToast) {
-                window.showToast("New incoming message!", "info");
+                window.showToast("Bot dispatched automatic reply via PhilSMS!", "success");
             }
             if (window.BrandSyncAppInstance && window.BrandSyncAppInstance.refreshGatewayStatus) {
                 window.BrandSyncAppInstance.refreshGatewayStatus();

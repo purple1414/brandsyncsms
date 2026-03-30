@@ -588,6 +588,9 @@ window.BrandSyncAPI = {
         this.runHealth();
         // REDUCED SPAM RATE TO PREVENT 429 ERRORS: 30 seconds instead of 500ms
         setInterval(this.runHealth, 30000); 
+        
+        // 10-Second Live Polling for Incoming PhilSMS Texts
+        setInterval(() => this.pollLiveMessages(), 10000);
 
         // Run Background Data Reconciliation (Pull) every 2 minutes
         setInterval(async () => {
@@ -600,6 +603,91 @@ window.BrandSyncAPI = {
                 await this.githubPull(token, gistId);
             }
         }, 120000);
+    },
+
+    // Polling Mechanism for PhilSMS Live Incoming Messages
+    async pollLiveMessages() {
+        try {
+            const smsRes = await fetch(`${API_URL}sms`, { headers: { 'Authorization': `Bearer ${API_KEY}`, 'Accept': 'application/json' } });
+            if (!smsRes.ok) return;
+            const smsData = await smsRes.json();
+            if (!smsData.data || !smsData.data.data) return;
+
+            const msgs = smsData.data.data;
+            let localMsgs = this._get(BS_STORAGE_KEYS.MESSAGES);
+            let changed = false;
+
+            // Filter for incoming messages (anything not 'api' or 'outbound' direction)
+            const incoming = msgs.filter(m => m.direction && m.direction.toLowerCase() !== 'api' && m.direction.toLowerCase() !== 'outbound');
+
+            for (const inc of incoming) {
+                // Determine sender number (If we receive, the sender is usually 'from', but handles variations)
+                const rawSender = inc.from && inc.from.length > 5 ? inc.from : inc.to;
+                if(!rawSender) continue;
+                const senderNum = String(rawSender).replace(/[^0-9]/g, '');
+                
+                // Track by unique ID to prevent duplicates
+                const extId = inc.uid || `LIVE_${senderNum}_${inc.sent_at}`;
+                const exists = localMsgs.find(lm => lm.externalId === extId);
+                
+                if (!exists) {
+                    let contactId = null;
+                    const contacts = this._get(BS_STORAGE_KEYS.CONTACTS);
+                    let contact = contacts.find(c => String(c.phone).replace(/[^0-9]/g, '') === senderNum);
+                    
+                    if (contact) {
+                        contactId = contact.id;
+                    } else {
+                        // Create unregistered contact dynamically
+                        contactId = Date.now().toString() + "_" + Math.random().toString(36).slice(2, 9);
+                        const newContact = { 
+                            id: contactId,
+                            name: "Live Contact " + senderNum.substring(Math.max(0, senderNum.length - 4)),
+                            phone: senderNum,
+                            added: new Date().toISOString().substring(0, 16).replace('T', ' '),
+                            groupIds: []
+                        };
+                        contacts.unshift(newContact);
+                        this._set(BS_STORAGE_KEYS.CONTACTS, contacts);
+                        
+                        // Force contacts view to refresh if open
+                        if (window.ContactsView && window.location.hash.includes('contacts')) {
+                            window.ContactsView.loadData();
+                        }
+                    }
+
+                    // Log the inbound message
+                    const newMsg = {
+                        id: Date.now() + Math.random(),
+                        externalId: extId,
+                        contactId: contactId,
+                        text: inc.message,
+                        sender: 'contact',
+                        timestamp: new Date(inc.sent_at || Date.now()).toISOString(),
+                        isRead: false
+                    };
+                    localMsgs.push(newMsg);
+                    changed = true;
+
+                    // Trigger Auto-Reply Logic natively in the Inbox (if available), or fall back here.
+                    if (window.InboxView && window.InboxView.simulateBotReply) {
+                        window.InboxView.simulateBotReply(contactId, inc.message, senderNum);
+                    }
+                }
+            }
+
+            if (changed) {
+                this._set(BS_STORAGE_KEYS.MESSAGES, localMsgs);
+                if (window.BrandSyncAppInstance) window.BrandSyncAppInstance.refreshGatewayStatus();
+                // Refresh Inbox instantly if active
+                if (window.InboxView && window.location.hash === '#inbox') {
+                    window.InboxView.loadConversations();
+                    setTimeout(() => { if (window.InboxView.activeContactId) window.InboxView.loadMessages(); }, 200);
+                }
+            }
+        } catch (e) {
+            console.error("PhilSMS Live Polling Error:", e);
+        }
     }
 };
 
