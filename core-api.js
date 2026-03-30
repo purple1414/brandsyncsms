@@ -699,10 +699,12 @@ window.BrandSyncAPI = {
         const API_KEY = "OUp6qm8VbX7rrJm5"; // Primary Method A
         const PASSWORD = "Sfgroup@2023!";     // Fallback Method B
         
-        // REDUNDANT PROXY POOL: Rotate if primary is blocked or overloaded
+        // ADVANCED REDUNDANT PROXY POOL: Expanded to include more robust bypass layers
         const PROXY_POOL = [
             "https://corsproxy.io/?",               // Primary: Transparent
-            "https://api.allorigins.win/get?url="   // Secondary: Wrapped Output
+            "https://thingproxy.freeboard.io/fetch/", // Secondary: Independent
+            "https://api.allorigins.win/get?url=",   // Tertiary: Backup (Wrapped Output)
+            "https://cors-proxy.htmldriven.com/?url=" // Quaternary: Extra Fallback
         ];
 
         if (this._crmLock && !isRetry) return { success: false, message: "Handshake already active." };
@@ -713,9 +715,17 @@ window.BrandSyncAPI = {
             for (const proxy of PROXY_POOL) {
                 try {
                     const tunnelUrl = proxy + encodeURIComponent(url);
-                    const res = await fetch(tunnelUrl, { cache: 'no-store' });
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second lookup timeout
+
+                    const res = await fetch(tunnelUrl, { 
+                        cache: 'no-store',
+                        signal: controller.signal,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    clearTimeout(timeoutId);
+
                     if (!res.ok) throw new Error(`Tunnel Error: ${res.status}`);
-                    
                     const data = await res.json();
                     
                     // Branch: Handle AllOrigins wrapping vs Transparent proxies
@@ -727,11 +737,13 @@ window.BrandSyncAPI = {
                     // Standard transparent proxy logic
                     return data;
                 } catch (e) {
-                    console.warn(`CRM Proxy Handshake Failure (${proxy.split('/')[2]}): ${e.message}`);
-                    lastErr = e;
+                    const isTimeout = e.name === 'AbortError';
+                    const host = (proxy.split('/')[2] || 'unknown_host').replace('?', '');
+                    console.warn(`CRM Proxy Fail (${host}): ${isTimeout ? 'Timed out' : e.message}`);
+                    lastErr = isTimeout ? new Error(`Proxy ${host} Timed Out`) : e;
                 }
             }
-            throw new Error(`All redundant CORS proxies failed. Network isolation suspected: ${lastErr?.message}`);
+            throw new Error(`CRITICAL: All CORS proxies exhausted or blocked. Last Error: ${lastErr?.message}`);
         };
 
         try {
