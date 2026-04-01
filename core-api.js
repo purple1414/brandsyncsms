@@ -692,142 +692,29 @@ window.BrandSyncAPI = {
         }
     },
 
-    // Agridom Centralized CRM Integration (Session-Persistence + Dual-Auth Edition)
-    async fetchCentralizedContacts(isRetry = false) {
-        const BASE_URL = "https://agridomcorp.com/warehouse/webservice.php";
-        const USERNAME = "pcalpas";
-        const API_KEY = "OUp6qm8VbX7rrJm5"; // Primary Method A
-        const PASSWORD = "Sfgroup@2023!";     // Fallback Method B
-        
-        // ALLORIGINS IS MANDATORY: It utilizes a static IPv4 egress footprint. 
-        // Vtiger backend load-balancers use IP-Hasing for sticky sessions.
-        // Distributed CDNs like CorsProxy rotate IPs, destroying the token state on the backend replica!
-        const PROXY_POOL = [
-            "https://api.allorigins.win/get?url=",   // Primary: Static IP Footprint
-            "https://corsproxy.io/?",               // Secondary: Fast but volatile IP
-        ];
-
-        if (this._crmLock && !isRetry) return { success: false, message: "Handshake already active." };
-        if (!isRetry) this._crmLock = true;
-
-        const proxyRequest = async (url) => {
-            // Append a cache-buster to prevent public proxies from serving stale responses (crucial for tokens)
-            const cacheSeparator = url.includes('?') ? '&' : '?';
-            const cacheBustedUrl = `${url}${cacheSeparator}_cb=${Date.now()}`;
-            
-            let lastErr = null;
-            for (const proxy of PROXY_POOL) {
-                try {
-                    const tunnelUrl = proxy + encodeURIComponent(cacheBustedUrl);
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000); 
-
-                    const res = await fetch(tunnelUrl, { 
-                        cache: 'no-store',
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeoutId);
-
-                    if (!res.ok) throw new Error(`Tunnel Error: ${res.status}`);
-                    const data = await res.json();
-                    
-                    if (proxy.includes('allorigins')) {
-                        if (!data.contents) throw new Error("Empty AllOrigins Content");
-                        return typeof data.contents === 'string' ? JSON.parse(data.contents) : data.contents;
-                    }
-                    
-                    return data;
-                } catch (e) {
-                    const isTimeout = e.name === 'AbortError';
-                    const host = (proxy.split('/')[2] || 'unknown_host').replace('?', '');
-                    console.warn(`CRM Proxy Fail (${host}): ${isTimeout ? 'Timed out' : e.message}`);
-                    lastErr = isTimeout ? new Error(`Proxy ${host} Timed Out`) : e;
-                }
-            }
-            throw new Error(`CRITICAL: All CORS proxies exhausted or blocked. Last Error: ${lastErr?.message}`);
+    // Brand-Sync Lead Syndication Integration (External Pull)
+    async fetchBrandSyncLeads() {
+        const CONFIG = {
+            LIVE_URL: 'https://brand-sync.onrender.com', 
+            PASSCODE: 'dadasafa'
         };
 
         try {
-            // Check for valid cached session first
-            let sessionName = localStorage.getItem('BS_CRM_SESSION');
-            let sessionTime = parseInt(localStorage.getItem('BS_CRM_SESSION_TIME') || '0');
-            const oneHour = 3600000;
+            console.log('--- INITIATING BRAND-SYNC LEAD PULL ---');
+            const url = `${CONFIG.LIVE_URL}/api/external/sync?pass=${CONFIG.PASSCODE}`;
+            const response = await fetch(url);
 
-            if (!sessionName || (Date.now() - sessionTime > oneHour) || isRetry) {
-                if (!isRetry) window.showToast("Handshaking with Central Warehouse...", "info");
-                else console.log("CRM: Re-authenticating session...");
-                
-                // STEP 1: Fast Handshake
-                const chal = await proxyRequest(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
-                if (!chal.success) throw new Error("Security handshake rejected.");
-                let token = (chal.result.token || '').trim();
-                
-                // MULTI-AUTH ATTEMPTOR (Token must be passed dynamically because they are single-use)
-                const tryAuth = async (secret, isPlain, currentToken) => {
-                    const normalizedSecret = isPlain ? secret : window.md5(secret).toLowerCase();
-                    const accessKey = window.md5(currentToken + normalizedSecret).toLowerCase();
-                    
-                    // Exclusively use GET logic to maintain compatibility with AllOrigins static routing
-                    const loginUrl = `${BASE_URL}?operation=login&username=${encodeURIComponent(USERNAME)}&accessKey=${encodeURIComponent(accessKey)}`;
-                    return await proxyRequest(loginUrl);
-                };
-
-                // ATTEMPT A: API Key (Static Method)
-                let auth = await tryAuth(API_KEY, true, token);
-                
-                // ATTEMPT B: Password MD5 (Legacy fallback for some Vtiger 7 configurations)
-                if (!auth.success) {
-                    const errA = auth.error ? auth.error.message : "Unknown Error";
-                    console.warn(`[CRM] Method A (API Key) rejected: ${errA}. Re-handshaking for Method B (MD5 Password)...`);
-                    
-                    // MUST get a fresh token because Vtiger consumes the token on ANY login attempt
-                    const chal2 = await proxyRequest(`${BASE_URL}?operation=getchallenge&username=${USERNAME}`);
-                    if (!chal2.success) throw new Error("Secondary security handshake rejected.");
-                    
-                    token = (chal2.result.token || '').trim();
-                    auth = await tryAuth(PASSWORD, false, token);
-                }
-
-                if (!auth.success) {
-                    const rawMsg = auth.error ? auth.error.message : "Access Denied";
-                    throw new Error(rawMsg);
-                }
-                
-                sessionName = auth.result.sessionName;
-                localStorage.setItem('BS_CRM_SESSION', sessionName);
-                localStorage.setItem('BS_CRM_SESSION_TIME', Date.now().toString());
-                if (!isRetry) window.showToast("Secure session anchored.", "info");
+            if (!response.ok) {
+                if (response.status === 401) throw new Error('Invalid Passcode');
+                throw new Error(`HTTP Error: ${response.status}`);
             }
 
-            // STEP 3: Identity Reconstruction
-            if (!isRetry) window.showToast("Harvesting records...", "info");
-            const query = encodeURIComponent("SELECT id, firstname, lastname, mobile, phone, farm_name FROM Contacts LIMIT 500;");
-            
-            // Execute natively via GET
-            const qRes = await proxyRequest(`${BASE_URL}?operation=query&sessionName=${encodeURIComponent(sessionName)}&query=${query}`);
-
-            // STEP 4: Session Recovery Logic
-            if (!qRes.success && qRes.error) {
-                const isInvalidSession = qRes.error.code === 'INVALID_SESSIONID' || 
-                                        (qRes.error.message && qRes.error.message.toLowerCase().includes('token is invalid or expired'));
-                
-                if (isInvalidSession && !isRetry) {
-                    console.warn("Centralized CRM: Session expired. Initiating automatic handshake recovery...");
-                    localStorage.removeItem('BS_CRM_SESSION');
-                    return await this.fetchCentralizedContacts(true); // Recursive recovery call
-                }
-            }
-
-            if (!qRes.success) {
-                const errorMsg = qRes.error ? qRes.error.message : "Identity sweep failed.";
-                throw new Error(errorMsg);
-            }
-
+            const data = await response.json();
             let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
             let importedCount = 0;
 
-            qRes.result.forEach(item => {
-                const phone = String(item.mobile || item.phone || '').replace(/[^0-9]/g, '');
+            data.leads.forEach(lead => {
+                const phone = String(lead.phone || '').replace(/[^0-9]/g, '');
                 if (!phone) return;
 
                 const existsPending = pending.find(p => String(p.phone).replace(/[^0-9]/g, '') === phone);
@@ -836,14 +723,16 @@ window.BrandSyncAPI = {
 
                 if (!existsPending && !existsMain) {
                     pending.unshift({
-                        id: 'PEND_CRM_' + item.id.replace(/:/g, '_'),
-                        name: item.firstname || item.farm_name || 'CRM Lead',
+                        id: 'PEND_BS_' + (lead.id || Date.now() + Math.random()),
+                        name: lead.name || 'Cloud Lead',
                         phone: phone,
-                        company: item.farm_name || 'Agridom Farm',
-                        position: item.lastname || 'Lead',
+                        email: lead.email || 'N/A',
+                        company: lead.company || 'Brand-Sync Origin',
+                        position: lead.approval_status || 'Lead',
+                        event: lead.event || 'N/A',
                         interest: '',
                         added: new Date().toISOString().substring(0, 10),
-                        source: 'Agridom CRM'
+                        source: 'Brand-Sync'
                     });
                     importedCount++;
                 }
@@ -853,12 +742,11 @@ window.BrandSyncAPI = {
             return { success: true, count: importedCount, totalPending: pending.length };
 
         } catch (err) {
-            console.error("Centralized CRM Error:", err);
-            return { success: false, message: `Access Alert: ${err.message}` };
-        } finally {
-            if (!isRetry) this._crmLock = false;
+            console.error("Brand-Sync Pull Error:", err);
+            return { success: false, message: err.message };
         }
     },
+
 
     getPendingContacts() {
         return this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);

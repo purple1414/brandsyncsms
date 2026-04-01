@@ -266,11 +266,12 @@ window.ContactsView = {
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <h3 style="font-size:1.4rem; font-weight:800; color:#ff9f0a; margin-bottom:4px;">Pending Contacts Review</h3>
-                            <p style="font-size:0.8rem; color:rgba(255,159,10,0.5);">Review and approve contacts from Agridom Centralized CRM.</p>
+                            <p style="font-size:0.8rem; color:rgba(255,159,10,0.5);">Review and approve contacts from Brand-Sync Lead Syndication.</p>
                         </div>
-                        <div style="display:flex; gap:12px;">
-                            <button onclick="window.ContactsView.pullCentralized()" class="btn" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:10px 18px; border-radius:14px; font-weight:700; display:flex; align-items:center; gap:8px;">
-                                <i class="icon-lucide-refresh-cw"></i> Pull from CRM
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <span id="sync-status" style="font-size:0.75rem; color:rgba(255,159,10,0.6); font-weight:700;">Ready to sync</span>
+                            <button id="pull-leads-btn" class="btn" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:10px 18px; border-radius:14px; font-weight:700; display:flex; align-items:center; gap:8px;">
+                                <i class="icon-lucide-refresh-cw"></i> Pull from Brand-Sync
                             </button>
                             <button onclick="window.ContactsView.closePendingModal()" style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; cursor:pointer;">&times;</button>
                         </div>
@@ -283,7 +284,7 @@ window.ContactsView = {
                         <button onclick="window.ContactsView.bulkApprovePending()" class="btn" style="background:rgba(50,215,75,0.15); border:1px solid rgba(50,215,75,0.3); color:#32d74b; padding:8px 20px; border-radius:12px; font-weight:800; font-size:0.85rem;">Approve Selected</button>
                     </div>
 
-                    <div style="background:rgba(0,0,0,0.2); border-radius:24px; border:1px solid rgba(255,255,255,0.05); overflow:hidden;">
+                    <div id="contacts" style="background:rgba(0,0,0,0.2); border-radius:24px; border:1px solid rgba(255,255,255,0.05); overflow:hidden;">
                         <table style="width:100%; border-collapse:collapse;">
                             <thead style="background:rgba(255,255,255,0.02);">
                                 <tr>
@@ -300,7 +301,7 @@ window.ContactsView = {
                         <div id="pendingEmptyState" style="display:none; padding:80px 20px; text-align:center; color:rgba(255,255,255,0.2);">
                             <i class="icon-lucide-users" style="font-size:3rem; margin-bottom:16px; display:block; opacity:0.3;"></i>
                             <p style="font-weight:600;">No pending contacts to review.</p>
-                            <p style="font-size:0.8rem; margin-top:4px;">Click 'Pull from CRM' to fetch latest data.</p>
+                            <p style="font-size:0.8rem; margin-top:4px;">Click 'Pull from Brand-Sync' to fetch latest data.</p>
                         </div>
                     </div>
                 </div>
@@ -1505,8 +1506,8 @@ window.ContactsView = {
     },
 
     async pullCentralized() {
-        window.showToast("Fetching records from Central CRM...", "info");
-        const res = await window.BrandSyncAPI.fetchCentralizedContacts();
+        window.showToast("Fetching records from Brand-Sync...", "info");
+        const res = await window.BrandSyncAPI.fetchBrandSyncLeads();
         if (res.success) {
             window.showToast(`Imported ${res.count} new pending contacts. Total: ${res.totalPending}`, "success");
             this.loadPendingData();
