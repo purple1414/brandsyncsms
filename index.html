@@ -35,10 +35,10 @@
             <div style="height:1px; background:rgba(255,255,255,0.08); margin-bottom:24px;"></div>
             
             <p style="color:rgba(255,255,255,0.3); font-size:0.8rem; margin-bottom:12px;">Need access?</p>
-            <a href="mailto:sfgcgraphics@gmail.com?subject=BrandSync%20Access%20Request&body=Please%20verify%20my%20identity%20for%20access." style="display:inline-flex; align-items:center; gap:8px; color:#ff9f0a; font-weight:800; text-decoration:none; font-size:0.85rem; padding:10px 20px; border-radius:10px; border:1px solid rgba(255,159,10,0.2); background:rgba(255,159,10,0.05); transition:0.3s;" onmouseover="this.style.background='rgba(255,159,10,0.1)'">
-                <i class="icon-lucide-mail" style="font-size:0.9rem;"></i>
+            <button onclick="window.showToast('Please request credential to Jek from marketing or the DSI Team', 'info')" style="display:inline-flex; align-items:center; gap:8px; color:#ff9f0a; font-weight:800; text-decoration:none; font-size:0.85rem; padding:10px 20px; border-radius:10px; border:1px solid rgba(255,159,10,0.2); background:rgba(255,159,10,0.05); transition:0.3s; cursor:pointer;" onmouseover="this.style.background='rgba(255,159,10,0.1)'" onmouseout="this.style.background='rgba(255,159,10,0.05)'">
+                <i class="icon-lucide-info" style="font-size:0.9rem;"></i>
                 Request Credentials
-            </a>
+            </button>
         </div>
         <p style="position:fixed; bottom:32px; color:rgba(255,255,255,0.15); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;">© 2026 BrandSync Intelligence Engine v1.0.4</p>
     </div>
@@ -357,23 +357,30 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
+    <!-- Services & Engine -->
     <script src="config.js?v=CRM_MASTER_v5"></script>
     <script src="core-api.js?v=CRM_MASTER_v5"></script>
     <script src="utils.js?v=CRM_MASTER_v5"></script>
-    <script src="dashboard.js?v=CRM_MASTER_v5"></script>
-    <script src="send-sms.js?v=CRM_MASTER_v5"></script>
-    <script src="contacts.js?v=CRM_MASTER_v5"></script>
     <script src="scheduler.js?v=CRM_MASTER_v5"></script>
-    <script src="scheduled.js?v=CRM_MASTER_v5"></script>
-    <script src="templates.js?v=CRM_MASTER_v5"></script>
-    <script src="campaigns.js?v=CRM_MASTER_v5"></script>
-    <script src="automation.js?v=CRM_MASTER_v5"></script>
-    <script src="inbox.js?v=CRM_MASTER_v5"></script>
-    <script src="blacklist.js?v=CRM_MASTER_v5"></script>
-    <script src="js/api-view.js?v=CRM_MASTER_v5"></script>
-    <script src="js/chatbot.js?v=CRM_MASTER_v5"></script>
-    <script src="js/integration_code.js?v=CRM_MASTER_v5"></script>
-    <script src="js/app.js?v=CRM_MASTER_v5"></script>
+
+    <!-- Views & Components -->
+    <script src="views/dashboard.js?v=CRM_MASTER_v5"></script>
+    <script src="views/send-sms.js?v=CRM_MASTER_v5"></script>
+    <script src="views/contacts.js?v=CRM_MASTER_v5"></script>
+    <script src="views/scheduled.js?v=CRM_MASTER_v5"></script>
+    <script src="views/templates.js?v=CRM_MASTER_v5"></script>
+    <script src="views/campaigns.js?v=CRM_MASTER_v5"></script>
+    <script src="views/automation.js?v=CRM_MASTER_v5"></script>
+    <script src="views/inbox.js?v=CRM_MASTER_v5"></script>
+    <script src="views/blacklist.js?v=CRM_MASTER_v5"></script>
+    <script src="views/api-view.js?v=CRM_MASTER_v5"></script>
+
+    <!-- Standalone Helpers -->
+    <script src="chatbot.js?v=CRM_MASTER_v5"></script>
+    <script src="integration_code.js?v=CRM_MASTER_v5"></script>
+
+    <!-- Main Entry Point -->
+    <script src="views/app.js?v=CRM_MASTER_v5"></script>
 </body>
 
 </html>
