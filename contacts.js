@@ -26,7 +26,7 @@ window.ContactsView = {
                         <h2 id="viewTitle" style="font-size: 1.1rem; font-weight: 700; color: #fff; white-space: nowrap;">All Contacts</h2>
                         
                         <!-- Search & Multi-Delete Controls -->
-                        <div style="flex: 1; max-width: none; position: relative;">
+                        <div style="flex: 1; max-width: none; position: relative; z-index: 50;">
                             
                             <!-- Default State (Search & Filters) -->
                             <div id="defaultActionControls" style="display: flex; gap:12px; align-items: center; justify-content: flex-end; width:100%; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); opacity: 1; transform: translateY(0);">
