@@ -692,17 +692,20 @@ window.BrandSyncAPI = {
         }
     },
 
-    // Brand-Sync Lead Syndication Integration (External Pull)
+    // Brand-Sync Lead Syndication Integration (External Pull-through)
     async fetchBrandSyncLeads() {
         const CONFIG = {
-            LIVE_URL: 'https://brand-sync.onrender.com', 
+            // Using a CORS proxy to bypass cross-origin browser restrictions (mandatory for Render/Hosted API)
+            LIVE_URL: 'https://corsproxy.io/?' + encodeURIComponent('https://brand-sync.onrender.com'), 
             PASSCODE: 'dadasafa'
         };
 
         try {
             console.log('--- INITIATING BRAND-SYNC LEAD PULL ---');
-            const url = `${CONFIG.LIVE_URL}/api/external/sync?pass=${CONFIG.PASSCODE}`;
-            const response = await fetch(url);
+            const targetUrl = `https://brand-sync.onrender.com/api/external/sync?pass=${CONFIG.PASSCODE}`;
+            const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+            
+            const response = await fetch(proxiedUrl);
 
             if (!response.ok) {
                 if (response.status === 401) throw new Error('Invalid Passcode');
