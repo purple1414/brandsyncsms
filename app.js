@@ -529,7 +529,7 @@ class BrandSyncApp {
         }
         if (elCamp) {
             elCamp.innerText = health.campaignsCount;
-            elCamp.style.color = health.campaignsCount > 0 ? '#0a84ff' : 'rgba(255,255,255,0.4)';
+            elCamp.style.color = health.campaignsCount > 4 ? '#0a84ff' : 'rgba(255,255,255,0.4)';
         }
 
         // Sidebar Menu Node Updates
