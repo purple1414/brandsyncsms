@@ -262,7 +262,7 @@ window.UsersView = {
             return `
                 <div class="role-opt role-${r.key} ${active ? 'active-role' : ''}" 
                      data-role="${r.key}" 
-                     onclick="${disabled ? '' : `document.querySelectorAll('.role-opt').forEach(el=>el.classList.remove('active-role')); this.classList.add('active-role');`}" 
+                     onclick="${disabled ? 'event.stopPropagation()' : `window.UsersView.selectRole('${r.key}', this)`}" 
                      style="opacity:${disabled ? '0.35' : '1'}; cursor:${disabled ? 'not-allowed' : 'pointer'};">
                     <div style="font-size:0.8rem; font-weight:800; color:#fff; margin-bottom:4px;">${r.label}</div>
                     <div style="font-size:0.6rem; color:rgba(255,255,255,0.3);">${r.desc}</div>
@@ -271,6 +271,11 @@ window.UsersView = {
         }).join('');
 
         document.getElementById('userModal').style.display = 'flex';
+    },
+
+    selectRole(roleKey, el) {
+        document.querySelectorAll('.role-opt').forEach(opt => opt.classList.remove('active-role'));
+        el.classList.add('active-role');
     },
 
     closeUserModal() {
