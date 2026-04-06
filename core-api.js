@@ -69,9 +69,24 @@ window.BrandSyncAPI = {
 
         if (token && gistId) {
             console.log("GitHub Cloud Engine: Synchronizing Master Database...");
-            this.githubPull(token, gistId).then(result => {
-                if(result && result.success) console.log("GitHub Cloud Engine: Cloud State Mounted.");
-            });
+            const doSync = () => {
+                this.githubPull(token, gistId).then(result => {
+                    if(result && result.success) {
+                        if (result.changed) console.log("GitHub Cloud Engine: Remote updates detected and applied.");
+                        localStorage.setItem('BS_SYNC_READY', 'true');
+                    }
+                });
+            };
+
+            // Immediate initial pull
+            doSync();
+
+            // Active Background Polling (Every 90 seconds)
+            if (this._syncInterval) clearInterval(this._syncInterval);
+            this._syncInterval = setInterval(() => {
+                console.log("GitHub Cloud Engine: Background heartbeat synchronization...");
+                doSync();
+            }, 90000); 
         }
     },
 
