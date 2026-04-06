@@ -1152,10 +1152,9 @@ window.ContactsView = {
                         if (raw === null || raw === undefined) return null;
                         let num = String(raw).replace(/[^\d]/g, '');
                         if (!num || num.length < 10) return null;
-                        if (num.startsWith('09') && num.length === 11) num = '63' + num.substring(1);
+                        if (num.startsWith('6309') && num.length === 13) num = '63' + num.substring(3);
+                        else if (num.startsWith('09') && num.length === 11) num = '63' + num.substring(1);
                         else if (num.startsWith('9') && num.length === 10) num = '63' + num;
-                        else if (num.startsWith('639') && num.length === 12) return num;
-                        else if (num.startsWith('6309') && num.length === 13) num = '63' + num.substring(3);
                         return /^639\d{9}$/.test(num) ? num : null;
                     };
 
@@ -1314,50 +1313,54 @@ window.ContactsView = {
     parseName(raw) {
         let s = String(raw || '').trim();
         if (!s) return { first: '', mi: '', last: '', full: 'Unknown' };
+        
+        // Handle "Last, First" format
         if (s.includes(',')) {
-            const [lastNamePart, rest] = s.split(',').map(p => p.trim());
-            if (lastNamePart && rest) s = `${rest} ${lastNamePart}`;
+            const parts = s.split(',').map(p => p.trim());
+            if (parts.length >= 2) {
+                const lastName = parts[0];
+                const firstNamePart = parts.slice(1).join(' ');
+                s = `${firstNamePart} ${lastName}`;
+            }
         }
+        
+        // Basic Title Case
         s = s.toLowerCase().replace(/(^|[ \-\/])([a-z0-9])/g, m => m.toUpperCase());
         const parts = s.split(/\s+/).filter(Boolean);
+        
+        if (parts.length === 1) return { first: parts[0], mi: '', last: '', full: parts[0] };
+        
+        // PH SURNAMES DETECTION: common multi-word surnames
+        const surnamePrefixes = ['Dela', 'Delos', 'De', 'La', 'Santa', 'Santo', 'San', 'Van', 'Von', 'Du'];
+        
         let first = '', mi = '', last = '';
-        if (parts.length === 1) {
-            first = parts[0];
-        } else if (parts.length === 2) {
-            first = parts[0]; last = parts[1];
-        } else {
-            first = parts[0]; 
-            last = parts[parts.length - 1];
-            const middleParts = parts.slice(1, -1);
-            
-            let explicitMiIndex = -1;
-            for(let i = middleParts.length - 1; i >= 0; i--) {
-                const pure = middleParts[i].replace(/\./g, '');
-                if (pure.length === 1) {
-                    explicitMiIndex = i;
-                    break;
-                }
-            }
-            
-            if (explicitMiIndex !== -1) {
-                // We found a standalone 1-letter initial word
-                mi = middleParts[explicitMiIndex].charAt(0).toUpperCase() + '.';
-                // Any middle parts *before* this explicit initial actually belong to the first name! (e.g. "Cherie Ann C." -> "Ann" is extra first name)
-                const extraFirst = middleParts.slice(0, explicitMiIndex).filter(p => {
-                    // Prevent concatenating raw duplicate initials to first name (like if they typed 'S.' twice)
-                    const pure = p.replace(/\./g, '');
-                    return !(pure.length === 1 && pure.charAt(0).toUpperCase() === mi.charAt(0));
-                });
-                if (extraFirst.length > 0) first += ' ' + extraFirst.join(' ');
-            } else {
-                // No explicit initial found (like "Juan Miguel Dela Cruz"). Assume the last middle word is the middle name.
-                if (middleParts.length > 0) {
-                    const lastMid = middleParts.pop();
-                    mi = lastMid.charAt(0).toUpperCase() + '.';
-                    if (middleParts.length > 0) first += ' ' + middleParts.join(' ');
-                }
+        
+        // Search for Middle Initial (single character word)
+        let miIndex = -1;
+        for (let i = 1; i < parts.length - 1; i++) {
+            const part = parts[i].replace(/\./g, '');
+            if (part.length === 1) {
+                miIndex = i;
+                break;
             }
         }
+
+        if (miIndex !== -1) {
+            first = parts.slice(0, miIndex).join(' ');
+            mi = parts[miIndex].charAt(0).toUpperCase() + '.';
+            last = parts.slice(miIndex + 1).join(' ');
+        } else {
+            // Check if the penultimate word is a surname prefix
+            const penultimate = parts[parts.length - 2];
+            if (surnamePrefixes.includes(penultimate) && parts.length >= 3) {
+                last = parts.slice(parts.length - 2).join(' ');
+                first = parts.slice(0, parts.length - 2).join(' ');
+            } else {
+                last = parts[parts.length - 1];
+                first = parts.slice(0, parts.length - 1).join(' ');
+            }
+        }
+        
         const full = `${first} ${mi ? mi + ' ' : ''}${last}`.trim().replace(/\s+/g, ' ');
         return { first, mi, last, full };
     },
