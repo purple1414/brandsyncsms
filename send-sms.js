@@ -779,12 +779,12 @@ window.SendSMSView = {
             const isSch = scheduleTime.style.display !== 'none' && scheduleTime.value;
 
             // Prevent multiple modals from overlapping
-            const existingModal = document.getElementById('confirmModal');
+            const existingModal = document.getElementById('smsConfirmModal');
             if (existingModal) existingModal.remove();
 
             const totalCredits = validRecipients.length * calc.segments;
             const modalHTML = `
-                <div id="confirmModal" class="apple-modal-overlay">
+                <div id="smsConfirmModal" class="apple-modal-overlay">
                     <div class="apple-modal-card">
                         <div class="modal-body">
                             <div class="modal-icon">
@@ -816,7 +816,7 @@ window.SendSMSView = {
             `;
             document.body.insertAdjacentHTML('beforeend', modalHTML);
 
-            const m = document.getElementById('confirmModal');
+            const m = document.getElementById('smsConfirmModal');
             document.getElementById('cancelConfBtn').onclick = () => m.remove();
             
             let processing = false;
