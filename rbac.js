@@ -13,16 +13,16 @@ window.RBAC = {
         // Templates
         create_template:    { superadmin: true, manager: true, user: true },
         edit_template:      { superadmin: true, manager: true, user: true },
-        delete_template:    { superadmin: true, manager: true, user: false },
+        delete_template:    { superadmin: true, manager: true, user: true },
         create_folder:      { superadmin: true, manager: true, user: true },
-        delete_folder:      { superadmin: true, manager: true, user: false },
+        delete_folder:      { superadmin: true, manager: true, user: true },
 
         // Contacts
         add_contact:        { superadmin: true, manager: true, user: true },
         edit_contact:       { superadmin: true, manager: true, user: true },
-        delete_contact:     { superadmin: true, manager: true, user: false },
+        delete_contact:     { superadmin: true, manager: true, user: true },
         import_contacts:    { superadmin: true, manager: true, user: true },
-        delete_group:       { superadmin: true, manager: true, user: false },
+        delete_group:       { superadmin: true, manager: true, user: true },
 
         // Dashboard
         view_dashboard:     { superadmin: true, manager: true, user: true },
@@ -33,16 +33,16 @@ window.RBAC = {
         delete_user:        { superadmin: true, manager: true, user: false },
 
         // System
-        access_api:         { superadmin: true, manager: true, user: false },
+        access_api:         { superadmin: true, manager: true, user: true },
         view_audit:         { superadmin: true, manager: true, user: false },
-        export_data:        { superadmin: true, manager: true, user: false },
-        import_data:        { superadmin: true, manager: false, user: false },
+        export_data:        { superadmin: true, manager: true, user: true },
+        import_data:        { superadmin: true, manager: true, user: false },
 
         // Navigation visibility
         nav_users:          { superadmin: true, manager: true, user: false },
-        nav_api:            { superadmin: true, manager: true, user: false },
-        nav_automation:     { superadmin: true, manager: true, user: false },
-        nav_blacklist:      { superadmin: true, manager: true, user: false },
+        nav_api:            { superadmin: true, manager: true, user: true },
+        nav_automation:     { superadmin: true, manager: true, user: true },
+        nav_blacklist:      { superadmin: true, manager: true, user: true },
         nav_campaigns:      { superadmin: true, manager: true, user: true },
         nav_inbox:          { superadmin: true, manager: true, user: true },
     },
