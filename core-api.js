@@ -68,26 +68,25 @@ window.BrandSyncAPI = {
         const gistId = config.gistId || (window.BrandSyncConfig ? window.BrandSyncConfig.DEFAULT_GIST_ID : null);
 
         if (token && gistId) {
-            console.log("GitHub Cloud Engine: Synchronizing Master Database...");
+            console.log("GitHub Cloud Engine: Cloud Parity Active.");
             const doSync = () => {
                 this.githubPull(token, gistId).then(result => {
                     if(result && result.success) {
-                        if (result.changed) console.log("GitHub Cloud Engine: Remote updates detected and applied.");
                         localStorage.setItem('BS_SYNC_READY', 'true');
                         localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
                     }
                 });
             };
 
-            // Immediate initial pull
+            // Initial pull
             doSync();
 
-            // Background Auto-Sync (Every 5 minutes for stability)
+            // FAST HEARTBEAT (60 seconds for team parity)
             if (this._syncInterval) clearInterval(this._syncInterval);
             this._syncInterval = setInterval(() => {
-                console.log("GitHub Cloud Engine: Background Heartbeat Data Recon...");
+                console.log("GitHub Cloud Engine: Pulse Syncing with Master Gist...");
                 doSync();
-            }, 300000); 
+            }, 60000); 
         }
     },
 
@@ -184,12 +183,46 @@ window.BrandSyncAPI = {
             
             const data = JSON.parse(file.content);
             let changed = false;
-            Object.keys(data).forEach(storageKey => {
-                const existing = localStorage.getItem(storageKey);
-                const incoming = JSON.stringify(data[storageKey]);
-                if (existing !== incoming) changed = true;
-                localStorage.setItem(storageKey, incoming);
+            
+            Object.keys(BS_STORAGE_KEYS).forEach(k => {
+                const storageKey = BS_STORAGE_KEYS[k];
+                if (!data[storageKey]) return;
+
+                const localRaw = localStorage.getItem(storageKey);
+                const local = localRaw ? JSON.parse(localRaw) : [];
+                const remote = data[storageKey];
+
+                if (!Array.isArray(remote)) {
+                    // Non-array storage (rare for this app)
+                    const incomingStr = JSON.stringify(remote);
+                    if (localRaw !== incomingStr) {
+                        localStorage.setItem(storageKey, incomingStr);
+                        changed = true;
+                    }
+                    return;
+                }
+
+                // SMART ARRAY RECONCILIATION:
+                // We merge local and remote. Remote IDs override local ones.
+                const map = new Map();
+                local.forEach(item => { if(item.id) map.set(String(item.id), item); });
+                remote.forEach(item => { if(item.id) { map.set(String(item.id), item); } });
+
+                const merged = Array.from(map.values());
+                
+                // Sort by ID or creation date if possible to maintain order consistency
+                merged.sort((a,b) => {
+                    if (a.added && b.added) return new Date(b.added) - new Date(a.added);
+                    return String(b.id).localeCompare(String(a.id));
+                });
+
+                const mergedStr = JSON.stringify(merged);
+                if (localRaw !== mergedStr) {
+                    localStorage.setItem(storageKey, mergedStr);
+                    changed = true;
+                }
             });
+
             this.runHealth();
 
             // UI RECONCILIATION: Inform active views that data has shifted
@@ -236,17 +269,23 @@ window.BrandSyncAPI = {
     _set(key, data) { 
         localStorage.setItem(key, JSON.stringify(data)); 
         
-        // Auto-Broadcast to GitHub Repository (if configured)
+        // Auto-Broadcast: Perform ATOMIC SYNC HANDSHAKE (Pull -> Merge -> Push)
         const config = JSON.parse(localStorage.getItem('BS_GH_CONFIG') || '{}');
         const token = config.token || (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN);
         const gistId = config.gistId || (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GIST_ID);
         
         if (token && gistId) {
-            // Debounce push to prevent frequent API calls
             clearTimeout(this._syncTimer);
-            this._syncTimer = setTimeout(() => {
-                this.githubPush(token, gistId);
-            }, 2000); // 2 second delay for safety
+            this._syncTimer = setTimeout(async () => {
+                console.log("GitHub Cloud Engine: Initiating Atomic Reconcile Handshake...");
+                // 1. Pull latest from remote first! This populates our LocalStorage with others' work
+                await this.githubPull(token, gistId);
+                // 2. LocalStorage now has the MERGED data (our change + their changes)
+                // 3. Push this consolidated world back to Gist
+                await this.githubPush(token, gistId);
+                console.log("GitHub Cloud Engine: World Consolidated.");
+                localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
+            }, 2500); 
         }
     },
 
