@@ -192,14 +192,36 @@ window.BrandSyncAPI = {
             });
             this.runHealth();
 
-            // If scheduled data changed, refresh the scheduled view if it's open and re-arm timers
+            // UI RECONCILIATION: Inform active views that data has shifted
             if (changed) {
-                if(window.Scheduler && window.Scheduler.restoreTimers) {
-                    window.Scheduler.restoreTimers(); // Ensure the background worker registers the new tasks!
-                }
+                console.log("GitHub Cloud Engine: Triggering across-the-board UI refresh...");
+                
+                // 1. Scheduler timers
+                if(window.Scheduler && window.Scheduler.restoreTimers) window.Scheduler.restoreTimers();
+
+                // 2. Scheduled View
                 if (window.ScheduledView && document.getElementById('scheduled-list')) {
                     window.ScheduledView.renderList();
                 }
+
+                // 3. Contacts View (Identity Pool & Groups)
+                if (window.ContactsView && document.getElementById('groupsList')) {
+                    window.ContactsView.loadData();
+                    window.ContactsView.loadGroups();
+                }
+
+                // 4. Dashboard (Metrics)
+                if (window.DashboardView && document.getElementById('dashboard-container')) {
+                    window.DashboardView.render(document.getElementById('app-content'));
+                }
+                
+                // 5. Inbox (Conversations)
+                if (window.InboxView && window.location.hash === '#inbox') {
+                    window.InboxView.loadConversations();
+                }
+
+                // Global heartbeat update
+                if (window.BrandSyncAPI && window.BrandSyncAPI.runHealth) window.BrandSyncAPI.runHealth();
             }
 
             return { success: true, status: 200, changed };
