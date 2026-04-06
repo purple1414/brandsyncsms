@@ -618,26 +618,39 @@ window.SendSMSView = {
                 return;
             }
             menu.style.display = 'block';
-            menu.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); padding:4px;">Loading templates...</div>';
+            menu.innerHTML = '<div style="font-size:0.8rem; color:rgba(255,255,255,0.5); padding:20px; text-align:center;"><i class="icon-lucide-loader" style="animation: spin 1s linear infinite;"></i> Loading...</div>';
             
             try {
                 const templates = await window.BrandSyncAPI.getTemplates();
-                let html = '';
+                menu.innerHTML = ''; // Clear loading
+                
                 if (templates.length > 0) {
                     templates.forEach(t => {
-                        html += `
-                            <div class="dropdown-item" style="padding: 8px; cursor: pointer; border-radius: 6px; display:flex; flex-direction:column; gap:4px;" onclick="window.SendSMSView.insertTemplate(this, '${t.content.replace(/'/g, "\\'")}')">
-                                <span style="font-size: 0.85rem; font-weight: 600; color: ${t.color || 'var(--accent-color)'};">${t.name}</span>
-                                <span style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.content}</span>
-                            </div>
+                        const item = document.createElement('div');
+                        item.className = 'apple-dropdown-item';
+                        item.style.display = 'flex';
+                        item.style.flexDirection = 'column';
+                        item.style.gap = '2px';
+                        item.style.padding = '10px 12px';
+                        
+                        item.innerHTML = `
+                            <span style="font-size: 0.85rem; font-weight: 600; color: ${t.color || '#0a84ff'};">${t.name}</span>
+                            <span style="font-size: 0.75rem; color: rgba(255,255,255,0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.content}</span>
                         `;
+                        
+                        item.onclick = (event) => {
+                            event.stopPropagation();
+                            window.SendSMSView.insertTemplate(item, t.content);
+                        };
+                        
+                        menu.appendChild(item);
                     });
                 } else {
-                    html = '<div style="font-size:0.75rem; color:var(--text-muted); padding:4px;">No templates found.</div>';
+                    menu.innerHTML = '<div style="font-size:0.75rem; color:var(--text-muted); padding:12px; text-align:center;">No templates found.</div>';
                 }
-                menu.innerHTML = html;
             } catch (err) {
-                menu.innerHTML = '<div style="font-size:0.75rem; color:var(--danger-color); padding:4px;">Error loading templates.</div>';
+                console.error(err);
+                menu.innerHTML = '<div style="font-size:0.75rem; color:var(--danger-color); padding:12px; text-align:center;">Error loading templates.</div>';
             }
         };
 

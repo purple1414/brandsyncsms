@@ -309,19 +309,28 @@ window.TemplatesView = {
             const color = f.color || '#0a84ff';
             const iconSvg = this.FOLDER_ICONS[f.icon || 'Folder'];
             
-            html += `<div onclick="window.TemplatesView.setFolder(${f.id})" class="glass-card group-card ${isActive ? 'active' : ''}" style="flex: 0 0 160px; height: 120px; padding: 22px; border-radius: 28px; background: ${isActive ? color+'2a' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${isActive ? color+'77' : 'rgba(255,255,255,0.12)'}; backdrop-filter: blur(20px); cursor: pointer; transition: 0.3s; display:flex; flex-direction:column; justify-content: space-between; scroll-snap-align: center;">
+            const card = document.createElement('div');
+            card.className = `glass-card group-card ${isActive ? 'active' : ''}`;
+            card.style.cssText = `flex: 0 0 160px; height: 120px; padding: 22px; border-radius: 28px; background: ${isActive ? color+'2a' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${isActive ? color+'77' : 'rgba(255,255,255,0.12)'}; backdrop-filter: blur(20px); cursor: pointer; transition: 0.3s; display:flex; flex-direction:column; justify-content: space-between; scroll-snap-align: center;`;
+            
+            card.innerHTML = `
                 <div style="display:flex; justify-content: space-between; align-items: flex-start;">
                     <div style="width: 42px; height: 42px; border-radius: 14px; background: ${color+'22'}; display:flex; align-items:center; justify-content:center; color: ${color};"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${iconSvg}</svg></div>
                     <div class="card-ops" style="display:flex; gap: 8px; transition: 0.2s;">
-                        <button onclick="event.stopPropagation(); window.TemplatesView.openFolderModal(${JSON.stringify(f).replace(/"/g, '&quot;')})" style="background:none; border:none; padding:0; cursor:pointer; color:#fff; opacity:0.8; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></button>
-                        <button onclick="event.stopPropagation(); window.TemplatesView.deleteFolder(${f.id}, '${f.name.replace(/'/g, "\\'")}')" style="background:none; border:none; padding:0; cursor:pointer; color:#ff453a; opacity:0.8; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
+                        <button class="edit-folder-btn" style="background:none; border:none; padding:0; cursor:pointer; color:#fff; opacity:0.8; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></button>
+                        <button class="delete-folder-btn" style="background:none; border:none; padding:0; cursor:pointer; color:#ff453a; opacity:0.8; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
                     </div>
                 </div>
                 <div>
                     <h4 style="font-size: 1rem; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;">${f.name}</h4>
                     <p style="font-size: 0.7rem; color: rgba(255,255,255,0.4); font-weight:700; text-transform:uppercase; letter-spacing:0.02em;">${counts[f.id] || 0} Identities</p>
-                </div>
-            </div>`;
+                </div>`;
+            
+            card.onclick = () => window.TemplatesView.setFolder(f.id);
+            card.querySelector('.edit-folder-btn').onclick = (e) => { e.stopPropagation(); window.TemplatesView.openFolderModal(f); };
+            card.querySelector('.delete-folder-btn').onclick = (e) => { e.stopPropagation(); window.TemplatesView.deleteFolder(f.id, f.name); };
+            
+            slider.appendChild(card);
         });
         slider.innerHTML = html;
 
@@ -348,32 +357,41 @@ window.TemplatesView = {
 
             if(templates.length === 0) { grid.innerHTML = `<div style="grid-column: span 3; padding: 80px; text-align: center; color: rgba(255,255,255,0.15); font-size:1.1rem; font-weight:700;">No Resources Found.</div>`; return; }
 
-            grid.innerHTML = templates.map((t, idx) => {
+            grid.innerHTML = '';
+            templates.forEach((t, idx) => {
                 const folder = folders.find(f => String(f.id) === String(t.folderId));
-                // STRATEGY: Folder color takes precedence for strict visual grouping
                 const color = folder ? folder.color : (t.color || '#0a84ff');
                 const rank = String(idx + 1).padStart(2, '0');
-                return `
-                    <div class="card glass-panel glass-card" style="display:flex; flex-direction:column; padding:28px; border-radius:32px; border-top: 5px solid ${color}; transition:0.35s; position: relative; background:rgba(255,255,255,0.02);">
-                        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom:20px;">
-                            <span style="font-size:0.65rem; font-weight:900; color:${color}; text-transform:uppercase; background:${color}15; padding:5px 10px; border-radius:8px; letter-spacing:0.04em; border:1px solid ${color}33;">${folder ? folder.name : 'UNGROUPED'}</span>
-                            <div style="display:flex; gap:10px;">
-                                <button class="btn icon-btn" onclick="window.TemplatesView.openModal(${JSON.stringify(t).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; width:34px; height:34px; color:#fff; display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></button>
-                                <button class="btn icon-btn" style="color:#ff453a; background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.2); border-radius:10px; width:34px; height:34px; display:flex; align-items:center; justify-content:center;" onclick="window.TemplatesView.deleteTemplate('${t.id}', '${t.name.replace(/'/g, "\\'")}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
-                            </div>
+                
+                const card = document.createElement('div');
+                card.className = 'card glass-panel glass-card';
+                card.style.cssText = `display:flex; flex-direction:column; padding:28px; border-radius:32px; border-top: 5px solid ${color}; transition:0.35s; position: relative; background:rgba(255,255,255,0.02);`;
+                
+                card.innerHTML = `
+                    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom:20px;">
+                        <span style="font-size:0.65rem; font-weight:900; color:${color}; text-transform:uppercase; background:${color}15; padding:5px 10px; border-radius:8px; letter-spacing:0.04em; border:1px solid ${color}33;">${folder ? folder.name : 'UNGROUPED'}</span>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn icon-btn edit-btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; width:34px; height:34px; color:#fff; display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></button>
+                            <button class="btn icon-btn delete-btn" style="color:#ff453a; background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.2); border-radius:10px; width:34px; height:34px; display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
                         </div>
-                        <h3 style="font-size:1.2rem; font-weight:900; color:#fff; margin:0 0 12px; letter-spacing:-0.02em;">${t.name}</h3>
-                        <p style="font-size:0.9rem; color:rgba(255,255,255,0.45); line-height:1.6; flex:1; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; margin-bottom:24px;">${t.content}</p>
-                        <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:18px; display:flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size:0.75rem; color:rgba(255,255,255,0.3); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Credits: ${window.calculateSMSLength(t.content).segments}.00</span>
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <button class="btn spatial-btn" style="padding: 6px 14px; font-size: 0.75rem; background: rgba(10,132,255,0.1); color:#0a84ff; font-weight:800; border-radius:10px; border:1px solid rgba(10,132,255,0.2);" onclick="window.TemplatesView.copyToClipboard('${t.content.replace(/'/g, "\\'")}')">Capture</button>
-                                <span style="font-size: 0.85rem; font-weight: 900; color: rgba(255,255,255,0.08); font-family: monospace; letter-spacing: 1px;">#${rank}</span>
-                            </div>
+                    </div>
+                    <h3 style="font-size:1.2rem; font-weight:900; color:#fff; margin:0 0 12px; letter-spacing:-0.02em;">${t.name}</h3>
+                    <p style="font-size:0.9rem; color:rgba(255,255,255,0.45); line-height:1.6; flex:1; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; margin-bottom:24px;">${t.content}</p>
+                    <div style="border-top:1px solid rgba(255,255,255,0.06); padding-top:18px; display:flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size:0.75rem; color:rgba(255,255,255,0.3); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;">Credits: ${window.calculateSMSLength(t.content).segments}.00</span>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <button class="btn spatial-btn capture-btn" style="padding: 6px 14px; font-size: 0.75rem; background: rgba(10,132,255,0.1); color:#0a84ff; font-weight:800; border-radius:10px; border:1px solid rgba(10,132,255,0.2);">Capture</button>
+                            <span style="font-size: 0.85rem; font-weight: 900; color: rgba(255,255,255,0.08); font-family: monospace; letter-spacing: 1px;">#${rank}</span>
                         </div>
                     </div>
                 `;
-            }).join('');
+                
+                card.querySelector('.edit-btn').onclick = () => window.TemplatesView.openModal(t);
+                card.querySelector('.delete-btn').onclick = () => window.TemplatesView.deleteTemplate(t.id, t.name);
+                card.querySelector('.capture-btn').onclick = () => window.TemplatesView.copyToClipboard(t.content);
+                
+                grid.appendChild(card);
+            });
         } catch (e) { grid.innerHTML = `<div style="padding:60px; text-align:center; color:#ff453a;">Engine Data Failure.</div>`; }
     },
 
