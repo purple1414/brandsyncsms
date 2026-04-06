@@ -85,6 +85,16 @@
                 <i class="icon-lucide-help-circle" style="font-size:1.1rem;"></i>
                 Request Credentials
             </button>
+
+            <!-- Cloud Sync Trigger (Automatic Data Parity) -->
+            <div style="margin-top:24px; padding-top:24px; border-top:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; gap:12px;">
+                <button onclick="window.app.handleCloudSync(this)" 
+                    style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; color:rgba(10,132,255,0.7); font-weight:700; font-size:0.75rem; padding:12px; border-radius:14px; border:1px solid rgba(10,132,255,0.15); background:rgba(10,132,255,0.04); cursor:pointer; transition:0.3s; text-transform:uppercase; letter-spacing:0.1em;">
+                    <i class="icon-lucide-cloud-download" style="font-size:0.9rem;"></i>
+                    <span id="syncLabel">Synchronize Cloud Index</span>
+                </button>
+                <div id="syncStatus" style="font-size:0.6rem; color:rgba(255,255,255,0.2); font-weight:800; text-transform:uppercase; letter-spacing:0.05em;">Status: Ready (Push/Pull Automated)</div>
+            </div>
         </div>
     </div>
 

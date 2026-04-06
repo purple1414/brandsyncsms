@@ -101,6 +101,8 @@ class BrandSyncApp {
         this.refreshGatewayStatus();
 
         setInterval(() => this.refreshGatewayStatus(), 5000);
+        setInterval(() => this.updateSyncStatusText(), 60000); // UI text refresh for "Last sync: X min ago"
+        this.updateSyncStatusText();
 
         const badge = document.getElementById('header-credits-badge');
         if (badge) badge.onclick = () => {
@@ -170,6 +172,27 @@ class BrandSyncApp {
                 }
             };
             setTimeout(() => document.addEventListener('mousedown', closer), 10);
+        }
+    }
+
+    async handleCloudSync(btn) {
+        const label = document.getElementById('syncLabel');
+        const status = document.getElementById('syncStatus');
+        if (!window.BrandSyncAPI || !window.BrandSyncAPI.syncCloudNow) return;
+
+        btn.disabled = true;
+        label.innerText = "Synchronizing...";
+        
+        const res = await window.BrandSyncAPI.syncCloudNow();
+        
+        btn.disabled = false;
+        label.innerText = "Synchronize Cloud Index";
+        if (res.success) {
+            status.innerText = "Status: Sync Complete";
+            if (window.showToast) window.showToast("Cloud synchronization successful", "success");
+        } else {
+            status.innerText = "Status: Sync Failed";
+            if (window.showToast) window.showToast(res.message, "error");
         }
     }
 

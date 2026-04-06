@@ -74,6 +74,7 @@ window.BrandSyncAPI = {
                     if(result && result.success) {
                         if (result.changed) console.log("GitHub Cloud Engine: Remote updates detected and applied.");
                         localStorage.setItem('BS_SYNC_READY', 'true');
+                        localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
                     }
                 });
             };
@@ -81,12 +82,35 @@ window.BrandSyncAPI = {
             // Immediate initial pull
             doSync();
 
-            // Active Background Polling (Every 90 seconds)
+            // Background Auto-Sync (Every 5 minutes for stability)
             if (this._syncInterval) clearInterval(this._syncInterval);
             this._syncInterval = setInterval(() => {
-                console.log("GitHub Cloud Engine: Background heartbeat synchronization...");
+                console.log("GitHub Cloud Engine: Background Heartbeat Data Recon...");
                 doSync();
-            }, 90000); 
+            }, 300000); 
+        }
+    },
+
+    async syncCloudNow() {
+        const config = JSON.parse(localStorage.getItem('BS_GH_CONFIG') || '{}');
+        const token = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN) || config.token;
+        const gistId = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GIST_ID) || config.gistId;
+
+        if (!token || !gistId) {
+            return { success: false, message: "Cloud configuration missing. Please link Gist ID." };
+        }
+
+        try {
+            // HIGH-FIDELITY PARITY SEQUENCE:
+            // 1. First push local state to cloud-first to ensure nothing is lost
+            const pushRes = await this.githubPush(token, gistId);
+            // 2. Then pull from cloud to reconcile with other users' changes
+            const pullRes = await this.githubPull(token, gistId);
+
+            localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
+            return { success: pullRes.success, changed: pullRes.changed };
+        } catch (e) {
+            return { success: false, message: e.message };
         }
     },
 
