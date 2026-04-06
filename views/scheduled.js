@@ -23,9 +23,9 @@ window.ScheduledView = {
                     </div>
                 </div>
 
-                <div class="card" style="padding:0; overflow:hidden; border-radius:24px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02);">
+                <div class="card" style="padding:0; overflow:visible; border-radius:24px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02);">
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
-                        <thead>
+                        <thead style="position:relative; z-index:1;">
                             <tr style="background:rgba(255,255,255,0.03); border-bottom:1px solid rgba(255,255,255,0.06);">
                                 <th style="padding:18px 20px; width:50px;"><input type="checkbox" id="schedSelectAll" onchange="window.ScheduledView.toggleAllRow(this.checked)" style="width:16px;height:16px;cursor:pointer;accent-color:#0a84ff;"></th>
                                 <th style="padding:18px 20px; font-weight:600; font-size:0.75rem; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.08em;">Schedule Info</th>
@@ -441,7 +441,7 @@ window.ScheduledView = {
                             <div class="snapshot-cell" style="position:relative; display:inline-block; cursor:help;">
                                 <style>.snapshot-cell:hover .hover-full-msg { display: block !important; }</style>
                                 <div style="font-size:0.95rem; font-weight:700; color:#fff;">${fmt(m.scheduleTime)}</div>
-                                <div class="hover-full-msg" style="display:none; position:absolute; bottom:calc(100% + 5px); left:0; width:max-content; background:rgba(30,30,35,0.98); padding:8px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(32px); box-shadow:0 8px 30px rgba(0,0,0,0.8); z-index:100; color:var(--accent-color); font-weight:800; font-size:0.75rem; pointer-events:none;">${getCountdown(m.scheduleTime)}</div>
+                                <div class="hover-full-msg" style="display:none; position:absolute; top:calc(100% + 5px); left:0; width:max-content; background:rgba(30,30,35,0.98); padding:8px 14px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(32px); box-shadow:0 8px 30px rgba(0,0,0,0.8); z-index:9999; color:var(--accent-color); font-weight:800; font-size:0.75rem; pointer-events:none;">${getCountdown(m.scheduleTime)}</div>
                             </div>
                             <div style="font-size:0.72rem; color:rgba(255,255,255,0.3); display:flex; align-items:center; gap:6px; margin-top:5px;">
                                 ${m.recurring && m.recurring.type !== 'none' ? 
@@ -453,7 +453,7 @@ window.ScheduledView = {
                             <div class="snapshot-cell" style="position:relative; display:inline-block; cursor:help;">
                                 <style>.snapshot-cell:hover .hover-full-msg { display: block !important; }</style>
                                 ${recCount}
-                                <div class="hover-full-msg" style="display:none; position:absolute; bottom:calc(100% + 5px); left:50%; transform:translateX(-50%); width:max-content; min-width:220px; background:rgba(30,30,35,0.98); padding:12px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(32px); box-shadow:0 8px 30px rgba(0,0,0,0.8); z-index:100; color:rgba(255,255,255,0.8); font-size:0.8rem; pointer-events:none; line-height:1.4; text-align:left;">
+                                <div class="hover-full-msg" style="display:none; position:absolute; top:calc(100% + 5px); left:50%; transform:translateX(-50%); width:max-content; min-width:220px; max-height:300px; overflow-y:auto; background:rgba(30,30,35,0.98); padding:12px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(32px); box-shadow:0 8px 30px rgba(0,0,0,0.8); z-index:9999; color:rgba(255,255,255,0.8); font-size:0.8rem; pointer-events:none; line-height:1.4; text-align:left;">
                                     <div style="font-size:0.65rem; color:rgba(255,255,255,0.4); text-transform:uppercase; font-weight:800; margin-bottom:6px; letter-spacing:0.04em; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">Target Contacts</div>
                                     ${recDisplay}
                                 </div>
@@ -462,14 +462,14 @@ window.ScheduledView = {
                         <td class="snapshot-cell" style="padding:20px; font-size:0.85rem; color:rgba(255,255,255,0.4); max-width:220px; position:relative; cursor:help;">
                             <style>.snapshot-cell:hover .hover-full-msg { display: block !important; }</style>
                             <div style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;">${safeMsg}</div>
-                            <div class="hover-full-msg" style="display:none; position:absolute; bottom:calc(100% - 10px); left:20px; width:340px; background:rgba(30,30,35,0.98); padding:16px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(32px); box-shadow:0 16px 40px rgba(0,0,0,0.8); z-index:100; color:#fff; font-size:0.85rem; white-space:pre-wrap; word-break:break-word; pointer-events:none; line-height:1.5; text-align:left;">${safeMsg}</div>
+                            <div class="hover-full-msg" style="display:none; position:absolute; top:calc(100% - 10px); left:20px; width:340px; background:rgba(30,30,35,0.98); padding:16px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(32px); box-shadow:0 16px 40px rgba(0,0,0,0.8); z-index:9999; color:#fff; font-size:0.85rem; white-space:pre-wrap; word-break:break-word; pointer-events:none; line-height:1.5; text-align:left;">${safeMsg}</div>
                         </td>
                         <td style="padding:20px; font-size:0.95rem; font-weight:700; color:var(--credit-color);">${creditCost}</td>
                         <td style="padding:20px;">
                             ${m.status === 'failed' ?
                             `<div class="snapshot-cell" style="position:relative; display:inline-block; cursor:help;">
                                 <div style="background:${statusBg}; color:${statusColor}; padding:6px 14px; border-radius:12px; font-size:0.75rem; font-weight:800; display:inline-flex; align-items:center; gap:4px; text-transform:uppercase; letter-spacing:0.04em;">${m.status} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-                                <div class="hover-full-msg" style="display:none; position:absolute; bottom:calc(100% + 5px); right:0; width:260px; background:rgba(255,69,58,0.95); padding:12px 14px; border-radius:12px; border:1px solid rgba(255,100,100,0.3); backdrop-filter:blur(24px); box-shadow:0 8px 30px rgba(255,69,58,0.4); z-index:100; color:#fff; font-size:0.75rem; white-space:pre-wrap; word-break:break-word; pointer-events:none; line-height:1.4; text-transform:none; font-weight:500;"><strong>Execution Error:</strong><br>${m.errorReason || 'Unknown execution or API failure.'}</div>
+                                <div class="hover-full-msg" style="display:none; position:absolute; top:calc(100% + 5px); right:0; width:260px; background:rgba(255,69,58,0.95); padding:12px 14px; border-radius:12px; border:1px solid rgba(255,100,100,0.3); backdrop-filter:blur(24px); box-shadow:0 8px 30px rgba(255,69,58,0.4); z-index:9999; color:#fff; font-size:0.75rem; white-space:pre-wrap; word-break:break-word; pointer-events:none; line-height:1.4; text-transform:none; font-weight:500;"><strong>Execution Error:</strong><br>${m.errorReason || 'Unknown execution or API failure.'}</div>
                             </div>` :
                             `<div style="background:${statusBg}; color:${statusColor}; padding:6px 14px; border-radius:12px; font-size:0.75rem; font-weight:800; display:inline-block; text-transform:uppercase; letter-spacing:0.04em;">${m.status}</div>`
                             }
