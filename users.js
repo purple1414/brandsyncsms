@@ -229,8 +229,6 @@ window.UsersView = {
         if (pwRow) pwRow.style.display = isEdit ? 'none' : 'block';
         if (!isEdit) document.getElementById('userFormPassword').value = '';
 
-        // Role selector
-        const currentRole = window.AuthService.getRole();
         const roles = [
             { key: 'user', label: 'User', desc: 'Basic SMS operations' },
             { key: 'manager', label: 'Manager', desc: 'Full operations + user mgmt' },
@@ -238,14 +236,35 @@ window.UsersView = {
         ];
 
         const selectedRole = isEdit ? existingUser.role : 'user';
+        const currentRole = window.AuthService.getRole();
         const roleEl = document.getElementById('roleSelector');
+
+        if (!document.getElementById('user-modal-styles')) {
+            const st = document.createElement('style');
+            st.id = 'user-modal-styles';
+            st.innerHTML = `
+                .role-opt { flex:1; padding:12px; border-radius:14px; text-align:center; transition:0.3s; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); cursor:pointer; }
+                .role-opt:hover { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.15); }
+                .role-opt.active-role.role-user { background: rgba(50, 215, 75, 0.12); border-color: rgba(50, 215, 75, 0.4); box-shadow: 0 4px 15px rgba(50, 215, 75, 0.2); }
+                .role-opt.active-role.role-manager { background: rgba(255, 159, 10, 0.12); border-color: rgba(255, 159, 10, 0.4); box-shadow: 0 4px 15px rgba(255, 159, 10, 0.2); }
+                .role-opt.active-role.role-superadmin { background: rgba(10, 132, 255, 0.12); border-color: rgba(10, 132, 255, 0.4); box-shadow: 0 4px 15px rgba(10, 132, 255, 0.2); }
+                
+                .role-opt.active-role.role-user div:first-child { color: #32d74b !important; }
+                .role-opt.active-role.role-manager div:first-child { color: #ff9f0a !important; }
+                .role-opt.active-role.role-superadmin div:first-child { color: #0a84ff !important; }
+            `;
+            document.head.appendChild(st);
+        }
+
         roleEl.innerHTML = roles.map(r => {
-            const rc = window.RBAC.roleColor(r.key);
             const disabled = (currentRole === 'manager' && r.key !== 'user');
             const active = r.key === selectedRole;
             return `
-                <div class="role-opt" data-role="${r.key}" onclick="${disabled ? '' : `document.querySelectorAll('.role-opt').forEach(el=>el.classList.remove('active-role')); this.classList.add('active-role');`}" style="flex:1; padding:12px; border-radius:14px; cursor:${disabled ? 'not-allowed' : 'pointer'}; border:1px solid ${active ? rc.border : 'rgba(255,255,255,0.08)'}; background:${active ? rc.bg : 'rgba(255,255,255,0.03)'}; text-align:center; transition:0.3s; opacity:${disabled ? '0.35' : '1'}; ${active ? 'box-shadow:0 4px 15px rgba(0,0,0,0.3);' : ''}" ${active ? 'class="role-opt active-role"' : ''}>
-                    <div style="font-size:0.8rem; font-weight:800; color:${active ? rc.color : '#fff'}; margin-bottom:4px;">${r.label}</div>
+                <div class="role-opt role-${r.key} ${active ? 'active-role' : ''}" 
+                     data-role="${r.key}" 
+                     onclick="${disabled ? '' : `document.querySelectorAll('.role-opt').forEach(el=>el.classList.remove('active-role')); this.classList.add('active-role');`}" 
+                     style="opacity:${disabled ? '0.35' : '1'}; cursor:${disabled ? 'not-allowed' : 'pointer'};">
+                    <div style="font-size:0.8rem; font-weight:800; color:#fff; margin-bottom:4px;">${r.label}</div>
                     <div style="font-size:0.6rem; color:rgba(255,255,255,0.3);">${r.desc}</div>
                 </div>
             `;
