@@ -82,7 +82,7 @@ window.ContactsView = {
                                 <span id="pendingBadgeCount" style="background:#ff9f0a; color:#000; padding:1px 6px; border-radius:8px; font-size:0.7rem; font-weight:900; display:none;">0</span>
                                 Pending Review
                             </button>
-                            <input type="file" id="heavyImportInput" accept=".csv,.xlsx,.xls,.ods" style="display:none;">
+                            <input type="file" id="heavyImportInput" accept=".csv,.xlsx,.xls,.ods,.pdf" style="display:none;">
                             <button onclick="window.ContactsView.importContacts()" class="btn" style="background: rgba(50, 215, 75, 0.12); color: var(--success-color); font-weight: 700; border: 1px solid rgba(50, 215, 75, 0.2); height: 40px; border-radius: 12px; padding: 0 16px; font-size: 0.85rem;">Heavy Import</button>
                             <button onclick="window.ContactsView.openEditModal()" class="btn primary-btn" style="height: 40px; border-radius: 12px; padding: 0 20px; font-weight: 700; font-size: 0.85rem;">Add Contact</button>
                         </div>
@@ -1120,6 +1120,52 @@ window.ContactsView = {
                                 parsedRows.push(row);
                             }
                         }
+                    } else if (file.name.match(/\.pdf$/i)) {
+                        window.showToast("📄 PDF CORE INITIALIZING...", "info");
+                        // Set worker source for pdf.js
+                        if (window.pdfjsLib) {
+                            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                        }
+                        const data = new Uint8Array(ev.target.result);
+                        const pdf = await pdfjsLib.getDocument({data}).promise;
+                        let fullText = "";
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const content = await page.getTextContent();
+                            fullText += content.items.map(item => item.str).join(" ") + "\n";
+                        }
+                        
+                        // Treat PDF as unstructured text scan
+                        window.showToast("📡 Analyzing PDF text layers...", "info");
+                        const phoneRegex = /(?:\+?63|0)?[\s\-\–\(\)]*9[\s\-\–\(\)]*(?:\d[\s\-\–\(\)]*){9}/g;
+                        const phoneMatches = fullText.match(phoneRegex) || [];
+                        const seen = new Set(); 
+                        const contacts = [];
+
+                        // Strategy: Find line containing the phone, assume name is nearby
+                        const lines = fullText.split('\n');
+                        for(const line of lines) {
+                            const match = line.match(phoneRegex);
+                            if(match) {
+                                const phone = this.normalizePhone(match[0]);
+                                if(phone && !seen.has(phone)) {
+                                    seen.add(phone);
+                                    // Try to grab name from the same line (everything before the phone)
+                                    let name = line.split(match[0])[0].trim().replace(/[,:]+$/, '').trim();
+                                    if(name.length < 2 || name.length > 60) name = "PDF_Lead";
+                                    contacts.push({ name, phone, groupIds: this.activeGroupId ? [this.activeGroupId] : [] });
+                                }
+                            }
+                        }
+
+                        if (contacts.length === 0) { window.showToast("⚠️ PDF SCAN FAILED — No contacts found.", "error"); return; }
+                        this._showImportPreview(contacts, async (confirmed) => {
+                            if (!confirmed) return;
+                            for (const c of confirmed) await window.BrandSyncAPI.saveContact(c);
+                            window.showToast(`✅ SYNCED ${confirmed.length} RECORDS.`, "success");
+                            this.loadData(); this.loadGroups();
+                        });
+                        return; // Exit early as PDF is handled specially
                     }
 
                     // --- SMART FIELD MAPPER ---
@@ -1186,6 +1232,7 @@ window.ContactsView = {
                 e.target.value = '';
             };
             if (file.name.match(/\.(xlsx|xls|ods)$/i)) reader.readAsArrayBuffer(file);
+            else if (file.name.match(/\.pdf$/i)) reader.readAsArrayBuffer(file);
             else reader.readAsText(file);
         };
     },
@@ -1314,7 +1361,7 @@ window.ContactsView = {
         let s = String(raw || '').trim();
         if (!s) return { first: '', mi: '', last: '', full: 'Unknown' };
         
-        // Handle "Last, First" format
+        // Handle "Last Name, Full Name M." format
         if (s.includes(',')) {
             const parts = s.split(',').map(p => p.trim());
             if (parts.length >= 2) {
@@ -1337,7 +1384,8 @@ window.ContactsView = {
         
         // Search for Middle Initial (single character word)
         let miIndex = -1;
-        for (let i = 1; i < parts.length - 1; i++) {
+        // Search from BACK to handle "First M. Last" OR "Last First M."
+        for (let i = parts.length - 1; i >= 1; i--) {
             const part = parts[i].replace(/\./g, '');
             if (part.length === 1) {
                 miIndex = i;
@@ -1346,11 +1394,20 @@ window.ContactsView = {
         }
 
         if (miIndex !== -1) {
-            first = parts.slice(0, miIndex).join(' ');
-            mi = parts[miIndex].charAt(0).toUpperCase() + '.';
-            last = parts.slice(miIndex + 1).join(' ');
+            // SPECIAL CASE: "Last First M." (Luna Dharryll Joy M.)
+            // If the MI is at the VERY end and there are at least 3 parts...
+            if (miIndex === parts.length - 1 && parts.length >= 3) {
+                last = parts[0];
+                first = parts.slice(1, -1).join(' ');
+                mi = parts[miIndex].charAt(0).toUpperCase() + '.';
+            } else {
+                // STANDARD: "First M. Last"
+                first = parts.slice(0, miIndex).join(' ');
+                mi = parts[miIndex].charAt(0).toUpperCase() + '.';
+                last = parts.slice(miIndex + 1).join(' ');
+            }
         } else {
-            // Check if the penultimate word is a surname prefix
+            // Check if the penultimate word is a surname prefix (e.g. "Juan Dela Cruz")
             const penultimate = parts[parts.length - 2];
             if (surnamePrefixes.includes(penultimate) && parts.length >= 3) {
                 last = parts.slice(parts.length - 2).join(' ');
