@@ -34,6 +34,15 @@ window.AuthService = {
             };
             this._setUsers([defaultAdmin]);
             console.log('[Auth] Default Super Admin seeded (admin / dadasafa)');
+        } else {
+            // Security Recovery: Ensure 'admin' username always has SUPER_ADMIN privileges
+            // (fixes accidental lockouts if the root account is downgraded)
+            const adminUser = users.find(u => u.username.toLowerCase() === 'admin');
+            if (adminUser && adminUser.role !== this.ROLES.SUPER_ADMIN) {
+                adminUser.role = this.ROLES.SUPER_ADMIN;
+                this._setUsers(users);
+                console.warn('[Auth Security] Restored administrative privileges for root account: admin');
+            }
         }
     },
 
