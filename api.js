@@ -174,12 +174,9 @@ window.ApiView = {
     updateSyncUI() {
         const config = JSON.parse(localStorage.getItem('BS_GH_CONFIG') || '{}');
         
-        // RECONCILIATION: Always prioritize the Master Default over stale local storage
-        const defaultToken = window.BrandSyncConfig ? window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN : '';
-        const defaultGistId = window.BrandSyncConfig ? window.BrandSyncConfig.DEFAULT_GIST_ID : '';
-        
-        const tokenVal = defaultToken || config.token; 
-        const gistVal = defaultGistId || config.gistId;
+        // RECONCILIATION: Respect the user's personal cloud config if it exists
+        const tokenVal = config.token || (window.BrandSyncConfig ? window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN : ''); 
+        const gistVal = config.gistId || (window.BrandSyncConfig ? window.BrandSyncConfig.DEFAULT_GIST_ID : '');
 
         const tokenField = document.getElementById('ghToken');
         const gistIdField = document.getElementById('ghGistId');

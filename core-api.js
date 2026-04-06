@@ -63,9 +63,9 @@ window.BrandSyncAPI = {
 
     initCloud() {
         const config = JSON.parse(localStorage.getItem('BS_GH_CONFIG') || '{}');
-        // Prioritize Global Defaults during this setup phase
-        const token = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN) || config.token;
-        const gistId = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GIST_ID) || config.gistId;
+        // RECONCILIATION: Prioritize the user's specific local config over the global defaults
+        const token = config.token || (window.BrandSyncConfig ? window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN : null);
+        const gistId = config.gistId || (window.BrandSyncConfig ? window.BrandSyncConfig.DEFAULT_GIST_ID : null);
 
         if (token && gistId) {
             console.log("GitHub Cloud Engine: Synchronizing Master Database...");
