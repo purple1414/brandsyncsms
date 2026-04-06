@@ -190,10 +190,11 @@ window.AuthService = {
         if (idx === -1) return { success: false, error: 'User not found.' };
 
         const target = users[idx];
+        const isRootAdmin = target.username.toLowerCase() === 'admin';
 
-        // Protection: cannot modify Super Admin unless you ARE that Super Admin
-        if (target.role === this.ROLES.SUPER_ADMIN && currentUser?.id !== target.id) {
-            return { success: false, error: 'Cannot modify Super Admin account.' };
+        // Protection: Managers cannot modify Super Admins. Super Admins can modify each other.
+        if (target.role === this.ROLES.SUPER_ADMIN && currentRole !== this.ROLES.SUPER_ADMIN && currentUser?.id !== target.id) {
+            return { success: false, error: 'Insufficient permissions to modify Super Admin.' };
         }
 
         // Managers cannot elevate roles
@@ -229,9 +230,17 @@ window.AuthService = {
         const target = users.find(u => u.id === id);
         if (!target) return { success: false, error: 'User not found.' };
 
-        // NEVER delete Super Admin
+        // NEVER delete the root 'admin'
+        if (target.username.toLowerCase() === 'admin') {
+            return { success: false, error: 'The Master Admin account cannot be deleted.' };
+        }
+        
+        // Ensure we don't delete the last Super Admin
         if (target.role === this.ROLES.SUPER_ADMIN) {
-            return { success: false, error: 'Super Admin account cannot be deleted.' };
+            const admins = users.filter(u => u.role === this.ROLES.SUPER_ADMIN && u.isActive);
+            if (admins.length <= 1) {
+                return { success: false, error: 'Cannot delete the last active Super Admin.' };
+            }
         }
 
         // Managers can only delete Users
