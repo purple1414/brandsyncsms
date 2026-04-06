@@ -81,12 +81,11 @@ window.BrandSyncAPI = {
             // Initial pull
             doSync();
 
-            // FAST HEARTBEAT (60 seconds for team parity)
+            // CLOUD HEARTBEAT: Reconcile every 30 seconds for live collaboration
             if (this._syncInterval) clearInterval(this._syncInterval);
             this._syncInterval = setInterval(() => {
-                console.log("GitHub Cloud Engine: Pulse Syncing with Master Gist...");
                 doSync();
-            }, 60000); 
+            }, 30000); 
         }
     },
 
@@ -163,10 +162,11 @@ window.BrandSyncAPI = {
             if (gistId.includes('/')) gistId = gistId.split('/').pop().split('?')[0];
             gistId = gistId.replace('.git', '');
 
-            const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+            const res = await fetch(`https://api.github.com/gists/${gistId}?cv=${Date.now()}`, {
                 headers: { 
                     'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github+json'
+                    'Accept': 'application/vnd.github+json',
+                    'Cache-Control': 'no-cache'
                 }
             });
             if(!res.ok) return { success: false, status: res.status };
@@ -691,20 +691,11 @@ window.BrandSyncAPI = {
         // REDUCED SPAM RATE TO PREVENT 429 ERRORS: 30 seconds instead of 500ms
         setInterval(this.runHealth, 30000); 
         
-        // 10-Second Live Polling for Incoming PhilSMS Texts
+        // Live Polling for Incoming PhilSMS Texts
         setInterval(() => this.pollLiveMessages(), 10000);
 
-        // Run Background Data Reconciliation (Pull) every 2 minutes
-        setInterval(async () => {
-            const config = JSON.parse(localStorage.getItem('BS_GH_CONFIG') || '{}');
-            const token = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN) || config.token;
-            const gistId = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GIST_ID) || config.gistId;
-            
-            if (token && gistId) {
-                console.log("GitHub Cloud Engine: Background Reconciliation...");
-                await this.githubPull(token, gistId);
-            }
-        }, 120000);
+        // Bootstrap Cloud Logic if not already active
+        this.initCloud();
     },
 
     // Polling Mechanism for PhilSMS Live Incoming Messages
