@@ -76,7 +76,7 @@ window.ContactsView = {
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
                             <button onclick="window.ContactsView.openPendingModal()" class="btn" style="background: rgba(255, 159, 10, 0.12); color: #ff9f0a; font-weight: 700; border: 1px solid rgba(255, 159, 10, 0.2); height: 40px; border-radius: 12px; padding: 0 16px; font-size: 0.85rem; display:flex; align-items:center; gap:8px;">
                                 <i class="icon-lucide-clock" style="font-size:1rem;"></i>
                                 <span id="pendingBadgeCount" style="background:#ff9f0a; color:#000; padding:1px 6px; border-radius:8px; font-size:0.7rem; font-weight:900; display:none;">0</span>
@@ -171,7 +171,7 @@ window.ContactsView = {
 
             <!-- Contact Modal -->
             <div id="contactModal" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.4); backdrop-filter:blur(30px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
-                <div class="glass-panel" style="width:520px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
+                <div class="glass-panel" style="width:100%; max-width:520px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
                     <button onclick="window.ContactsView.closeEditModal()" style="position: absolute; top: 20px; right: 20px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem;">&times;</button>
                     <h3 id="contactModalTitle" style="font-size:1.35rem; font-weight:800; color:#fff; margin-bottom:4px;">Identity Profile</h3>
                     <p id="contactAddedLabel" style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-bottom:24px;">Added: Unknown</p>
@@ -233,7 +233,7 @@ window.ContactsView = {
 
             <!-- Group Modal -->
             <div id="groupModal" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.6); backdrop-filter:blur(40px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
-                <div class="glass-panel" style="width:720px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
+                <div class="glass-panel" style="width:100%; max-width:720px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
                     <button onclick="document.getElementById('groupModal').style.display='none'" style="position: absolute; top: 20px; right: 20px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem;">&times;</button>
                     <input type="hidden" id="edit_groupId">
                     <h3 id="groupModalTitle" style="font-size:1.4rem; font-weight:800; color:#fff; margin-bottom:24px;">Customize Group</h3>
@@ -363,7 +363,7 @@ window.ContactsView = {
         const slider = document.getElementById('groupsList'); if (!slider) return;
         const groups = await window.BrandSyncAPI.getGroups(); this.cachedGroups = groups;
         const contacts = await window.BrandSyncAPI.getContacts(); const counts = groups.reduce((acc, g) => { acc[g.id] = contacts.filter(c => (c.groupIds || []).includes(g.id)).length; return acc; }, {});
-        const gc = document.getElementById('groupCheckboxes'); if(gc) gc.innerHTML = groups.map(g => `<label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,0.03); cursor:pointer;"><input type="checkbox" class="group-select-check" value="${g.id}" style="width:16px; height:16px; accent-color:${g.color};"><span style="color:#fff; font-size:0.85rem; font-weight:600;">${g.name}</span></label>`).join('');
+        const gc = document.getElementById('groupCheckboxes'); if(gc) gc.innerHTML = groups.map(g => `<label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,0.03); cursor:pointer;"><input type="checkbox" class="group-select-check" value="${g.id}" style="width:16px; height:16px; accent-color:${g.color};"><span style="color:#fff; font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${g.name}</span></label>`).join('');
 
         let html = `<div onclick="window.ContactsView.setGroup(null)" class="glass-card pool-card ${this.activeGroupId === null ? 'active' : ''}" style="flex: 0 0 150px; height: 110px; padding: 18px; border-radius: 24px; background: ${this.activeGroupId === null ? 'rgba(10,132,255,0.18)' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${this.activeGroupId === null ? 'rgba(10,132,255,0.35)' : 'rgba(255,255,255,0.1)'}; backdrop-filter: blur(25px); cursor: pointer; transition: transform 0.3s, background 0.3s; position: relative; display:flex; flex-direction:column; justify-content: space-between; scroll-snap-align: center; transform-origin: center;">
             <div style="display:flex; justify-content: space-between; align-items: flex-start;">
