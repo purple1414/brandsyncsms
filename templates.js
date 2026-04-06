@@ -304,6 +304,9 @@ window.TemplatesView = {
             </div>
             <div><h4 style="font-size: 1rem; font-weight: 800; color: #fff; margin-bottom: 2px;">All Templates</h4><p style="font-size: 0.7rem; color: rgba(255,255,255,0.4); font-weight:700; text-transform:uppercase; letter-spacing:0.02em;">${templates.length} Identities</p></div></div>`;
 
+        // Set the "All Templates" card first
+        slider.innerHTML = html;
+
         folders.forEach(f => {
             const isActive = String(this.activeFolderId) === String(f.id);
             const color = f.color || '#0a84ff';
@@ -332,7 +335,6 @@ window.TemplatesView = {
             
             slider.appendChild(card);
         });
-        slider.innerHTML = html;
 
         const folderSelect = document.getElementById('edit_templateFolder');
         if(folderSelect) folderSelect.innerHTML = '<option value="">Ungrouped</option>' + folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
