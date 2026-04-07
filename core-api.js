@@ -12,6 +12,7 @@ const BS_STORAGE_KEYS = {
     SCHEDULED: 'brandsync_scheduled_messages',
     PENDING_CONTACTS: 'brandsync_pending_contacts'
 };
+window.BS_STORAGE_KEYS = BS_STORAGE_KEYS;
 
 const initStorage = (key, defaults) => {
     if (!localStorage.getItem(key)) {
@@ -189,17 +190,37 @@ window.BrandSyncAPI = {
                 }
 
                 // SMART ARRAY RECONCILIATION:
-                // We merge local and remote. Remote IDs override local ones.
                 const map = new Map();
                 local.forEach(item => { if(item.id) map.set(String(item.id), item); });
-                remote.forEach(item => { if(item.id) { map.set(String(item.id), item); } });
+                
+                // IF WE ARE PULLING PENDING LEADS: 
+                // Discard any remote lead that is already in our local CONTACT list (Approved elsewhere)
+                if (storageKey === BS_STORAGE_KEYS.PENDING_CONTACTS) {
+                    const localContacts = this._get(BS_STORAGE_KEYS.CONTACTS);
+                    const approvedPhones = new Set(localContacts.map(lc => String(lc.phone).replace(/\D/g, '')));
+                    
+                    remote.forEach(item => {
+                        if (item.id) {
+                            const pPhone = String(item.phone || '').replace(/\D/g, '');
+                            if (approvedPhones.has(pPhone)) {
+                                console.log(`[CloudSync] Lead ${pPhone} was approved locally. Ignoring stale remote pending record.`);
+                                return;
+                            }
+                            map.set(String(item.id), item);
+                        }
+                    });
+                } else {
+                    remote.forEach(item => { if(item.id) { map.set(String(item.id), item); } });
+                }
 
                 const merged = Array.from(map.values());
                 
                 // Sort by ID or creation date if possible to maintain order consistency
                 merged.sort((a,b) => {
-                    if (a.added && b.added) return new Date(b.added) - new Date(a.added);
-                    return String(b.id).localeCompare(String(a.id));
+                    const dateA = a.added ? new Date(a.added).getTime() : 0;
+                    const dateB = b.added ? new Date(b.added).getTime() : 0;
+                    if (dateA && dateB) return dateB - dateA;
+                    return String(b.id || '').localeCompare(String(a.id || ''));
                 });
 
                 const mergedStr = JSON.stringify(merged);
@@ -911,11 +932,20 @@ window.BrandSyncAPI = {
         console.log(`[Approve] Logic Complete. ${approvedCount} records promoted.`);
         if (contacts.length > 0) console.table(contacts.slice(0, 5));
 
-        // FORCE ATOMIC SYNC HANDSHAKE:
-        // We bypass the 3s debounce timer for approvals to prevent race conditions with cloud heartbeats.
-        this.syncCloudNow().then(res => {
-            console.log("[Approve] Atomic Cloud Handshake:", res.success ? "SUCCESS" : "FAILED", res.message || "");
-        });
+        // CRITICAL FIX: Push DIRECTLY to Gist without pulling first.
+        // syncCloudNow() does Pull→Push, but the Pull step fetches OLD Gist data
+        // (which still has the pending contacts) and merges it back, UNDOING the approval.
+        // By pushing first, we commit the approved state to the Gist immediately.
+        const config = JSON.parse(localStorage.getItem('BS_GH_CONFIG') || '{}');
+        const pushToken = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN) || config.token;
+        const pushGistId = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GIST_ID) || config.gistId;
+        
+        if (pushToken && pushGistId) {
+            this.githubPush(pushToken, pushGistId).then(res => {
+                console.log("[Approve] Direct Push to Gist:", res.success ? "SUCCESS" : "FAILED (HTTP " + res.status + ")");
+                localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
+            }).catch(e => console.error("[Approve] Push error:", e));
+        }
 
         return { success: true, count: approvedCount };
     },

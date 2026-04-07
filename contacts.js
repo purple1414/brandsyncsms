@@ -1017,7 +1017,7 @@ window.ContactsView = {
             const isRecent = addDate && (Date.now() - addDate) <= (7 * 24 * 60 * 60 * 1000);
             const addedLabel = document.getElementById('contactAddedLabel');
             if(addedLabel) {
-                 addedLabel.innerHTML = `Added: <span style="font-family:monospace; color:#fff; font-weight:700;">${contact.added || 'Unknown'}</span> ${isRecent ? '<span style="color:#ff9f0a; font-weight:800; margin-left:8px; padding:2px 6px; border:1px solid rgba(255,159,10,0.3); background:rgba(255,159,10,0.1); border-radius:4px;">NEW</span>' : ''}`;
+                addedLabel.innerHTML = `Added: <span style="font-family:monospace; color:#fff; font-weight:700;">${contact.added || 'Unknown'}</span> ${isRecent ? '<span style="color:#ff9f0a; font-weight:800; margin-left:8px; padding:2px 6px; border:1px solid rgba(255,159,10,0.3); background:rgba(255,159,10,0.1); border-radius:4px;">NEW</span>' : ''}`;
             }
 
             document.getElementById('edit_contactFirstName').value = first;
@@ -1031,13 +1031,14 @@ window.ContactsView = {
             document.getElementById('edit_contactPosition').value = contact.position || "";
             document.getElementById('edit_contactSales').value = contact.salesPerson || contact.salesperson || "";
             
-            // TYPE-AGNOSTIC GROUP SELECTION: Ensure checkboxes match regardless of ID storage type
+            // TYPE-AGNOSTIC GROUP SELECTION
             checkboxes.forEach(cb => {
                 const isAssigned = (contact.groupIds || []).some(gid => String(gid) === String(cb.value));
                 cb.checked = isAssigned;
             });
         } else {
-            ids.forEach(id => document.getElementById('edit' + id).value = "");
+            document.getElementById('edit_contactId').value = "";
+            ids.forEach(id => { const el = document.getElementById('edit' + id); if(el) el.value = ""; });
             checkboxes.forEach(cb => cb.checked = false);
             
             const addedLabel = document.getElementById('contactAddedLabel');
@@ -1045,6 +1046,7 @@ window.ContactsView = {
         }
         modal.style.display = 'flex';
     },
+
 
     closeEditModal() { document.getElementById('contactModal').style.display = 'none'; },
 
@@ -1761,17 +1763,25 @@ window.ContactsView = {
             const res = await window.BrandSyncAPI.approvePendingContacts(ids, targetGroupId);
             console.log(`[UI] API response:`, res);
             if (res.success) {
-                window.showToast(`${ids.length} Identities approved and synced!`, "success");
-                
-                // Clear filters to ensure the user actually SEES the new contacts
+                // FORCE COMPLETE UI RESET TO SHOW NEW DATA
                 const searchInp = document.getElementById('contactSearch');
                 if (searchInp) searchInp.value = '';
-                this.isRecentFilterActive = false; // reset recent too for clarity
+                
+                // Clear Advanced Filters
+                const filters = ['filterDateFrom', 'filterDateTo', 'filterTag', 'filterCompany'];
+                filters.forEach(fid => { const el = document.getElementById(fid); if(el) el.value = ''; });
+                
+                this.isRecentFilterActive = false;
+                this.activeGroupId = null; // Switch to All Contacts view so they are visible
+                
+                window.showToast(`${ids.length} Records Promoted to Global Pool!`, "success");
                 
                 this.loadData();
                 this.loadGroups();
                 this.loadPendingData();
                 if (document.getElementById('selectAllPending')) document.getElementById('selectAllPending').checked = false;
+            } else {
+                window.showToast("Approval failed. Check cloud connection.", "error");
             }
         });
     },
