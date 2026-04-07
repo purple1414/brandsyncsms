@@ -162,22 +162,31 @@ async function pullLeadsFromBrandSync() {
         const pendingKey = 'brandsync_pending_contacts';
         const existing = JSON.parse(localStorage.getItem(pendingKey) || '[]');
         
-        let newCount = 0;
+        // Look into BOTH pending and main contacts to hot-patch broken historic imports
+        const mainKey = 'brandsync_contacts';
+        const existingMain = JSON.parse(localStorage.getItem(mainKey) || '[]');
+        
         let updatedCount = 0;
+        let mainUpdatedCount = 0;
+
         leads.forEach(lead => {
             const mappedCompany = lead.organization || lead.company || lead.organizations || '';
             const mappedPosition = lead.role || lead.position || lead.roles || lead.job_title || '';
             const mappedEvent = lead.event || lead.event_name || '';
             const mappedInterest = lead.selected_topic || lead.selected_topics || lead.topics || lead.interest || lead.interests || lead.brand_interest || lead.brand_interested || '';
 
-            // Check if already exists by ID or phone number  
-            const extIdx = existing.findIndex(e => 
-                (e.id && e.id === lead.id) || 
-                (e.phone && e.phone === lead.phone)
-            );
+            const extIdx = existing.findIndex(e => (e.id && e.id === lead.id) || (e.phone && e.phone === lead.phone));
+            const mainIdx = existingMain.findIndex(e => (e.id && e.id === lead.id) || (e.phone && e.phone === lead.phone));
 
-            if (extIdx !== -1) {
-                // Force update existing records to repair empty field mappings
+            if (mainIdx !== -1) {
+                // If the lead was already approved into the main contacts, repair here
+                existingMain[mainIdx].company = mappedCompany || existingMain[mainIdx].company;
+                existingMain[mainIdx].position = mappedPosition || existingMain[mainIdx].position;
+                existingMain[mainIdx].event = mappedEvent || existingMain[mainIdx].event;
+                existingMain[mainIdx].interest = mappedInterest || existingMain[mainIdx].interest;
+                mainUpdatedCount++;
+            } else if (extIdx !== -1) {
+                // Force update existing pending records to repair empty field mappings
                 existing[extIdx].company = mappedCompany || existing[extIdx].company;
                 existing[extIdx].position = mappedPosition || existing[extIdx].position;
                 existing[extIdx].event = mappedEvent || existing[extIdx].event;
@@ -211,6 +220,7 @@ async function pullLeadsFromBrandSync() {
         });
         
         localStorage.setItem(pendingKey, JSON.stringify(existing));
+        if (mainUpdatedCount > 0) localStorage.setItem(mainKey, JSON.stringify(existingMain));
         
         // Also trigger cloud sync if available
         if (window.BrandSyncAPI && window.BrandSyncAPI.syncCloudNow) {
@@ -222,14 +232,18 @@ async function pullLeadsFromBrandSync() {
             window.ContactsView.loadPendingData();
         }
 
+        if (window.ContactsView && typeof window.ContactsView.loadData === 'function') {
+            window.ContactsView.loadData();
+        }
+
         // Update status
         if (statusEl) {
-            statusEl.textContent = `✓ ${count} leads (${newCount} new, ${updatedCount} refreshed)`;
+            statusEl.textContent = `✓ ${count} leads (${newCount} new, ${updatedCount + mainUpdatedCount} refreshed)`;
             statusEl.style.color = '#32d74b';
         }
         
         if (window.showToast) {
-            window.showToast(`Pull Successful: ${newCount} new leads, ${updatedCount} refreshed.`, 'success');
+            window.showToast(`Pull Successful: ${newCount} new leads, ${updatedCount} cached pending, ${mainUpdatedCount} active updated.`, 'success');
         }
 
         return leads;
