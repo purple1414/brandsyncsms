@@ -278,21 +278,21 @@ window.ContactsView = {
             </div>
 
             <!-- Pending Approval Modal -->
-            <div id="pendingModal" style="display:none; position:fixed; inset:0; z-index:30000; background:rgba(0,0,0,0.6); backdrop-filter:blur(40px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
-                <div class="glass-panel" style="width:1000px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,159,10,0.3); background:rgba(35,25,15,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6); display:flex; flex-direction:column; gap:24px;">
+            <div id="pendingModal" style="display:none; position:fixed; inset:0; z-index:30000; background:rgba(0,0,0,0.5); backdrop-filter:blur(50px) saturate(220%); align-items:center; justify-content:center; padding:20px;">
+                <div class="glass-panel" style="width:1100px; max-width: 95vw; max-height:90vh; overflow-y:auto; padding:32px; border-radius:40px; border:1px solid rgba(255,159,10,0.25); background:rgba(30,22,15,0.92); position: relative; animation: slideUp 0.5s cubic-bezier(0.1, 0.9, 0.25, 1); box-shadow: 0 50px 120px rgba(0,0,0,0.7); display:flex; flex-direction:column; gap:28px;">
+                    <button onclick="window.ContactsView.closePendingModal()" style="position: absolute; top: 24px; right: 24px; width:40px; height:40px; border-radius:50%; background:rgba(255,159,10,0.1); border:1px solid rgba(255,159,10,0.3); color:#ff9f0a; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10;" onmouseover="this.style.background='rgba(255,159,10,0.25)'; this.style.transform='rotate(90deg) scale(1.1)'" onmouseout="this.style.background='rgba(255,159,10,0.1)'; this.style.transform='rotate(0deg) scale(1)'">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <h3 style="font-size:1.4rem; font-weight:800; color:#ff9f0a; margin-bottom:4px;">Pending Contacts Review</h3>
                             <p style="font-size:0.8rem; color:rgba(255,159,10,0.5);">Review and approve contacts from Brand-Sync Lead Syndication.</p>
                         </div>
-                        <div style="display:flex; gap:16px; align-items:center;">
-                            <input type="text" id="pendingFilter" placeholder="Filter company, position..." oninput="window.ContactsView.loadPendingData()" class="glass-input" style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; padding:8px 12px; font-size:0.8rem; outline:none; max-width:180px;">
-                            <span id="sync-status" style="font-size:0.75rem; color:rgba(255,159,10,0.6); font-weight:700;">Ready to sync</span>
-                            <button id="pull-leads-btn" class="btn" style="background:linear-gradient(135deg, rgba(255,159,10,0.2), rgba(255,159,10,0.05)); border:1px solid rgba(255,159,10,0.4); color:#ff9f0a; padding:10px 20px; border-radius:14px; font-weight:800; font-size: 0.85rem; display:flex; align-items:center; gap:8px; box-shadow: 0 4px 15px rgba(255,159,10,0.15); transition: 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,159,10,0.25)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(255,159,10,0.2), rgba(255,159,10,0.05))'">
-                                <i class="icon-lucide-download-cloud" style="font-size:1.1rem;"></i> Get Data From BrandSync Leads Collection
-                            </button>
-                            <button onclick="window.ContactsView.closePendingModal()" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <div style="display:flex; gap:16px; align-items:center; margin-right: 50px;">
+                            <input type="text" id="pendingFilter" placeholder="Live Filter..." oninput="window.ContactsView.loadPendingData()" class="glass-input" style="background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:14px; color:#fff; padding:10px 16px; font-size:0.85rem; outline:none; max-width:200px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);">
+                            <span id="sync-status" style="font-size:0.75rem; color:rgba(255,159,10,0.8); font-weight:700; text-transform: uppercase; letter-spacing: 0.05em;">Status: Ready</span>
+                            <button id="pull-leads-btn" class="btn" style="background:linear-gradient(135deg, rgba(255,159,10,0.25), rgba(255,159,10,0.1)); border:1px solid rgba(255,159,10,0.5); color:#ff9f0a; padding:12px 24px; border-radius:16px; font-weight:800; font-size: 0.85rem; display:flex; align-items:center; gap:10px; box-shadow: 0 4px 20px rgba(255,159,10,0.2); transition: 0.3s; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(255,159,10,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(255,159,10,0.2)'">
+                                <i class="icon-lucide-list-restart" style="font-size:1.1rem;"></i> Sync BS Distribution
                             </button>
                         </div>
                     </div>
@@ -317,7 +317,7 @@ window.ContactsView = {
                     <div id="contacts" style="background:rgba(0,0,0,0.2); border-radius:24px; border:1px solid rgba(255,255,255,0.05); overflow:hidden; display:flex; flex-direction:column; max-height: 400px;">
                         <div style="flex:1; overflow-y:auto; overflow-x:hidden;">
                             <table style="width:100%; border-collapse:collapse;">
-                                <thead style="background:rgba(255,255,255,0.02); position:sticky; top:0; z-index:10; backdrop-filter:blur(10px);">
+                                <thead style="background:rgba(255,255,255,0.05); position:sticky; top:0; z-index:10; backdrop-filter:blur(20px); border-bottom: 2px solid rgba(255,159,10,0.3);">
                                     <tr>
                                         <th style="padding:16px 20px; text-align:left; width:45px;"><input type="checkbox" id="selectAllPending" onchange="window.ContactsView.toggleAllPending(this.checked)" style="width:17px; height:17px; accent-color:#ff9f0a; cursor:pointer;"></th>
                                         <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Contact Info</th>
