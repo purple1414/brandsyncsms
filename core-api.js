@@ -80,21 +80,18 @@ window.BrandSyncAPI = {
         }
 
         try {
-            // HIGH-FIDELITY PARITY SEQUENCE [ATOMIC REINFORCEMENT]:
-            // 1. Pull from cloud first to reconcile with other users' changes
-            const pullRes = await this.githubPull(token, gistId);
-            
             if (!pullRes.success && pullRes.status !== 204) {
-                return { success: false, message: `Handshake Failed: Cloud unreachable (HTTP ${pullRes.status}). Aborting sync to prevent data loss.` };
-            }
-
-            // 2. Now that local state is merged with remote, push back to cloud
+            // ATOMIC PUSH FOR LOCAL MUTATIONS
+            // We bypass the pull step here because pulling before pushing 
+            // resurrects locally deleted items (since they still exist in the remote state).
             const pushRes = await this.githubPush(token, gistId);
 
-            localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
-            localStorage.setItem('BS_CLOUD_READY', 'true'); // Flag as safe for autonomous broadcasts
+            if (pushRes.success) {
+                localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
+                localStorage.setItem('BS_CLOUD_READY', 'true');
+            }
             
-            return { success: pushRes.success, changed: pullRes.changed };
+            return { success: pushRes.success };
         } catch (e) {
             return { success: false, message: e.message };
         }
