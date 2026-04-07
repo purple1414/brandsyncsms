@@ -80,7 +80,6 @@ window.BrandSyncAPI = {
         }
 
         try {
-            if (!pullRes.success && pullRes.status !== 204) {
             // ATOMIC PUSH FOR LOCAL MUTATIONS
             // We bypass the pull step here because pulling before pushing 
             // resurrects locally deleted items (since they still exist in the remote state).
