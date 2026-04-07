@@ -672,15 +672,39 @@ window.BrandSyncAPI = {
         const ghToken = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN) || config.token;
         const ghGistId = (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GIST_ID) || config.gistId;
 
+        const measurePing = async (url) => {
+            const start = performance.now();
+            try {
+                // Use no-cors specifically for ping to avoid CORS preflight overhead and just measure raw connection
+                await fetch(url, { method: 'GET', mode: 'no-cors', cache: 'no-store' });
+                return Math.round(performance.now() - start);
+            } catch (e) {
+                return -1; // Offline/Unreachable
+            }
+        };
+
         const health = { 
             github: !!(ghToken && ghGistId), 
-            philsms: true, // Functional assumption for UI
+            philsms: true, 
             internet: navigator.onLine, 
             latencyGh: 0, latencySms: 0, latencyNet: 0,
             unreadCount: 0,
             scheduledCount: 0,
             campaignsCount: 0
         };
+
+        if (health.internet) {
+            // Measure real latencies simultaneously
+            const [pingNet, pingGh, pingSms] = await Promise.all([
+                measurePing('https://cloudflare-dns.com/dns-query?name=google.com&type=A'), // Fast internet check
+                health.github ? measurePing(`https://api.github.com/gists/${ghGistId}?t=${Date.now()}`) : Promise.resolve(-1),
+                measurePing(`https://dashboard.philsms.com?t=${Date.now()}`)
+            ]);
+            
+            health.latencyNet = pingNet;
+            health.latencyGh = pingGh;
+            health.latencySms = pingSms;
+        }
 
         try {
             const mKey = BS_STORAGE_KEYS.MESSAGES || 'brandsync_messages';

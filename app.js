@@ -502,6 +502,39 @@ class BrandSyncApp {
             if (window.BrandSyncAPI && window.BrandSyncAPI.runHealth) window.BrandSyncAPI.runHealth();
         } catch (e) {}
     }
+
+    updateHeartbeatUI(health) {
+        const formatLatency = (ms) => {
+            if (ms < 0) return { text: 'OFFLINE', color: '#ff453a' }; // Red
+            if (ms < 200) return { text: `${ms}ms`, color: '#32d74b' }; // Green
+            if (ms < 800) return { text: `${ms}ms`, color: '#ffd60a' }; // Yellow
+            return { text: `${ms}ms`, color: '#ff453a' }; // Red
+        };
+
+        const net = formatLatency(health.internet ? health.latencyNet : -1);
+        const gh = formatLatency(health.github ? health.latencyGh : -1);
+        const sms = formatLatency(health.philsms ? health.latencySms : -1);
+
+        const elNet = document.getElementById('health_internet');
+        const elGh = document.getElementById('health_github');
+        const elSms = document.getElementById('health_philsms');
+
+        if (elNet) {
+            elNet.innerText = net.text;
+            elNet.style.color = net.color;
+            elNet.style.textShadow = `0 0 12px ${net.color}`;
+        }
+        if (elGh) {
+            elGh.innerText = gh.text;
+            elGh.style.color = gh.color;
+            elGh.style.textShadow = `0 0 12px ${gh.color}`;
+        }
+        if (elSms) {
+            elSms.innerText = sms.text;
+            elSms.style.color = sms.color;
+            elSms.style.textShadow = `0 0 12px ${sms.color}`;
+        }
+    }
 }
 
 // Initialized Application Node
