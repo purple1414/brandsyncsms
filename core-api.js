@@ -861,20 +861,32 @@ window.BrandSyncAPI = {
                 const phone = String(lead.phone || '').replace(/[^0-9]/g, '');
                 if (!phone) return;
 
-                const existsPending = pending.find(p => String(p.phone).replace(/[^0-9]/g, '') === phone);
+                const pendingIdx = pending.findIndex(p => String(p.phone).replace(/[^0-9]/g, '') === phone);
                 const contacts = this._get(BS_STORAGE_KEYS.CONTACTS);
-                const existsMain = contacts.find(c => String(c.phone).replace(/[^0-9]/g, '') === phone);
+                const existsMain = contacts.some(c => String(c.phone).replace(/[^0-9]/g, '') === phone);
 
-                if (!existsPending && !existsMain) {
+                const mappedCompany = lead.organization || lead.company || lead.organizations || 'Brand-Sync Origin';
+                const mappedPosition = lead.role || lead.position || lead.roles || lead.job_title || lead.approval_status || 'Lead';
+                const mappedEvent = lead.event || lead.event_name || 'N/A';
+                const mappedInterest = lead.selected_topic || lead.selected_topics || lead.topics || lead.interest || lead.interests || lead.brand_interest || lead.brand_interested || 'N/A';
+
+                if (pendingIdx !== -1) {
+                    // Update existing pending lead
+                    pending[pendingIdx].company = mappedCompany !== 'Brand-Sync Origin' ? mappedCompany : pending[pendingIdx].company;
+                    pending[pendingIdx].position = mappedPosition !== 'Lead' ? mappedPosition : pending[pendingIdx].position;
+                    pending[pendingIdx].event = mappedEvent !== 'N/A' ? mappedEvent : pending[pendingIdx].event;
+                    pending[pendingIdx].interest = mappedInterest !== 'N/A' ? mappedInterest : pending[pendingIdx].interest;
+                } else if (!existsMain) {
+                    // Insert brand new lead
                     pending.unshift({
                         id: 'PEND_BS_' + (lead.id || Date.now() + Math.random()),
                         name: lead.name || 'Cloud Lead',
                         phone: phone,
                         email: lead.email || 'N/A',
-                        company: lead.organization || lead.company || lead.organizations || 'Brand-Sync Origin',
-                        position: lead.role || lead.position || lead.roles || lead.job_title || lead.approval_status || 'Lead',
-                        event: lead.event || lead.event_name || 'N/A',
-                        interest: lead.selected_topic || lead.selected_topics || lead.topics || lead.interest || lead.interests || lead.brand_interest || lead.brand_interested || 'N/A',
+                        company: mappedCompany,
+                        position: mappedPosition,
+                        event: mappedEvent,
+                        interest: mappedInterest,
                         salesPerson: lead.salesperson || lead.sales_person || 'Unassigned',
                         tags: Array.isArray(lead.tags) ? lead.tags : typeof lead.tags === 'string' ? lead.tags.split(',').map(s=>s.trim()).filter(x=>x) : [],
                         awareness: lead.brand_awareness || 'N/A',
