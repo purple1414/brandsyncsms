@@ -294,7 +294,7 @@ window.ContactsView = {
                             <input type="text" id="pendingFilter" placeholder="Live Filter..." oninput="window.ContactsView.loadPendingData()" class="glass-input" style="background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.1); border-radius:14px; color:#fff; padding:10px 16px; font-size:0.85rem; outline:none; max-width:200px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);">
                             <span id="sync-status" style="font-size:0.75rem; color:rgba(255,159,10,0.8); font-weight:700; text-transform: uppercase; letter-spacing: 0.05em;">Status: Ready</span>
                             <button id="pull-leads-btn" class="btn" style="background:linear-gradient(135deg, rgba(255,159,10,0.25), rgba(255,159,10,0.1)); border:1px solid rgba(255,159,10,0.5); color:#ff9f0a; padding:12px 24px; border-radius:16px; font-weight:800; font-size: 0.85rem; display:flex; align-items:center; gap:10px; box-shadow: 0 4px 20px rgba(255,159,10,0.2); transition: 0.3s; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(255,159,10,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(255,159,10,0.2)'">
-                                <i class="icon-lucide-list-restart" style="font-size:1.1rem;"></i> Sync BS Distribution
+                                <i class="icon-lucide-list-restart" style="font-size:1.1rem;"></i> Sync BrandSync Data
                             </button>
                         </div>
                     </div>
@@ -363,12 +363,12 @@ window.ContactsView = {
 
     _renderPickers() {
         const cp = document.getElementById('colorPicker'); const ip = document.getElementById('iconPicker');
-        if(!cp) return;
+        if (!cp) return;
         cp.innerHTML = this.GROUP_COLORS.map(c => `<div onclick="window.ContactsView.selectColor('${c}')" class="color-dot" style="width:28px; height:28px; border-radius:50%; background:${c}; cursor:pointer; border:3px solid transparent; transition:0.2s;" data-color="${c}"></div>`).join('');
         const activeColor = this.selectedColor;
         ip.innerHTML = Object.keys(this.GROUP_ICONS).map(name => {
             const isActive = name === this.selectedIcon;
-            return `<div onclick="window.ContactsView.selectIcon('${name}')" class="icon-dot" style="width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:${isActive ? activeColor+'33' : 'rgba(255,255,255,0.05)'}; color:${activeColor}; cursor:pointer; transition:0.2s; border:1px solid ${isActive ? activeColor+'88' : 'transparent'};" data-icon="${name}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${this.GROUP_ICONS[name]}</svg></div>`;
+            return `<div onclick="window.ContactsView.selectIcon('${name}')" class="icon-dot" style="width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:${isActive ? activeColor + '33' : 'rgba(255,255,255,0.05)'}; color:${activeColor}; cursor:pointer; transition:0.2s; border:1px solid ${isActive ? activeColor + '88' : 'transparent'};" data-icon="${name}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${this.GROUP_ICONS[name]}</svg></div>`;
         }).join('');
     },
 
@@ -398,7 +398,7 @@ window.ContactsView = {
         const slider = document.getElementById('groupsList'); if (!slider) return;
         const groups = await window.BrandSyncAPI.getGroups(); this.cachedGroups = groups;
         const contacts = await window.BrandSyncAPI.getContacts(); const counts = groups.reduce((acc, g) => { acc[g.id] = contacts.filter(c => (c.groupIds || []).some(gid => String(gid) === String(g.id))).length; return acc; }, {});
-        const gc = document.getElementById('groupCheckboxes'); if(gc) gc.innerHTML = groups.map(g => `<label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,0.03); cursor:pointer;"><input type="checkbox" class="group-select-check" value="${g.id}" style="width:16px; height:16px; accent-color:${g.color};"><span style="color:#fff; font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${g.name}</span></label>`).join('');
+        const gc = document.getElementById('groupCheckboxes'); if (gc) gc.innerHTML = groups.map(g => `<label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,0.03); cursor:pointer;"><input type="checkbox" class="group-select-check" value="${g.id}" style="width:16px; height:16px; accent-color:${g.color};"><span style="color:#fff; font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${g.name}</span></label>`).join('');
 
         let html = `<div onclick="window.ContactsView.setGroup(null)" class="glass-card pool-card ${this.activeGroupId === null ? 'active' : ''}" style="flex: 0 0 150px; height: 110px; padding: 18px; border-radius: 24px; background: ${this.activeGroupId === null ? 'rgba(10,132,255,0.18)' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${this.activeGroupId === null ? 'rgba(10,132,255,0.35)' : 'rgba(255,255,255,0.1)'}; backdrop-filter: blur(25px); cursor: pointer; transition: transform 0.3s, background 0.3s; position: relative; display:flex; flex-direction:column; justify-content: space-between; scroll-snap-align: center; transform-origin: center;">
             <div style="display:flex; justify-content: space-between; align-items: flex-start;">
@@ -409,9 +409,9 @@ window.ContactsView = {
         groups.forEach((g, idx) => {
             const isActive = this.activeGroupId === g.id; const color = g.color || '#32d74b'; const iconSvg = this.GROUP_ICONS[g.icon || 'Users'];
             const displayRank = idx + 1;
-            html += `<div onclick="window.ContactsView.setGroup(${g.id})" class="glass-card group-card ${isActive ? 'active' : ''}" style="flex: 0 0 150px; height: 110px; padding: 18px; border-radius: 24px; background: ${isActive ? color+'22' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${isActive ? color+'66' : 'rgba(255,255,255,0.1)'}; backdrop-filter: blur(25px); cursor: pointer; transition: transform 0.3s, background 0.3s; position: relative; display:flex; flex-direction:column; justify-content: space-between; scroll-snap-align: center; transform-origin: center;">
+            html += `<div onclick="window.ContactsView.setGroup(${g.id})" class="glass-card group-card ${isActive ? 'active' : ''}" style="flex: 0 0 150px; height: 110px; padding: 18px; border-radius: 24px; background: ${isActive ? color + '22' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${isActive ? color + '66' : 'rgba(255,255,255,0.1)'}; backdrop-filter: blur(25px); cursor: pointer; transition: transform 0.3s, background 0.3s; position: relative; display:flex; flex-direction:column; justify-content: space-between; scroll-snap-align: center; transform-origin: center;">
                 <div style="display:flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="width: 38px; height: 38px; border-radius: 12px; background: ${color+'1a'}; display:flex; align-items:center; justify-content:center; color: ${color};"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${iconSvg}</svg></div>
+                    <div style="width: 38px; height: 38px; border-radius: 12px; background: ${color + '1a'}; display:flex; align-items:center; justify-content:center; color: ${color};"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${iconSvg}</svg></div>
                     <div class="card-ops" style="display:flex; gap: 8px;"><button onclick="event.stopPropagation(); window.ContactsView.openGroupModal(${JSON.stringify(g).replace(/"/g, '&quot;')})" class="op-btn edit" style="background:none; border:none; padding:0; cursor:pointer; color:#32d74b; opacity:0.35; transition:0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></button><button onclick="event.stopPropagation(); window.ContactsView.tripleDeleteGroup(${g.id}, '${g.name.replace(/'/g, "\\'")}')" class="op-btn delete" style="background:none; border:none; padding:0; cursor:pointer; color:#ff453a; opacity:0.35; transition:0.2s;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button></div></div>
                 <div style="display:flex; justify-content: space-between; align-items: flex-end;">
                     <div style="flex:1; overflow:hidden;" title="${g.description || ''}"><h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${g.name}</h4><p style="font-size: 0.65rem; color: rgba(255,255,255,0.35);">${counts[g.id]} Records</p></div>
@@ -421,8 +421,8 @@ window.ContactsView = {
                     </div></div></div>`;
         });
         slider.innerHTML = html;
-        
-        if(!document.getElementById('manual-refinement-css')) {
+
+        if (!document.getElementById('manual-refinement-css')) {
             const st = document.createElement('style'); st.id = 'manual-refinement-css';
             st.innerHTML = `
                 .op-btn:hover { opacity: 1 !important; transform: scale(1.25); } 
@@ -440,12 +440,12 @@ window.ContactsView = {
         const slider = document.getElementById('groupsList'); if (!slider) return;
         let isDown = false, startX, scrollLeft, velocity = 0, lastX = 0, momentumID;
         const cleanup = () => { isDown = false; slider.style.cursor = 'grab'; cancelAnimationFrame(momentumID); momentum(); };
-        const momentum = () => { if (Math.abs(velocity) < 0.1) return; slider.scrollLeft -= velocity; velocity *= 0.94; const tilt = Math.max(-8, Math.min(8, velocity * 0.8)); Array.from(slider.children).forEach(card => card.style.transform = `rotateY(${tilt}deg) scale(${1 - Math.abs(velocity)*0.002})`); if (!isDown) momentumID = requestAnimationFrame(momentum); else resetTilt(); };
+        const momentum = () => { if (Math.abs(velocity) < 0.1) return; slider.scrollLeft -= velocity; velocity *= 0.94; const tilt = Math.max(-8, Math.min(8, velocity * 0.8)); Array.from(slider.children).forEach(card => card.style.transform = `rotateY(${tilt}deg) scale(${1 - Math.abs(velocity) * 0.002})`); if (!isDown) momentumID = requestAnimationFrame(momentum); else resetTilt(); };
         const resetTilt = () => Array.from(slider.children).forEach(card => card.style.transform = 'rotateY(0) scale(1)');
         slider.addEventListener('mousedown', (e) => { isDown = true; slider.style.cursor = 'grabbing'; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; cancelAnimationFrame(momentumID); velocity = 0; });
         slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const walk = (x - startX) * 1.5; velocity = x - lastX; lastX = x; slider.scrollLeft = scrollLeft - walk; const tilt = Math.max(-12, Math.min(12, velocity * 1.2)); Array.from(slider.children).forEach(card => card.style.transform = `rotateY(${tilt}deg) scale(0.98)`); });
-        window.addEventListener('mouseup', () => { if(isDown) cleanup(); });
-        slider.addEventListener('mouseleave', () => { if(isDown) cleanup(); });
+        window.addEventListener('mouseup', () => { if (isDown) cleanup(); });
+        slider.addEventListener('mouseleave', () => { if (isDown) cleanup(); });
     },
 
     async updateRank(currentIdx, newValue) {
@@ -458,7 +458,7 @@ window.ContactsView = {
 
     setGroup(id) {
         this.activeGroupId = id; this.loadGroups(); this.loadData();
-        const title = document.getElementById('viewTitle'); if(title) title.innerText = id ? (this.cachedGroups.find(x => x.id === id)?.name || "Group") : "All Contacts";
+        const title = document.getElementById('viewTitle'); if (title) title.innerText = id ? (this.cachedGroups.find(x => x.id === id)?.name || "Group") : "All Contacts";
     },
 
     toggleAll(checked) {
@@ -469,20 +469,20 @@ window.ContactsView = {
 
     updateBulkUI() {
         const count = document.querySelectorAll('.contact-checkbox:checked').length;
-        
+
         const defaultCtrl = document.getElementById('defaultActionControls');
         const bulkCtrl = document.getElementById('bulkActionControls');
         const countBadge = document.getElementById('contextualSelectedCount');
-        
+
         if (count > 0) {
-            if(defaultCtrl) defaultCtrl.style.display = 'none';
-            if(bulkCtrl) bulkCtrl.style.display = 'flex';
-            if(countBadge) countBadge.innerText = count;
+            if (defaultCtrl) defaultCtrl.style.display = 'none';
+            if (bulkCtrl) bulkCtrl.style.display = 'flex';
+            if (countBadge) countBadge.innerText = count;
         } else {
-            if(defaultCtrl) defaultCtrl.style.display = 'flex';
-            if(bulkCtrl) bulkCtrl.style.display = 'none';
+            if (defaultCtrl) defaultCtrl.style.display = 'flex';
+            if (bulkCtrl) bulkCtrl.style.display = 'none';
             const menu = document.getElementById('addToGroupMenu');
-            if(menu) menu.style.display = 'none';
+            if (menu) menu.style.display = 'none';
         }
     },
 
@@ -521,7 +521,7 @@ window.ContactsView = {
     toggleAddToGroupMenu() {
         const menu = document.getElementById('addToGroupMenu');
         const list = document.getElementById('addToGroupList');
-        if(!menu || !list) return;
+        if (!menu || !list) return;
 
         if (menu.style.display === 'block') {
             menu.style.display = 'none';
@@ -533,7 +533,7 @@ window.ContactsView = {
         menu.style.display = 'block';
 
         window.BrandSyncAPI.getGroups().then(groups => {
-            if(!groups || groups.length === 0) {
+            if (!groups || groups.length === 0) {
                 list.innerHTML = `<div style="padding:10px; color:#888; font-size:0.8rem; text-align:center;">No existing groups.</div>`;
                 return;
             }
@@ -544,11 +544,11 @@ window.ContactsView = {
                 </div>
             `).join('');
         });
-        
+
         // Auto close handler
         const closeHandler = (e) => {
             const btn = document.getElementById('addToGroupBtn');
-            if(btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+            if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
                 menu.style.display = 'none';
                 document.removeEventListener('click', closeHandler);
             }
@@ -559,7 +559,7 @@ window.ContactsView = {
     async confirmAddToGroup(groupId, groupName) {
         const checkedInputs = Array.from(document.querySelectorAll('.contact-checkbox:checked'));
         const idsToAdd = checkedInputs.map(cb => String(cb.value));
-        if(idsToAdd.length === 0) return;
+        if (idsToAdd.length === 0) return;
 
         document.getElementById('addToGroupMenu').style.display = 'none';
         window.showToast("Appending contacts to group...", "info");
@@ -567,10 +567,10 @@ window.ContactsView = {
         const allContacts = await window.BrandSyncAPI.getContacts();
         let addedCount = 0;
 
-        for(const c of allContacts) {
-            if(idsToAdd.includes(String(c.id))) {
+        for (const c of allContacts) {
+            if (idsToAdd.includes(String(c.id))) {
                 let currentGids = c.groupIds || [];
-                if(!currentGids.includes(groupId)) {
+                if (!currentGids.includes(groupId)) {
                     currentGids.push(groupId);
                     c.groupIds = currentGids;
                     await window.BrandSyncAPI.saveContact(c);
@@ -579,15 +579,15 @@ window.ContactsView = {
             }
         }
 
-        if(addedCount > 0) {
+        if (addedCount > 0) {
             window.showToast(`Successfully added ${addedCount} new contacts to "${groupName}".`, "success");
         } else {
             window.showToast(`Selected contacts are already in "${groupName}".`, "info");
         }
-        
+
         const selectAll = document.getElementById('selectAllCheckbox');
         if (selectAll) selectAll.checked = false;
-        
+
         this.loadGroups();
         this.loadData();
     },
@@ -595,25 +595,25 @@ window.ContactsView = {
     async bulkDelete() {
         const checkedInputs = Array.from(document.querySelectorAll('.contact-checkbox:checked'));
         const idsToDelete = checkedInputs.map(cb => cb.value); // Capture IDs immediately
-        if(idsToDelete.length === 0) return;
-        
+        if (idsToDelete.length === 0) return;
+
         window.BrandSyncAppInstance.confirmAction(`Purge ${idsToDelete.length} Identities?`, "This will permanently terminate the selected records from the database.", "#ff453a", async () => {
             // Use the captured idsToDelete array instead of re-querying or using global state
-            for(const id of idsToDelete) { 
-                await window.BrandSyncAPI.deleteContact(id); 
+            for (const id of idsToDelete) {
+                await window.BrandSyncAPI.deleteContact(id);
             }
             window.showToast(`${idsToDelete.length} Identities purged successfully.`, "success");
-            
+
             const selectAll = document.getElementById('selectAllCheckbox');
             if (selectAll) selectAll.checked = false;
-            
+
             this.loadData();
         });
     },
 
     async deleteIndividual(id, name) {
         // SURGICAL DELETE: Only ever deletes the ID passed directly to it.
-        const actualId = id; 
+        const actualId = id;
         window.BrandSyncAppInstance.confirmAction("Confirm Purge", `Terminate record "${name}"?`, "#ff453a", async () => {
             console.log("[Delete] Individually purging ID:", actualId);
             await window.BrandSyncAPI.deleteContact(actualId);
@@ -642,23 +642,23 @@ window.ContactsView = {
     toggleAdvancedFilters() {
         const panel = document.getElementById('advancedFiltersPanel');
         const btn = document.getElementById('advFilterToggleBtn');
-        if(!panel) return;
-        
-        if(panel.style.display === 'none') {
+        if (!panel) return;
+
+        if (panel.style.display === 'none') {
             panel.style.display = 'block';
-            if(btn) btn.style.background = 'rgba(255,255,255,0.15)';
+            if (btn) btn.style.background = 'rgba(255,255,255,0.15)';
         } else {
             panel.style.display = 'none';
-            if(btn) btn.style.background = 'rgba(255,255,255,0.05)';
+            if (btn) btn.style.background = 'rgba(255,255,255,0.05)';
         }
     },
 
     clearAdvancedFilters() {
-        if(document.getElementById('filterDateFrom')) document.getElementById('filterDateFrom').value = '';
-        if(document.getElementById('filterDateTo')) document.getElementById('filterDateTo').value = '';
-        if(document.getElementById('filterTag')) document.getElementById('filterTag').value = '';
-        if(document.getElementById('filterUnifiedSelector')) document.getElementById('filterUnifiedSelector').value = '';
-        
+        if (document.getElementById('filterDateFrom')) document.getElementById('filterDateFrom').value = '';
+        if (document.getElementById('filterDateTo')) document.getElementById('filterDateTo').value = '';
+        if (document.getElementById('filterTag')) document.getElementById('filterTag').value = '';
+        if (document.getElementById('filterUnifiedSelector')) document.getElementById('filterUnifiedSelector').value = '';
+
         if (this.isRecentFilterActive) {
             this.toggleRecentFilter(); // This natively re-renders loadData
         } else {
@@ -667,37 +667,37 @@ window.ContactsView = {
     },
 
     async loadData() {
-        const tbody = document.getElementById('contactsTableBody'); 
-        
+        const tbody = document.getElementById('contactsTableBody');
+
         const searchInput = document.getElementById('contactSearch');
         const clearBtn = document.getElementById('clearSearchBtn');
         const searchQuery = (searchInput?.value || '').trim();
-        
+
         if (clearBtn) clearBtn.style.display = searchQuery ? 'flex' : 'none';
-        
+
         const dateFrom = document.getElementById('filterDateFrom')?.value;
         const dateTo = document.getElementById('filterDateTo')?.value;
         const filterTag = (document.getElementById('filterTag')?.value || '').toLowerCase();
         const dropUnified = (document.getElementById('filterUnifiedSelector')?.value || ''); // e.g. "company:Google"
-        
+
         if (!tbody) return;
-        
-        let contacts = await window.BrandSyncAPI.getContacts(); 
-        const groups = await window.BrandSyncAPI.getGroups(); 
+
+        let contacts = await window.BrandSyncAPI.getContacts();
+        const groups = await window.BrandSyncAPI.getGroups();
         const grpMap = groups.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
 
         // UNIFIED DROPDOWN POPULATION logic
         const populateUnified = (id, data, currentValue) => {
             const select = document.getElementById(id);
             if (!select) return;
-            
+
             // If already populated with something more than just "All", we might not need to re-parse unless contacts changed
             // But for simplicity and to handle dynamic data, we'll re-render if count is small or on first load
             if (select.options.length > 1 && !this._forceRefreshDropdowns) {
-                 // Optimization: only re-populate if we really need to
+                // Optimization: only re-populate if we really need to
             } else {
                 const html = [`<option value="">All Categories</option>`];
-                
+
                 const addGroup = (label, items, prefix) => {
                     if (items.size === 0) return;
                     html.push(`<optgroup label="${label}">`);
@@ -711,7 +711,7 @@ window.ContactsView = {
                 addGroup('EVENTS', data.events, 'event');
                 addGroup('POSITIONS', data.positions, 'position');
                 addGroup('INTERESTS', data.interests, 'interest');
-                
+
                 select.innerHTML = html.join('');
             }
             if (currentValue) select.value = currentValue.toLowerCase();
@@ -745,7 +745,7 @@ window.ContactsView = {
             if (c.company) uniqueData.companies.add(c.company.trim());
             if (c.event) uniqueData.events.add(c.event.trim());
             if (c.position) uniqueData.positions.add(c.position.trim());
-            
+
             const rawInt = c.interest || c.selected_topic || '';
             const intStr = _extractStrings(rawInt);
             if (intStr) {
@@ -760,15 +760,15 @@ window.ContactsView = {
         });
 
         populateUnified('filterUnifiedSelector', uniqueData, dropUnified);
-        
+
         const now = Date.now();
         const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
         let activeFilterCount = 0;
-        
+
         // Multi-keyword tokenization for Global Search AND logic
         const keywords = searchQuery ? searchQuery.toLowerCase().split(/\s+/).filter(k => k.length > 0) : [];
-        
+
         // Multi-dimensional constraint rendering
         contacts = contacts.filter(c => {
             // Global Keyword Matching (Tolerant & Scope-Expanded)
@@ -777,7 +777,7 @@ window.ContactsView = {
                 const gNames = (c.groupIds || []).map(gid => grpMap[gid]?.name).join(' ');
                 const rawInt = c.interest || c.selected_topic || '';
                 const intStr = Array.isArray(rawInt) ? rawInt.join(', ') : String(rawInt).replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ');
-                
+
                 const searchablePool = [
                     c.name,
                     c.phone,
@@ -795,7 +795,7 @@ window.ContactsView = {
                 // Every typed word must be found SOMEWHERE in the contact object
                 passGeneral = keywords.every(kw => searchablePool.includes(kw));
             }
-            if(!passGeneral) return false;
+            if (!passGeneral) return false;
 
             // Spatial/Temporal Checks
             const addDateMs = new Date(c.added).getTime();
@@ -817,7 +817,7 @@ window.ContactsView = {
                 const firstColon = dropUnified.indexOf(':');
                 const category = dropUnified.substring(0, firstColon);
                 const val = dropUnified.substring(firstColon + 1);
-                
+
                 if (category === 'company') {
                     if ((c.company || '').toLowerCase() !== val) return false;
                 } else if (category === 'event') {
@@ -836,24 +836,24 @@ window.ContactsView = {
                 const gNames = (c.groupIds || []).map(gid => grpMap[gid]?.name).join(' ').toLowerCase();
                 const rawInt = c.interest || c.selected_topic || '';
                 const intStr = _extractStrings(rawInt).toLowerCase();
-                
-                const passTag = (c.event || '').toLowerCase().includes(filterTag) || 
-                                intStr.includes(filterTag) ||
-                                (c.tags || []).join(' ').toLowerCase().includes(filterTag) || 
-                                gNames.includes(filterTag);
+
+                const passTag = (c.event || '').toLowerCase().includes(filterTag) ||
+                    intStr.includes(filterTag) ||
+                    (c.tags || []).join(' ').toLowerCase().includes(filterTag) ||
+                    gNames.includes(filterTag);
                 if (!passTag) return false;
             }
 
             return true;
         });
-        
+
         // Active Filter Counting & UI Chips rendering
         if (this.isRecentFilterActive) activeFilterCount++;
         if (dateFrom) activeFilterCount++;
         if (dateTo) activeFilterCount++;
         if (filterTag) activeFilterCount++;
         if (dropUnified) activeFilterCount++;
-        
+
         const counterSpan = document.getElementById('advFilterCounter');
         if (counterSpan) {
             counterSpan.style.display = activeFilterCount > 0 ? 'inline-block' : 'none';
@@ -864,7 +864,7 @@ window.ContactsView = {
         if (chipsContainer) {
             let chipsHtml = '';
             const chipStyle = `padding: 4px 12px; background: rgba(10,132,255,0.15); border: 1px solid rgba(10,132,255,0.3); border-radius: 8px; font-size: 0.7rem; color: #0a84ff; font-weight: 700; display:flex; align-items:center; gap:6px;`;
-            
+
             if (this.isRecentFilterActive) chipsHtml += `<div style="${chipStyle}"><span>🚀</span> Recently Added</div>`;
             if (dateFrom) chipsHtml += `<div style="${chipStyle}"><span>📅</span> From: ${dateFrom}</div>`;
             if (dateTo) chipsHtml += `<div style="${chipStyle}"><span>📅</span> To: ${dateTo}</div>`;
@@ -876,7 +876,7 @@ window.ContactsView = {
                 const valLabel = selectedOption.text;
                 chipsHtml += `<div style="${chipStyle}"><span>🔍</span> ${catLabel}: ${valLabel}</div>`;
             }
-            
+
             chipsContainer.innerHTML = chipsHtml;
             chipsContainer.style.display = chipsHtml ? 'flex' : 'none';
         }
@@ -894,13 +894,13 @@ window.ContactsView = {
                 return 0;
             });
         }
-        
+
         // Intelligent HTML highlighting function
         const _highlight = (str) => {
             if (!str) return '—';
             let res = String(str);
             if (keywords.length === 0) return res;
-            
+
             let htmlForm = res;
             keywords.forEach(kw => {
                 const escKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -909,13 +909,13 @@ window.ContactsView = {
             });
             return htmlForm;
         };
-        
+
         // Generative HTML Table Body
         if (contacts.length > 0) {
             tbody.innerHTML = contacts.map(c => {
                 const grps = (c.groupIds || []).map(gid => grpMap[gid]).filter(Boolean);
                 const contactJson = JSON.stringify(c).replace(/"/g, '&quot;');
-                
+
                 const _toTitleCase = (str) => {
                     if (!str) return '';
                     return String(str).trim().toLowerCase().replace(/(^|[ \-\/,])([a-z0-9])/g, m => m.toUpperCase());
@@ -923,40 +923,40 @@ window.ContactsView = {
 
                 const rawDisplayName = window.ContactsView.parseName(c.name || 'Unknown').full;
                 const safeNameForDelete = rawDisplayName.replace(/'/g, "\\'");
-                
+
                 // Construct strings with Title Case, then apply smart highlighting
                 const displayName = _highlight(rawDisplayName);
                 const displayPhone = _highlight(`+${c.phone}`);
                 const displayCompany = c.company ? _highlight(_toTitleCase(c.company)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 const displayEvent = c.event ? _highlight(_toTitleCase(c.event)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
-                
+
                 let rawInterest = c.interest || c.selected_topic || '';
                 if (typeof rawInterest === 'string' && rawInterest.trim().startsWith('[') && rawInterest.trim().endsWith(']')) {
-                    try { rawInterest = JSON.parse(rawInterest.replace(/'/g, '"')); } catch(e) {}
+                    try { rawInterest = JSON.parse(rawInterest.replace(/'/g, '"')); } catch (e) { }
                 }
-                
+
                 let extractedInterest = _extractStrings(rawInterest);
                 let cleanInterest = String(extractedInterest).replace(/[\[\]"'{}]/g, '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim();
                 const displayInterest = cleanInterest && cleanInterest !== 'N/A' && cleanInterest !== 'Object Object' ? _highlight(_toTitleCase(cleanInterest)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
-                
+
                 const displayPosition = c.position ? _highlight(_toTitleCase(c.position)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
-                
+
                 const cellStyle = "padding: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;";
-                
+
                 // Logic for "Recently Added" Tag and formatted string
                 const addDate = new Date(c.added).getTime();
                 const isRecent = addDate && (now - addDate) <= sevenDaysMs;
                 const recentBadge = isRecent ? `<span title="Added within the last 7 days" style="background:rgba(255,159,10,0.15); color:#ff9f0a; border:1px solid rgba(255,159,10,0.3); padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; white-space:nowrap; margin-right:4px;">NEW</span>` : '';
-                
+
                 // Generate formatted timestamp string nicely
                 let addDisplay = c.added || '';
                 if (addDate) {
-                   const dObj = new Date(c.added);
-                   const hours = dObj.getHours();
-                   const mins = String(dObj.getMinutes()).padStart(2, '0');
-                   const ampm = hours >= 12 ? 'PM' : 'AM';
-                   const fmtTime = `${hours % 12 || 12}:${mins} ${ampm}`;
-                   addDisplay = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')} ${c.added.includes(':') ? fmtTime : ''}`.trim();
+                    const dObj = new Date(c.added);
+                    const hours = dObj.getHours();
+                    const mins = String(dObj.getMinutes()).padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const fmtTime = `${hours % 12 || 12}:${mins} ${ampm}`;
+                    addDisplay = `${dObj.getFullYear()}-${String(dObj.getMonth() + 1).padStart(2, '0')}-${String(dObj.getDate()).padStart(2, '0')} ${c.added.includes(':') ? fmtTime : ''}`.trim();
                 }
 
                 return `<tr style="border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.1s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
@@ -972,7 +972,7 @@ window.ContactsView = {
                     <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.event || ''}">${displayEvent}</td>
                     <td style="padding: 12px; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem; color: rgba(255,255,255,0.55);" title="${c.interest || c.selected_topic || ''}">${displayInterest}</td>
                     <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.position || ''}">${displayPosition}</td>
-                    <td style="padding: 12px;"><div style="display:flex; gap: 4px; flex-wrap: nowrap; overflow: hidden;">${grps.length > 0 ? grps.map(g => `<span title="${g.name}" style="background:${(g.color || '#fff')+'1a'}; color: ${g.color || '#fff'}; border:1px solid ${(g.color || '#fff')+'33'}; padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px;">${_highlight(g.name)}</span>`).join('') : `<span style="color:rgba(255,255,255,0.1);">—</span>`}</div></td>
+                    <td style="padding: 12px;"><div style="display:flex; gap: 4px; flex-wrap: nowrap; overflow: hidden;">${grps.length > 0 ? grps.map(g => `<span title="${g.name}" style="background:${(g.color || '#fff') + '1a'}; color: ${g.color || '#fff'}; border:1px solid ${(g.color || '#fff') + '33'}; padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px;">${_highlight(g.name)}</span>`).join('') : `<span style="color:rgba(255,255,255,0.1);">—</span>`}</div></td>
                     <td style="padding: 12px 12px; text-align: right;"><div style="display:flex; justify-content:flex-end; gap:6px;">
                         <button onclick="event.stopPropagation(); window.ContactsView.openEditModal(${contactJson})" style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></button>
                         <button onclick="event.stopPropagation(); window.ContactsView.deleteIndividual('${c.id}', '${safeNameForDelete}')" style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,69,58,0.15); background:rgba(255,69,58,0.05); color:#ff453a; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
@@ -996,7 +996,7 @@ window.ContactsView = {
                 </tr>
             `;
         }
-        
+
         document.getElementById('selectAllCheckbox').checked = false;
         this.updateBulkUI();
     },
@@ -1006,24 +1006,24 @@ window.ContactsView = {
         this.selectedPoolContacts = new Set();
         this.activePoolContacts = await window.BrandSyncAPI.getContacts();
 
-        if(group) { 
-            document.getElementById('groupModalTitle').innerText = "Edit Group Identity"; 
-            nameInp.value = group.name; 
+        if (group) {
+            document.getElementById('groupModalTitle').innerText = "Edit Group Identity";
+            nameInp.value = group.name;
             descInp.value = group.description || "";
-            document.getElementById('edit_groupId').value = group.id; 
-            this.selectColor(group.color || '#0a84ff'); 
-            this.selectIcon(group.icon || 'Users'); 
-            
+            document.getElementById('edit_groupId').value = group.id;
+            this.selectColor(group.color || '#0a84ff');
+            this.selectIcon(group.icon || 'Users');
+
             this.activePoolContacts.forEach(c => {
-                if(c.groupIds && c.groupIds.includes(group.id)) this.selectedPoolContacts.add(String(c.id));
+                if (c.groupIds && c.groupIds.includes(group.id)) this.selectedPoolContacts.add(String(c.id));
             });
         }
-        else { 
-            document.getElementById('groupModalTitle').innerText = "Define New Group"; 
-            nameInp.value = ""; descInp.value = ""; document.getElementById('edit_groupId').value = ""; 
-            this.selectColor('#0a84ff'); this.selectIcon('Users'); 
+        else {
+            document.getElementById('groupModalTitle').innerText = "Define New Group";
+            nameInp.value = ""; descInp.value = ""; document.getElementById('edit_groupId').value = "";
+            this.selectColor('#0a84ff'); this.selectIcon('Users');
         }
-        
+
         document.getElementById('groupPoolFilter').value = "";
         this.filterGroupPool();
         modal.style.display = 'flex';
@@ -1032,7 +1032,7 @@ window.ContactsView = {
     filterGroupPool() {
         const query = (document.getElementById('groupPoolFilter').value || '').toLowerCase();
         const list = document.getElementById('groupPoolList');
-        
+
         let filtered = this.activePoolContacts.filter(c => {
             return (c.name || '').toLowerCase().includes(query) || (c.phone || '').includes(query);
         });
@@ -1051,7 +1051,7 @@ window.ContactsView = {
                 ${selectedCount} Selected for Group
                </div>`
             : '';
-        
+
         list.innerHTML = countBadge + filtered.map(c => {
             const isChecked = this.selectedPoolContacts.has(String(c.id));
             return `<label style="display:flex; align-items:center; gap:12px; padding:10px; border-radius:12px; background:${isChecked ? 'rgba(191,90,242,0.08)' : 'rgba(255,255,255,0.03)'}; cursor:pointer; transition:0.2s; border:1px solid ${isChecked ? 'rgba(191,90,242,0.35)' : 'transparent'}; margin-bottom:2px;">
@@ -1064,9 +1064,9 @@ window.ContactsView = {
             </label>`;
         }).join('');
     },
-    
+
     togglePoolContact(id) {
-        if(this.selectedPoolContacts.has(id)) this.selectedPoolContacts.delete(id);
+        if (this.selectedPoolContacts.has(id)) this.selectedPoolContacts.delete(id);
         else this.selectedPoolContacts.add(id);
         this.filterGroupPool(); // refresh UI colors
     },
@@ -1075,25 +1075,25 @@ window.ContactsView = {
         const name = document.getElementById('newGroupName').value.trim(); if (!name) return;
         const description = document.getElementById('newGroupDesc').value.trim();
         const groupIdRaw = document.getElementById('edit_groupId').value;
-        const res = await window.BrandSyncAPI.saveGroup({ 
-            id: groupIdRaw ? parseInt(groupIdRaw) : null, 
-            name, description, color: this.selectedColor, icon: this.selectedIcon 
+        const res = await window.BrandSyncAPI.saveGroup({
+            id: groupIdRaw ? parseInt(groupIdRaw) : null,
+            name, description, color: this.selectedColor, icon: this.selectedIcon
         });
-        
+
         const gId = res.group.id;
-        
-        for(let c of this.activePoolContacts) {
+
+        for (let c of this.activePoolContacts) {
             let hasGroup = (c.groupIds || []).includes(gId);
             let shouldHave = this.selectedPoolContacts.has(c.id);
-            if(hasGroup !== shouldHave) {
+            if (hasGroup !== shouldHave) {
                 let newGid = [...(c.groupIds || [])];
-                if(shouldHave) newGid.push(gId);
+                if (shouldHave) newGid.push(gId);
                 else newGid = newGid.filter(id => id !== gId);
                 c.groupIds = newGid;
-                await window.BrandSyncAPI.saveContact({...c});
+                await window.BrandSyncAPI.saveContact({ ...c });
             }
         }
-        
+
         window.showToast("Group secured.", "success"); document.getElementById('groupModal').style.display = 'none'; this.loadGroups(); this.loadData();
     },
 
@@ -1122,23 +1122,23 @@ window.ContactsView = {
         const ids = ['_contactId', '_contactFirstName', '_contactMI', '_contactLastName', '_contactPhone', '_contactEvent', '_contactInterest', '_contactAwareness', '_contactPosition', '_contactSales', '_contactCompany'];
         if (contact) {
             document.getElementById('edit_contactId').value = contact.id;
-            
+
             // Re-split name if we only saved full name previously
             const nameParts = (contact.name || "").split(" ");
             let first = contact.firstName || "";
             let mi = contact.mi || "";
             let last = contact.lastName || "";
-            
-            if(!first && !last && nameParts.length > 0) {
+
+            if (!first && !last && nameParts.length > 0) {
                 first = nameParts[0];
-               if(nameParts.length === 3) { mi = nameParts[1]; last = nameParts[2]; }
-               else if(nameParts.length === 2) { last = nameParts[1]; }
+                if (nameParts.length === 3) { mi = nameParts[1]; last = nameParts[2]; }
+                else if (nameParts.length === 2) { last = nameParts[1]; }
             }
-            
+
             const addDate = new Date(contact.added).getTime();
             const isRecent = addDate && (Date.now() - addDate) <= (7 * 24 * 60 * 60 * 1000);
             const addedLabel = document.getElementById('contactAddedLabel');
-            if(addedLabel) {
+            if (addedLabel) {
                 addedLabel.innerHTML = `Added: <span style="font-family:monospace; color:#fff; font-weight:700;">${contact.added || 'Unknown'}</span> ${isRecent ? '<span style="color:#ff9f0a; font-weight:800; margin-left:8px; padding:2px 6px; border:1px solid rgba(255,159,10,0.3); background:rgba(255,159,10,0.1); border-radius:4px;">NEW</span>' : ''}`;
             }
 
@@ -1152,7 +1152,7 @@ window.ContactsView = {
             document.getElementById('edit_contactAwareness').value = contact.awareness || "";
             document.getElementById('edit_contactPosition').value = contact.position || "";
             document.getElementById('edit_contactSales').value = contact.salesPerson || contact.salesperson || "";
-            
+
             // TYPE-AGNOSTIC GROUP SELECTION
             checkboxes.forEach(cb => {
                 const isAssigned = (contact.groupIds || []).some(gid => String(gid) === String(cb.value));
@@ -1160,11 +1160,11 @@ window.ContactsView = {
             });
         } else {
             document.getElementById('edit_contactId').value = "";
-            ids.forEach(id => { const el = document.getElementById('edit' + id); if(el) el.value = ""; });
+            ids.forEach(id => { const el = document.getElementById('edit' + id); if (el) el.value = ""; });
             checkboxes.forEach(cb => cb.checked = false);
-            
+
             const addedLabel = document.getElementById('contactAddedLabel');
-            if(addedLabel) addedLabel.innerHTML = `Added: <span style="color:rgba(255,255,255,0.2); font-style:italic;">Pending Save...</span>`;
+            if (addedLabel) addedLabel.innerHTML = `Added: <span style="color:rgba(255,255,255,0.2); font-style:italic;">Pending Save...</span>`;
         }
         modal.style.display = 'flex';
     },
@@ -1175,7 +1175,7 @@ window.ContactsView = {
     async saveContact() {
         // Enforce Standard Titling Format
         const _toTitleCase = (str) => {
-            if(!str) return '';
+            if (!str) return '';
             return String(str).trim().toLowerCase().replace(/(^|[ \-\/])([a-z0-9])/g, m => m.toUpperCase());
         };
         const _toMI = (str) => {
@@ -1190,18 +1190,18 @@ window.ContactsView = {
         const last = _toTitleCase(document.getElementById('edit_contactLastName').value);
         const company = _toTitleCase(document.getElementById('edit_contactCompany').value);
         const eventVal = _toTitleCase(document.getElementById('edit_contactEvent').value);
-        
+
         const phone = document.getElementById('edit_contactPhone').value.replace(/[^\d]/g, '');
-        
+
         if (!first || !last || !phone) { window.showToast("Core identity (First, Last, Phone) incomplete.", "warning"); return; }
-        
+
         // Composite name for display and backwards compatibility (e.g. "John D. Doe")
         const fullName = `${first} ${mi ? mi + ' ' : ''}${last}`.trim().replace(/\s+/g, ' ');
-        
+
         const gids = Array.from(document.querySelectorAll('.group-select-check:checked')).map(cb => parseInt(cb.value));
         const contactData = {
             id: document.getElementById('edit_contactId').value,
-            name: fullName, 
+            name: fullName,
             firstName: first,
             mi: mi,
             lastName: last,
@@ -1267,32 +1267,32 @@ window.ContactsView = {
                             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
                         }
                         const data = new Uint8Array(ev.target.result);
-                        const pdf = await pdfjsLib.getDocument({data}).promise;
+                        const pdf = await pdfjsLib.getDocument({ data }).promise;
                         let fullText = "";
                         for (let i = 1; i <= pdf.numPages; i++) {
                             const page = await pdf.getPage(i);
                             const content = await page.getTextContent();
                             fullText += content.items.map(item => item.str).join(" ") + "\n";
                         }
-                        
+
                         // Treat PDF as unstructured text scan
                         window.showToast("📡 Analyzing PDF text layers...", "info");
                         const phoneRegex = /(?:\+?63|0)?[\s\-\–\(\)]*9[\s\-\–\(\)]*(?:\d[\s\-\–\(\)]*){9}/g;
                         const phoneMatches = fullText.match(phoneRegex) || [];
-                        const seen = new Set(); 
+                        const seen = new Set();
                         const contacts = [];
 
                         // Strategy: Find line containing the phone, assume name is nearby
                         const lines = fullText.split('\n');
-                        for(const line of lines) {
+                        for (const line of lines) {
                             const match = line.match(phoneRegex);
-                            if(match) {
+                            if (match) {
                                 const phone = this.normalizePhone(match[0]);
-                                if(phone && !seen.has(phone)) {
+                                if (phone && !seen.has(phone)) {
                                     seen.add(phone);
                                     // Try to grab name from the same line (everything before the phone)
                                     let name = line.split(match[0])[0].trim().replace(/[,:]+$/, '').trim();
-                                    if(name.length < 2 || name.length > 60) name = "PDF_Lead";
+                                    if (name.length < 2 || name.length > 60) name = "PDF_Lead";
                                     contacts.push({ name, phone, groupIds: this.activeGroupId ? [this.activeGroupId] : [] });
                                 }
                             }
@@ -1311,15 +1311,15 @@ window.ContactsView = {
                     // --- SMART FIELD MAPPER ---
                     // Priority order: compound/specific patterns first to avoid stealing
                     const SPECIFIC_ALIASES = [
-                        ['name',        /\bfull.?name\b/i, /\bcontact.?name\b/i, /\bfirst.?name\b/i, /\bclient.?name\b/i, /\bperson.?name\b/i, /^name$/i, /\bfname\b/i, /\bclient\b/i, /\bcustomer\b/i],
-                        ['phone',       /\bphone.?no\b/i, /\bcontact.?no\b/i, /\bmobile.?no\b/i, /\bcell.?no\b/i, /\bphone.?number\b/i, /\bcellphone\b/i, /^phone$/i, /\bmobile\b/i, /\bcell\b/i, /\btel\b/i, /\bcp\b/i, /\bnum\b/i, /\bnumber\b/i, /\bno\.?\b/i],
-                        ['company',     /\bcompany.?name\b/i, /\borganization\b/i, /\borganisation\b/i, /\bbusiness.?name\b/i, /\bcompany\b/i, /\bfirm\b/i, /\bbusiness\b/i, /\bestablishment\b/i],
-                        ['interest',    /\bbrand.?interest\b/i, /\bproduct.?interest\b/i, /\binterest\b/i, /\binterests\b/i, /\bniche\b/i],
-                        ['awareness',   /\bbrand.?awareness\b/i, /\bhow.?did\b/i, /\bawareness\b/i, /\breferral\b/i, /\bchannel\b/i, /\bmedium\b/i],
-                        ['event',       /\bevent.?name\b/i, /\bsource.?event\b/i, /\bevent\b/i, /\boccasion\b/i, /\bvenue\b/i],
-                        ['position',    /\bjob.?title\b/i, /\bposition\b/i, /\bdesignation\b/i, /\btitle\b/i, /\brole\b/i, /\bjob\b/i, /\bdept\b/i],
+                        ['name', /\bfull.?name\b/i, /\bcontact.?name\b/i, /\bfirst.?name\b/i, /\bclient.?name\b/i, /\bperson.?name\b/i, /^name$/i, /\bfname\b/i, /\bclient\b/i, /\bcustomer\b/i],
+                        ['phone', /\bphone.?no\b/i, /\bcontact.?no\b/i, /\bmobile.?no\b/i, /\bcell.?no\b/i, /\bphone.?number\b/i, /\bcellphone\b/i, /^phone$/i, /\bmobile\b/i, /\bcell\b/i, /\btel\b/i, /\bcp\b/i, /\bnum\b/i, /\bnumber\b/i, /\bno\.?\b/i],
+                        ['company', /\bcompany.?name\b/i, /\borganization\b/i, /\borganisation\b/i, /\bbusiness.?name\b/i, /\bcompany\b/i, /\bfirm\b/i, /\bbusiness\b/i, /\bestablishment\b/i],
+                        ['interest', /\bbrand.?interest\b/i, /\bproduct.?interest\b/i, /\binterest\b/i, /\binterests\b/i, /\bniche\b/i],
+                        ['awareness', /\bbrand.?awareness\b/i, /\bhow.?did\b/i, /\bawareness\b/i, /\breferral\b/i, /\bchannel\b/i, /\bmedium\b/i],
+                        ['event', /\bevent.?name\b/i, /\bsource.?event\b/i, /\bevent\b/i, /\boccasion\b/i, /\bvenue\b/i],
+                        ['position', /\bjob.?title\b/i, /\bposition\b/i, /\bdesignation\b/i, /\btitle\b/i, /\brole\b/i, /\bjob\b/i, /\bdept\b/i],
                         ['salesPerson', /\bsales.?person\b/i, /\bassigned.?to\b/i, /\bsales\b/i, /\bagent\b/i, /\bhandler\b/i, /\brep\b/i],
-                        ['tags',        /\btags?\b/i, /\blabels?\b/i, /\bcategory\b/i, /\bsegment\b/i],
+                        ['tags', /\btags?\b/i, /\blabels?\b/i, /\bcategory\b/i, /\bsegment\b/i],
                     ];
 
                     const buildMap = (headers) => {
@@ -1382,15 +1382,15 @@ window.ContactsView = {
         if (existing) existing.remove();
 
         const FIELDS = [
-            { key: 'name',        label: '👤 Name' },
-            { key: 'phone',       label: '📞 Phone Number' },
-            { key: 'company',     label: '🏢 Company' },
-            { key: 'event',       label: '🗓 Event' },
-            { key: 'interest',    label: '💡 Brand Interest' },
-            { key: 'awareness',   label: '📡 Awareness' },
-            { key: 'position',    label: '🏷 Position' },
+            { key: 'name', label: '👤 Name' },
+            { key: 'phone', label: '📞 Phone Number' },
+            { key: 'company', label: '🏢 Company' },
+            { key: 'event', label: '🗓 Event' },
+            { key: 'interest', label: '💡 Brand Interest' },
+            { key: 'awareness', label: '📡 Awareness' },
+            { key: 'position', label: '🏷 Position' },
             { key: 'salesPerson', label: '🤝 Sales Person' },
-            { key: 'tags',        label: '🔖 Tags' },
+            { key: 'tags', label: '🔖 Tags' },
         ];
 
         const optionsList = ['— Skip —', ...headers].map(h => `<option value="${h === '— Skip —' ? '' : h}">${h}</option>`).join('');
@@ -1440,13 +1440,13 @@ window.ContactsView = {
             });
 
             if (!map.phone) { window.showToast("⚠️ Please assign a Phone column.", "warning"); return; }
-            
+
             const seen = new Set();
             const contacts = [];
 
             // MASTER RE-FORMATTING ENGINE
             const _toTitleCase = (str) => {
-                if(!str) return '';
+                if (!str) return '';
                 return String(str).trim().toLowerCase().replace(/(^|[ \-\/])([a-z0-9])/g, m => m.toUpperCase());
             };
 
@@ -1465,23 +1465,23 @@ window.ContactsView = {
                         if (s && s.length > 1 && s.length < 80 && /[a-zA-Z]/.test(s) && !normalizePhone(s)) { rawName = s; break; }
                     }
                 }
-                
+
                 const nameData = window.ContactsView.parseName(rawName);
 
                 contacts.push({
-                    name:        nameData.full,
-                    firstName:   nameData.first,
-                    mi:          nameData.mi,
-                    lastName:    nameData.last,
-                    phone:       phone,
-                    company:     map.company     ? _toTitleCase(row[map.company])     : '',
-                    event:       map.event       ? _toTitleCase(row[map.event])       : '',
-                    interest:    map.interest    ? _toTitleCase(row[map.interest])    : '',
-                    awareness:   map.awareness   ? String(row[map.awareness]   || '').trim() : '',
-                    position:    map.position    ? _toTitleCase(row[map.position])    : '',
+                    name: nameData.full,
+                    firstName: nameData.first,
+                    mi: nameData.mi,
+                    lastName: nameData.last,
+                    phone: phone,
+                    company: map.company ? _toTitleCase(row[map.company]) : '',
+                    event: map.event ? _toTitleCase(row[map.event]) : '',
+                    interest: map.interest ? _toTitleCase(row[map.interest]) : '',
+                    awareness: map.awareness ? String(row[map.awareness] || '').trim() : '',
+                    position: map.position ? _toTitleCase(row[map.position]) : '',
                     salesPerson: map.salesPerson ? _toTitleCase(row[map.salesPerson]) : '',
-                    tags:        map.tags ? String(row[map.tags] || '').split(/[,;|]/).map(t => t.trim()).filter(Boolean) : [],
-                    groupIds:    this.activeGroupId ? [this.activeGroupId] : []
+                    tags: map.tags ? String(row[map.tags] || '').split(/[,;|]/).map(t => t.trim()).filter(Boolean) : [],
+                    groupIds: this.activeGroupId ? [this.activeGroupId] : []
                 });
             }
 
@@ -1500,7 +1500,7 @@ window.ContactsView = {
     parseName(raw) {
         let s = String(raw || '').trim();
         if (!s) return { first: '', mi: '', last: '', full: 'Unknown' };
-        
+
         // Handle "Last Name, Full Name M." format
         if (s.includes(',')) {
             const parts = s.split(',').map(p => p.trim());
@@ -1510,18 +1510,18 @@ window.ContactsView = {
                 s = `${firstNamePart} ${lastName}`;
             }
         }
-        
+
         // Basic Title Case
         s = s.toLowerCase().replace(/(^|[ \-\/])([a-z0-9])/g, m => m.toUpperCase());
         const parts = s.split(/\s+/).filter(Boolean);
-        
+
         if (parts.length === 1) return { first: parts[0], mi: '', last: '', full: parts[0] };
-        
+
         // PH SURNAMES DETECTION: common multi-word surnames
         const surnamePrefixes = ['Dela', 'Delos', 'De', 'La', 'Santa', 'Santo', 'San', 'Van', 'Von', 'Du'];
-        
+
         let first = '', mi = '', last = '';
-        
+
         // Search for Middle Initial (single character word)
         let miIndex = -1;
         // Search from BACK to handle "First M. Last" OR "Last First M."
@@ -1557,7 +1557,7 @@ window.ContactsView = {
                 first = parts.slice(0, parts.length - 1).join(' ');
             }
         }
-        
+
         const full = `${first} ${mi ? mi + ' ' : ''}${last}`.trim().replace(/\s+/g, ' ');
         return { first, mi, last, full };
     },
@@ -1568,7 +1568,7 @@ window.ContactsView = {
 
         const existing = document.getElementById('importPreviewModal');
         if (existing) existing.remove();
-        
+
         const modal = document.createElement('div');
         modal.id = 'importPreviewModal';
         modal.style.cssText = 'position:fixed;inset:0;z-index:30000;background:rgba(0,0,0,0.7);backdrop-filter:blur(40px);display:flex;align-items:center;justify-content:center;padding:20px;';
@@ -1601,7 +1601,7 @@ window.ContactsView = {
                 </div>
             </div>`;
         document.body.appendChild(modal);
-        
+
         document.getElementById('importConfirmBtn').onclick = () => { modal.remove(); this.previewCallback(this.previewBuffer); };
 
         this.renderPreviewTable();
@@ -1609,7 +1609,7 @@ window.ContactsView = {
 
     renderPreviewTable() {
         const tbody = document.getElementById('previewTableBody');
-        if(!tbody) return;
+        if (!tbody) return;
         const total = this.previewBuffer.length;
         document.getElementById('previewTotalCount').innerText = total;
         document.getElementById('importConfirmBtn').innerText = total === 0 ? "Empty Buffer (Nothing to Sync)" : `Sync ${total} Final Records →`;
@@ -1617,16 +1617,16 @@ window.ContactsView = {
         const renderLimit = Math.min(this.previewBuffer.length, 100); // 100 to keep UI extremely fast and responsive. They edit the first 100 page.
 
         let html = '';
-        for(let i=0; i<renderLimit; i++) {
+        for (let i = 0; i < renderLimit; i++) {
             let c = this.previewBuffer[i];
             const dName = this.parseName(c.name).full;
-            
+
             // Inline inputs with transparent styling
             const inpStyle = "width:100%; background:transparent; border:1px solid transparent; border-radius:6px; color:#fff; font-size:0.8rem; font-weight:700; outline:none; padding:4px 8px; transition:0.2s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;";
             const secStyle = "width:100%; background:transparent; border:1px solid transparent; border-radius:6px; color:rgba(255,255,255,0.55); font-size:0.75rem; font-weight:500; outline:none; padding:4px 8px; transition:0.2s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;";
-            
+
             html += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);" id="prev_row_${i}" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
-                <td style="padding:10px;color:rgba(255,255,255,0.25);font-weight:700;">${i+1}</td>
+                <td style="padding:10px;color:rgba(255,255,255,0.25);font-weight:700;">${i + 1}</td>
                 <td style="padding:10px;">
                     <input type="text" value="${dName}" title="${dName}" style="${inpStyle}" onchange="window.ContactsView.updatePreviewContact(${i}, 'name', this.value)" onfocus="this.style.background='rgba(0,0,0,0.4)'; this.style.border='1px solid var(--accent-color)';" onblur="this.style.background='transparent'; this.style.border='1px solid transparent';">
                 </td>
@@ -1650,27 +1650,27 @@ window.ContactsView = {
                 </td>
             </tr>`;
         }
-        
+
         if (total > renderLimit) {
             html += `<tr><td colspan="8" style="padding:30px 10px;text-align:center;color:rgba(255,255,255,0.25);font-style:italic;">...and <strong style="color:var(--accent-color)">${total - renderLimit}</strong> more records efficiently hidden from preview. They will still securely sync.</td></tr>`;
         }
-        
+
         tbody.innerHTML = html;
     },
 
     updatePreviewContact(index, field, val) {
         if (!this.previewBuffer[index]) return;
-        if(field === 'phone') {
+        if (field === 'phone') {
             const clean = val.replace(/[^\d]/g, '');
             this.previewBuffer[index].phone = clean;
-        } else if(field === 'name') {
+        } else if (field === 'name') {
             const dt = this.parseName(val);
             this.previewBuffer[index].name = dt.full;
             this.previewBuffer[index].firstName = dt.first;
             this.previewBuffer[index].mi = dt.mi;
             this.previewBuffer[index].lastName = dt.last;
             // visually update input box immediately with parsed form
-            this.renderPreviewTable(); 
+            this.renderPreviewTable();
         } else {
             this.previewBuffer[index][field] = String(val).trim();
         }
@@ -1728,7 +1728,7 @@ window.ContactsView = {
         const filterEl = document.getElementById('pendingFilter');
         if (filterEl && filterEl.value) {
             const f = filterEl.value.toLowerCase();
-            pending = pending.filter(p => 
+            pending = pending.filter(p =>
                 (p.company || p.organization || '').toLowerCase().includes(f) ||
                 (p.position || p.role || '').toLowerCase().includes(f) ||
                 (p.name || '').toLowerCase().includes(f) ||
@@ -1791,9 +1791,9 @@ window.ContactsView = {
             // Format Interest as Comma Separated safely deep diving objects
             let rawInterest = p.interest || p.selected_topic || '';
             if (typeof rawInterest === 'string' && rawInterest.trim().startsWith('[') && rawInterest.trim().endsWith(']')) {
-                try { rawInterest = JSON.parse(rawInterest.replace(/'/g, '"')); } catch(e) {}
+                try { rawInterest = JSON.parse(rawInterest.replace(/'/g, '"')); } catch (e) { }
             }
-            
+
             let extractedInterest = _extractStrings(rawInterest);
             let cleanPendingInterest = String(extractedInterest).replace(/[\[\]"'{}]/g, '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim();
             const formattedInterest = cleanPendingInterest === 'Object Object' ? '' : _toTitleCase(cleanPendingInterest);
@@ -1803,7 +1803,7 @@ window.ContactsView = {
             if (formattedPhone.startsWith('6309') && formattedPhone.length === 13) formattedPhone = '63' + formattedPhone.substring(3);
             else if (formattedPhone.startsWith('09') && formattedPhone.length === 11) formattedPhone = '63' + formattedPhone.substring(1);
             else if (formattedPhone.startsWith('9') && formattedPhone.length === 10) formattedPhone = '63' + formattedPhone;
-            
+
             if (formattedPhone !== p.phone && p.id) {
                 // Background update if changed
                 setTimeout(() => window.ContactsView.updatePendingField(p.id, 'phone', formattedPhone), 10);
@@ -1873,7 +1873,7 @@ window.ContactsView = {
         const checked = document.querySelectorAll('.pending-checkbox:checked');
         const bulk = document.getElementById('pendingBulkActions');
         const count = document.getElementById('pendingSelectCount');
-        
+
         if (bulk && count) {
             if (checked.length > 0) {
                 bulk.style.display = 'flex';
@@ -1923,16 +1923,16 @@ window.ContactsView = {
                 // FORCE COMPLETE UI RESET TO SHOW NEW DATA
                 const searchInp = document.getElementById('contactSearch');
                 if (searchInp) searchInp.value = '';
-                
+
                 // Clear Advanced Filters
                 const filters = ['filterDateFrom', 'filterDateTo', 'filterTag', 'filterCompany'];
-                filters.forEach(fid => { const el = document.getElementById(fid); if(el) el.value = ''; });
-                
+                filters.forEach(fid => { const el = document.getElementById(fid); if (el) el.value = ''; });
+
                 this.isRecentFilterActive = false;
                 this.activeGroupId = null; // Switch to All Contacts view so they are visible
-                
+
                 window.showToast(`${ids.length} Records Promoted to Global Pool!`, "success");
-                
+
                 this.loadData();
                 this.loadGroups();
                 this.loadPendingData();
@@ -1964,4 +1964,4 @@ window.ContactsView = {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => { setTimeout(() => { if(window.app) window.app.views['contacts'] = () => window.ContactsView.render(window.app.contentArea); }, 1000); });
+document.addEventListener('DOMContentLoaded', () => { setTimeout(() => { if (window.app) window.app.views['contacts'] = () => window.ContactsView.render(window.app.contentArea); }, 1000); });

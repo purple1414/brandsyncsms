@@ -82,20 +82,21 @@ async function pullFromSource(source) {
 
 /**
  * Main function to fetch leads from the Brand-Sync servers with failover
+ * @param {boolean} isBackground - If true, skip toasts and manual button updates
  */
-async function pullLeadsFromBrandSync() {
-    console.log('--- INITIATING LEAD PULL (v2 Dual Source) ---');
+async function pullLeadsFromBrandSync(isBackground = false) {
+    console.log(`--- INITIATING LEAD PULL (v2 Dual Source | ${isBackground ? 'Background' : 'Manual'}) ---`);
     
     const statusEl = document.getElementById('sync-status');
     const btn = document.getElementById('pull-leads-btn');
 
-    if (statusEl) {
+    if (!isBackground && statusEl) {
         statusEl.textContent = 'Checking server health...';
         statusEl.style.color = '#ff9f0a';
     }
     
     let originalHtml = '';
-    if (btn) {
+    if (!isBackground && btn) {
         btn.disabled = true;
         originalHtml = btn.innerHTML;
         btn.innerHTML = '<i class="icon-lucide-loader-2" style="animation: spin 1s linear infinite;"></i> Connecting...';
@@ -129,8 +130,8 @@ async function pullLeadsFromBrandSync() {
         }
 
         // STEP 2: Pull Leads — try each healthy source with failover
-        if (btn) btn.innerHTML = '<i class="icon-lucide-loader-2" style="animation: spin 1s linear infinite;"></i> Pulling leads...';
-        if (statusEl) statusEl.textContent = 'Fetching leads data...';
+        if (!isBackground && btn) btn.innerHTML = '<i class="icon-lucide-loader-2" style="animation: spin 1s linear infinite;"></i> Pulling leads...';
+        if (!isBackground && statusEl) statusEl.textContent = 'Fetching leads data...';
 
         for (const source of healthySources) {
             try {
@@ -155,8 +156,8 @@ async function pullLeadsFromBrandSync() {
         const leads = pullData.leads || [];
         const count = pullData.count || leads.length;
 
-        if (btn) btn.innerHTML = '<i class="icon-lucide-loader-2" style="animation: spin 1s linear infinite;"></i> Saving locally...';
-        if (statusEl) statusEl.textContent = 'Processing leads...';
+        if (!isBackground && btn) btn.innerHTML = '<i class="icon-lucide-loader-2" style="animation: spin 1s linear infinite;"></i> Saving locally...';
+        if (!isBackground && statusEl) statusEl.textContent = 'Processing leads...';
 
         // Save leads into the pending contacts store
         const pendingKey = 'brandsync_pending_contacts';
@@ -247,13 +248,19 @@ async function pullLeadsFromBrandSync() {
         }
 
         // Update status
-        if (statusEl) {
+        if (!isBackground && statusEl) {
             statusEl.textContent = `✓ ${count} leads (${newCount} new, ${updatedCount + mainUpdatedCount} refreshed)`;
             statusEl.style.color = '#32d74b';
         }
         
-        if (window.showToast) {
+        if (!isBackground && window.showToast) {
             window.showToast(`Pull Successful: ${newCount} new leads, ${updatedCount} cached pending, ${mainUpdatedCount} active updated.`, 'success');
+        }
+
+        // Always show toast if NEW leads were found, even in background?
+        // Let's stick to user request: "shows how many is pending" - they'll see it on heartbeat.
+        if (isBackground && newCount > 0 && window.showToast) {
+            window.showToast(`Background Sync: ${newCount} new pending leads discovered.`, 'info');
         }
 
         return leads;
@@ -267,7 +274,7 @@ async function pullLeadsFromBrandSync() {
         if (window.showToast) window.showToast('Sync Error: ' + error.message, 'error');
         return null;
     } finally {
-        if (btn) {
+        if (!isBackground && btn) {
             btn.disabled = false;
             btn.innerHTML = originalHtml;
         }

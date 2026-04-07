@@ -187,6 +187,16 @@ class BrandSyncApp {
 
         setInterval(() => this.refreshGatewayStatus(), 5000);
 
+        // BACKGROUND SYNC SERVICE: Every 5 minutes
+        setInterval(() => {
+            if (window.pullLeadsFromBrandSync) window.pullLeadsFromBrandSync(true);
+        }, 300000);
+
+        // Initial Background Pull: 30 seconds after boot to stay fresh
+        setTimeout(() => {
+            if (window.pullLeadsFromBrandSync) window.pullLeadsFromBrandSync(true);
+        }, 30000);
+
         const badge = document.getElementById('header-credits-badge');
         if (badge) badge.onclick = () => {
             this.refreshBalance();
@@ -578,13 +588,17 @@ class BrandSyncApp {
             const campaigns = JSON.parse(localStorage.getItem('brandsync_campaigns') || '[]');
             const activeCamp = campaigns.length;
 
-            opsAlerts = unread + pendingSched + activeCamp;
+            const pendingLeads = JSON.parse(localStorage.getItem('brandsync_pending_contacts') || '[]');
+            const pendingLeadsCount = pendingLeads.length;
+
+            opsAlerts = unread + pendingSched + activeCamp + pendingLeadsCount;
 
             // Also update the flyout counts live
             const elInbox = document.getElementById('gateway_inbox_notif');
             const elInCount = document.getElementById('gateway_inbox_count');
             const elSched = document.getElementById('gateway_scheduled_count');
             const elCamp = document.getElementById('gateway_campaigns_count');
+            const elLeads = document.getElementById('gateway_brandsync_count');
 
             if (elInbox) {
                 if (unread > 0) {
@@ -597,6 +611,7 @@ class BrandSyncApp {
             if (elInCount) elInCount.innerText = unread;
             if (elSched) elSched.innerText = pendingSched;
             if (elCamp) elCamp.innerText = activeCamp;
+            if (elLeads) elLeads.innerText = pendingLeadsCount;
         } catch (e) {}
 
         // Total badge = API issues + operational alerts
