@@ -175,15 +175,25 @@ async function pullLeadsFromBrandSync() {
             const mappedEvent = lead.event || lead.event_name || '';
             const mappedInterest = lead.selected_topic || lead.selected_topics || lead.topics || lead.interest || lead.interests || lead.brand_interest || lead.brand_interested || '';
 
-            const extIdx = existing.findIndex(e => (e.id && e.id === lead.id) || (e.phone && e.phone === lead.phone));
-            const mainIdx = existingMain.findIndex(e => (e.id && e.id === lead.id) || (e.phone && e.phone === lead.phone));
+            const leadPhone = String(lead.phone || '').replace(/\D/g, '');
+            const extIdx = existing.findIndex(e => {
+                const ep = String(e.phone || '').replace(/\D/g, '');
+                return (e.id && String(e.id) === String(lead.id)) || (ep && ep === leadPhone);
+            });
+            const mainIdx = existingMain.findIndex(e => {
+                const ep = String(e.phone || '').replace(/\D/g, '');
+                return (e.id && String(e.id) === String(lead.id)) || (ep && ep === leadPhone);
+            });
 
             if (mainIdx !== -1) {
                 // If the lead was already approved into the main contacts, repair here
-                existingMain[mainIdx].company = mappedCompany || existingMain[mainIdx].company;
-                existingMain[mainIdx].position = mappedPosition || existingMain[mainIdx].position;
-                existingMain[mainIdx].event = mappedEvent || existingMain[mainIdx].event;
-                existingMain[mainIdx].interest = mappedInterest || existingMain[mainIdx].interest;
+                // Aggressive Hot-patch: Always recover interest if it looks like junk or is missing
+                const currentInt = String(existingMain[mainIdx].interest || '').toLowerCase();
+                const isJunk = !currentInt || currentInt === 'n/a' || currentInt.includes('object object') || currentInt === '...';
+                
+                if (mappedInterest && (isJunk || String(mappedInterest).length > currentInt.length)) {
+                    existingMain[mainIdx].interest = mappedInterest;
+                }
                 mainUpdatedCount++;
             } else if (extIdx !== -1) {
                 // Force update existing pending records to repair empty field mappings

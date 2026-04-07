@@ -698,13 +698,16 @@ window.ContactsView = {
             let passGeneral = true;
             if (keywords.length > 0) {
                 const gNames = (c.groupIds || []).map(gid => grpMap[gid]?.name).join(' ');
+                const rawInt = c.interest || c.selected_topic || '';
+                const intStr = Array.isArray(rawInt) ? rawInt.join(', ') : String(rawInt).replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ');
+                
                 const searchablePool = [
                     c.name,
                     c.phone,
                     c.company,
                     c.position,
                     c.event,
-                    Array.isArray(c.interest) ? c.interest.join(', ') : String(c.interest || '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', '),
+                    intStr,
                     c.awareness,
                     c.salesPerson,
                     (c.tags || []).join(' '),
@@ -1056,7 +1059,7 @@ window.ContactsView = {
             document.getElementById('edit_contactPhone').value = contact.phone || "";
             document.getElementById('edit_contactCompany').value = contact.company || "";
             document.getElementById('edit_contactEvent').value = contact.event || "";
-            document.getElementById('edit_contactInterest').value = contact.interest || "";
+            document.getElementById('edit_contactInterest').value = contact.interest || contact.selected_topic || "";
             document.getElementById('edit_contactAwareness').value = contact.awareness || "";
             document.getElementById('edit_contactPosition').value = contact.position || "";
             document.getElementById('edit_contactSales').value = contact.salesPerson || contact.salesperson || "";
