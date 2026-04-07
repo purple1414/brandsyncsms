@@ -145,6 +145,11 @@ window.BrandSyncAPI = {
     },
 
     async githubPull(token, gistId) {
+        // PREVENT CONFLICTS: Skip pull if a push from a local mutation is currently queuing/running
+        if (this._isPushing) {
+            console.log("GitHub Cloud Engine: Skipping Pull because local push is pending.");
+            return { success: true, status: 200, changed: false };
+        }
         try {
             // High-Fidelity Sanitization: Handle URLs, Git Extensions, & Query Params
             if (gistId.includes('/')) gistId = gistId.split('/').pop().split('?')[0];
@@ -189,13 +194,11 @@ window.BrandSyncAPI = {
                     return;
                 }
 
-                // SMART ARRAY RECONCILIATION:
-                const map = new Map();
-                local.forEach(item => { if(item.id) map.set(String(item.id), item); });
-                
                 // IF WE ARE PULLING PENDING LEADS: 
                 // Discard any remote lead that is already in our local CONTACT list (Approved elsewhere)
                 if (storageKey === BS_STORAGE_KEYS.PENDING_CONTACTS) {
+                    const map = new Map();
+                    local.forEach(item => { if(item.id) map.set(String(item.id), item); });
                     const localContacts = this._get(BS_STORAGE_KEYS.CONTACTS);
                     const approvedPhones = new Set(localContacts.map(lc => String(lc.phone).replace(/\D/g, '')));
                     
@@ -209,24 +212,37 @@ window.BrandSyncAPI = {
                             map.set(String(item.id), item);
                         }
                     });
+
+                    const merged = Array.from(map.values());
+                    merged.sort((a,b) => {
+                        const dateA = a.added ? new Date(a.added).getTime() : 0;
+                        const dateB = b.added ? new Date(b.added).getTime() : 0;
+                        if (dateA && dateB) return dateB - dateA;
+                        return String(b.id || '').localeCompare(String(a.id || ''));
+                    });
+                    const mergedStr = JSON.stringify(merged);
+                    if (localRaw !== mergedStr) {
+                        localStorage.setItem(storageKey, mergedStr);
+                        changed = true;
+                    }
                 } else {
-                    remote.forEach(item => { if(item.id) { map.set(String(item.id), item); } });
-                }
+                    // STRICT CLOUD PRECEDENCE:
+                    // Instead of additive merging which resurrects deletions, we enforce the remote state 
+                    // as the ultimate source of truth.
+                    
+                    // Maintain sorting consistency
+                    const sortedRemote = [...remote].sort((a,b) => {
+                        const dateA = a.added ? new Date(a.added).getTime() : 0;
+                        const dateB = b.added ? new Date(b.added).getTime() : 0;
+                        if (dateA && dateB) return dateB - dateA;
+                        return String(b.id || '').localeCompare(String(a.id || ''));
+                    });
 
-                const merged = Array.from(map.values());
-                
-                // Sort by ID or creation date if possible to maintain order consistency
-                merged.sort((a,b) => {
-                    const dateA = a.added ? new Date(a.added).getTime() : 0;
-                    const dateB = b.added ? new Date(b.added).getTime() : 0;
-                    if (dateA && dateB) return dateB - dateA;
-                    return String(b.id || '').localeCompare(String(a.id || ''));
-                });
-
-                const mergedStr = JSON.stringify(merged);
-                if (localRaw !== mergedStr) {
-                    localStorage.setItem(storageKey, mergedStr);
-                    changed = true;
+                    const remoteStr = JSON.stringify(sortedRemote);
+                    if (localRaw !== remoteStr) {
+                        localStorage.setItem(storageKey, remoteStr);
+                        changed = true;
+                    }
                 }
             });
 
@@ -276,35 +292,26 @@ window.BrandSyncAPI = {
     _set(key, data) { 
         localStorage.setItem(key, JSON.stringify(data)); 
         
-        // Auto-Broadcast: Perform ATOMIC SYNC HANDSHAKE (Pull -> Merge -> Push)
+        // Auto-Broadcast: Perform ATOMIC PUSH FOR LOCAL MUTATIONS
         const config = JSON.parse(localStorage.getItem('BS_GH_CONFIG') || '{}');
         const token = config.token || (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GITHUB_TOKEN);
         const gistId = config.gistId || (window.BrandSyncConfig && window.BrandSyncConfig.DEFAULT_GIST_ID);
         
         if (token && gistId) {
             clearTimeout(this._syncTimer);
+            this._isPushing = true; // Signal to avoid concurrent pulls
             this._syncTimer = setTimeout(async () => {
-                // SAFETY GUARD: Do not broadcast if we haven't successfully pulled at least once this session.
-                // This prevents pushing defaults before the cloud index is loaded.
-                const cloudReady = localStorage.getItem('BS_CLOUD_READY') === 'true';
+                console.log("GitHub Cloud Engine: Initiating Atomic Push...");
                 
-                console.log("GitHub Cloud Engine: Initiating Atomic Reconcile Handshake...");
+                const pushRes = await this.syncCloudNow();
+                this._isPushing = false;
                 
-                // 1. Pull latest from remote first! This populates our LocalStorage with others' work
-                const pullRes = await this.githubPull(token, gistId);
-                
-                // 2. ONLY proceed to Push if the Pull was successful OR if it's a completely new Gist (204)
-                if (pullRes.success || pullRes.status === 204) {
-                    // LocalStorage now has the MERGED data (our change + their changes)
-                    // 3. Push this consolidated world back to Gist
-                    await this.githubPush(token, gistId);
-                    console.log("GitHub Cloud Engine: World Consolidated.");
-                    localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
-                    localStorage.setItem('BS_CLOUD_READY', 'true');
+                if (pushRes.success) {
+                    console.log("GitHub Cloud Engine: Overwrote Cloud with Local Mutation.");
                 } else {
-                    console.error("GitHub Cloud Engine: Sync Handshake Aborted—Cloud unreachable. Local changes preserved, but not broadcast.");
+                    console.error("GitHub Cloud Engine: Sync Aborted—Cloud unreachable. Local changes preserved, but not broadcast.");
                 }
-            }, 3000); 
+            }, 1000); 
         }
     },
 
