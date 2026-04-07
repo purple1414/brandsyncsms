@@ -459,7 +459,6 @@ input:checked + .toggle-slider {
 }
 input:checked + .toggle-slider:before {
     transform: translateX(20px);
-}
 input:focus + .toggle-slider {
     box-shadow: 0 0 0 2px rgba(10,132,255,0.3);
 }
@@ -478,103 +477,99 @@ input:focus + .toggle-slider {
     overflow: hidden;
 }
 
-.ai-scan-container {
-    position: relative;
-    width: 240px;
-    height: 240px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.ai-scan-circle {
+.apple-aura-base {
     position: absolute;
     inset: 0;
-    border: 2px solid rgba(10, 132, 255, 0.2);
-    border-radius: 50%;
-    animation: aiPulse 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.9) 100%);
+    z-index: 2;
 }
 
-.ai-scan-beam {
+.apple-aura-spin {
     position: absolute;
-    width: 100%;
-    height: 3px;
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        rgba(10, 132, 255, 0.2) 20%, 
-        rgba(10, 132, 255, 1) 50%, 
-        rgba(10, 132, 255, 0.2) 80%, 
-        transparent 100%
-    );
-    box-shadow: 0 0 40px rgba(10, 132, 255, 0.8), 0 0 100px rgba(10, 132, 255, 0.3);
-    top: 0;
-    left: 0;
-    animation: aiScanner 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 0;
+    inset: -50%;
+    background: conic-gradient(from 0deg, #ff2a85, #8a2be2, #0a84ff, #5ac8fa, #ff2a85);
+    filter: blur(100px);
+    opacity: 0.6;
+    animation: auraSpin 6s linear infinite;
+    z-index: 1;
+}
+
+.apple-aura-glow1 {
+    position: absolute;
+    top: -30%; left: -30%; width: 160%; height: 160%;
+    background: radial-gradient(ellipse at center, rgba(10,132,255,0.4) 0%, transparent 60%);
+    animation: moveGlow1 8s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.apple-aura-glow2 {
+    position: absolute;
+    bottom: -30%; right: -30%; width: 160%; height: 160%;
+    background: radial-gradient(ellipse at center, rgba(255,42,133,0.3) 0%, transparent 60%);
+    animation: moveGlow1 10s ease-in-out infinite alternate;
+    mix-blend-mode: screen;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.ai-loading-logo {
     z-index: 10;
+    font-size: 5rem;
+    color: #fff;
+    background: linear-gradient(135deg, #ffffff 0%, #a0ccff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: logoPulse 2s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.5));
+    margin-bottom: 2rem;
 }
 
-.ai-scan-core {
-    width: 120px;
-    height: 120px;
-    background: radial-gradient(circle, rgba(10, 132, 255, 0.2) 0%, transparent 70%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+.ai-loading-logo i {
+    font-size: inherit;
+    -webkit-text-fill-color: initial;
+    color: #fff;
+    opacity: 0.9;
 }
 
-.ai-scan-core i {
-    font-size: 3rem;
-    color: #0a84ff;
-    filter: drop-shadow(0 0 15px rgba(10, 132, 255, 0.8));
-    animation: aiCoreRotate 10s infinite linear;
+@keyframes auraSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
-.ai-scan-shimmer {
-    position: absolute;
-    inset: -20px;
-    background: radial-gradient(circle at center, rgba(10, 132, 255, 0.15), transparent 70%);
-    animation: aiShimmer 2s infinite alternate ease-in-out;
+@keyframes moveGlow1 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(10%, 15%) scale(1.1); }
 }
 
-@keyframes aiPulse {
-    0% { transform: scale(0.95); opacity: 0.3; border-color: rgba(10, 132, 255, 0.2); }
-    50% { transform: scale(1.1); opacity: 0.6; border-color: rgba(191, 90, 242, 0.4); }
-    100% { transform: scale(0.95); opacity: 0.3; border-color: rgba(10, 132, 255, 0.2); }
+@keyframes moveGlow2 {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-10%, -15%) scale(1.2); }
 }
 
-@keyframes aiScanner {
-    0% { top: 0%; opacity: 0; }
-    20% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { top: 100%; opacity: 0; }
-}
-
-@keyframes aiCoreRotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-}
-
-@keyframes aiShimmer {
-    from { opacity: 0.4; transform: scale(0.8); }
-    to { opacity: 0.8; transform: scale(1.2); }
+@keyframes logoPulse {
+    0% { transform: scale(0.95); opacity: 0.8; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+    100% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 30px rgba(255,255,255,0.8)); }
 }
 
 .ai-loading-text {
-    margin-top: 48px;
-    font-size: 0.85rem;
+    z-index: 10;
+    font-size: 0.9rem;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.4em;
-    color: rgba(255, 255, 255, 0.4);
-    animation: textFlicker 2s infinite;
+    color: transparent;
+    background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0.3) 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    animation: shineText 2s linear infinite;
+    margin-top: 10px;
 }
 
-@keyframes textFlicker {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.8; color: #fff; text-shadow: 0 0 20px rgba(10, 132, 255, 0.5); }
+@keyframes shineText {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
 }
 
 /* Login Footer */
