@@ -103,16 +103,14 @@ window.DashboardView = {
         ];
 
         statsContainer.innerHTML = metrics.map(m => `
-            <div class="apple-card" style="display: flex; flex-direction: column; gap: 16px;">
-                <div style="display:flex; justify-content: space-between; align-items: center;">
-                    <div class="glass-icon-wrapper" style="color: ${m.color};">
-                        <i class="${m.icon}"></i>
-                    </div>
-                    <span style="font-size: 0.65rem; color: rgba(255,255,255,0.3); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">${m.label}</span>
+            <div class="apple-card" style="display: flex; flex-direction: column; gap: 12px; justify-content: flex-start; align-items: flex-start;">
+                <div class="glass-icon-wrapper" style="color: ${m.color}; margin-bottom: 4px;">
+                    <i class="${m.icon}"></i>
                 </div>
-                <div style="margin-top: 8px;">
-                    <div style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; color: #fff;">${m.value}</div>
-                    <div style="font-size: 0.75rem; font-weight: 600; color: ${m.color}; margin-top: 4px; opacity: 0.8;">${m.sub}</div>
+                <div>
+                    <p style="font-size: 0.65rem; color: rgba(255,255,255,0.4); font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px;">${m.label}</p>
+                    <div style="font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; color: #fff; line-height: 1;">${m.value}</div>
+                    <p style="font-size: 0.75rem; font-weight: 700; color: ${m.color}; margin-top: 8px; opacity: 0.9;">${m.sub}</p>
                 </div>
             </div>
         `).join('');
