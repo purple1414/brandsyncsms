@@ -119,7 +119,27 @@ window.ContactsView = {
                             </div>
                             <div>
                                 <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Company</label>
-                                <input type="text" id="filterCompany" placeholder="Search company..." oninput="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none;">
+                                <select id="filterCompanyDropdown" onchange="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(30,30,35,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; cursor:pointer;">
+                                    <option value="">All Companies</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Event</label>
+                                <select id="filterEventDropdown" onchange="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(30,30,35,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; cursor:pointer;">
+                                    <option value="">All Events</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Position</label>
+                                <select id="filterPositionDropdown" onchange="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(30,30,35,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; cursor:pointer;">
+                                    <option value="">All Positions</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Interest</label>
+                                <select id="filterInterestDropdown" onchange="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(30,30,35,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; cursor:pointer;">
+                                    <option value="">All Interests</option>
+                                </select>
                             </div>
                             <div style="flex:1;"></div>
                             <button onclick="window.ContactsView.clearAdvancedFilters()" style="height: 36px; border-radius: 10px; padding: 0 16px; background: rgba(255,69,58,0.1); color:#ff453a; border: none; font-weight:700; font-size:0.8rem; cursor:pointer; align-self: flex-end;">
@@ -655,7 +675,10 @@ window.ContactsView = {
         if(document.getElementById('filterDateFrom')) document.getElementById('filterDateFrom').value = '';
         if(document.getElementById('filterDateTo')) document.getElementById('filterDateTo').value = '';
         if(document.getElementById('filterTag')) document.getElementById('filterTag').value = '';
-        if(document.getElementById('filterCompany')) document.getElementById('filterCompany').value = '';
+        if(document.getElementById('filterCompanyDropdown')) document.getElementById('filterCompanyDropdown').value = '';
+        if(document.getElementById('filterEventDropdown')) document.getElementById('filterEventDropdown').value = '';
+        if(document.getElementById('filterPositionDropdown')) document.getElementById('filterPositionDropdown').value = '';
+        if(document.getElementById('filterInterestDropdown')) document.getElementById('filterInterestDropdown').value = '';
         
         if (this.isRecentFilterActive) {
             this.toggleRecentFilter(); // This natively re-renders loadData
@@ -676,13 +699,74 @@ window.ContactsView = {
         const dateFrom = document.getElementById('filterDateFrom')?.value;
         const dateTo = document.getElementById('filterDateTo')?.value;
         const filterTag = (document.getElementById('filterTag')?.value || '').toLowerCase();
-        const filterCompany = (document.getElementById('filterCompany')?.value || '').toLowerCase();
+        const dropCompany = (document.getElementById('filterCompanyDropdown')?.value || '').toLowerCase();
+        const dropEvent = (document.getElementById('filterEventDropdown')?.value || '').toLowerCase();
+        const dropPosition = (document.getElementById('filterPositionDropdown')?.value || '').toLowerCase();
+        const dropInterest = (document.getElementById('filterInterestDropdown')?.value || '').toLowerCase();
         
         if (!tbody) return;
         
         let contacts = await window.BrandSyncAPI.getContacts(); 
         const groups = await window.BrandSyncAPI.getGroups(); 
         const grpMap = groups.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
+
+        // DYNAMIC DROPDOWN POPULATION logic
+        const populateSelect = (id, values, currentValue) => {
+            const select = document.getElementById(id);
+            if (!select) return;
+            const existingOptions = Array.from(select.options).map(o => o.value);
+            const newOptions = Array.from(values).filter(v => v && !existingOptions.includes(v)).sort();
+            
+            if (newOptions.length > 0) {
+                newOptions.forEach(val => {
+                    const opt = document.createElement('option');
+                    opt.value = val.toLowerCase();
+                    opt.textContent = val;
+                    select.appendChild(opt);
+                });
+            }
+            if (currentValue) select.value = currentValue.toLowerCase();
+        };
+
+        const _extractStrings = (input) => {
+            if (!input) return "";
+            if (typeof input === "string") {
+                if (input.startsWith("[") && input.endsWith("]")) {
+                    try {
+                        const parsed = JSON.parse(input.replace(/'/g, '"'));
+                        return Array.isArray(parsed) ? parsed.join(", ") : input;
+                    } catch (e) { return input; }
+                }
+                return input;
+            }
+            if (Array.isArray(input)) return input.join(", ");
+            return String(input);
+        };
+
+        const uniqueCompanies = new Set();
+        const uniqueEvents = new Set();
+        const uniquePositions = new Set();
+        const uniqueInterests = new Set();
+
+        contacts.forEach(c => {
+            if (c.company) uniqueCompanies.add(c.company.trim());
+            if (c.event) uniqueEvents.add(c.event.trim());
+            if (c.position) uniquePositions.add(c.position.trim());
+            
+            const rawInt = c.interest || c.selected_topic || '';
+            const intStr = _extractStrings(rawInt);
+            if (intStr) {
+                intStr.split(',').forEach(part => {
+                    const p = part.trim();
+                    if (p && p !== 'N/A' && p !== 'Object Object') uniqueInterests.add(p);
+                });
+            }
+        });
+
+        populateSelect('filterCompanyDropdown', uniqueCompanies, dropCompany);
+        populateSelect('filterEventDropdown', uniqueEvents, dropEvent);
+        populateSelect('filterPositionDropdown', uniquePositions, dropPosition);
+        populateSelect('filterInterestDropdown', uniqueInterests, dropInterest);
         
         const now = Date.now();
         const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
@@ -735,15 +819,25 @@ window.ContactsView = {
                 if (!addDateMs || addDateMs > toMs) return false;
             }
 
-            // Categorical Checks
+            // Dropdown Precision Filters
+            if (dropCompany && (c.company || '').toLowerCase() !== dropCompany) return false;
+            if (dropEvent && (c.event || '').toLowerCase() !== dropEvent) return false;
+            if (dropPosition && (c.position || '').toLowerCase() !== dropPosition) return false;
+            
+            if (dropInterest) {
+                const rawInt = c.interest || c.selected_topic || '';
+                const intStr = _extractStrings(rawInt).toLowerCase();
+                if (!intStr.includes(dropInterest)) return false;
+            }
+
+            // Categorical Checks (Tag Search)
             if (filterTag) {
                 const gNames = (c.groupIds || []).map(gid => grpMap[gid]?.name).join(' ').toLowerCase();
-                // FIX: Check both interest and selected_topic for broader filtering compatibility
                 const rawInt = c.interest || c.selected_topic || '';
-                const intStr = Array.isArray(rawInt) ? rawInt.join(', ') : String(rawInt).replace(/[;\/\|]/g, ', ');
+                const intStr = _extractStrings(rawInt).toLowerCase();
                 
                 const passTag = (c.event || '').toLowerCase().includes(filterTag) || 
-                                intStr.toLowerCase().includes(filterTag) ||
+                                intStr.includes(filterTag) ||
                                 (c.tags || []).join(' ').toLowerCase().includes(filterTag) || 
                                 gNames.includes(filterTag);
                 if (!passTag) return false;
