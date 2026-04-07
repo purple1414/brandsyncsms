@@ -282,12 +282,12 @@ window.ContactsView = {
                             <h3 style="font-size:1.4rem; font-weight:800; color:#ff9f0a; margin-bottom:4px;">Pending Contacts Review</h3>
                             <p style="font-size:0.8rem; color:rgba(255,159,10,0.5);">Review and approve contacts from Brand-Sync Lead Syndication.</p>
                         </div>
-                        <div style="display:flex; gap:12px; align-items:center;">
+                        <div style="display:flex; gap:16px; align-items:center;">
                             <span id="sync-status" style="font-size:0.75rem; color:rgba(255,159,10,0.6); font-weight:700;">Ready to sync</span>
-                            <button id="pull-leads-btn" class="btn" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:10px 18px; border-radius:14px; font-weight:700; display:flex; align-items:center; gap:8px;">
-                                <i class="icon-lucide-refresh-cw"></i> Pull from Brand-Sync
+                            <button id="pull-leads-btn" class="btn" style="background:linear-gradient(135deg, rgba(255,159,10,0.2), rgba(255,159,10,0.05)); border:1px solid rgba(255,159,10,0.4); color:#ff9f0a; padding:10px 20px; border-radius:14px; font-weight:800; font-size: 0.85rem; display:flex; align-items:center; gap:8px; box-shadow: 0 4px 15px rgba(255,159,10,0.15); transition: 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,159,10,0.25)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(255,159,10,0.2), rgba(255,159,10,0.05))'">
+                                <i class="icon-lucide-download-cloud" style="font-size:1.1rem;"></i> Get Data From BrandSync Leads Collection
                             </button>
-                            <button onclick="window.ContactsView.closePendingModal()" style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; cursor:pointer;">&times;</button>
+                            <button onclick="window.ContactsView.closePendingModal()" style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">&times;</button>
                         </div>
                     </div>
 
@@ -315,7 +315,7 @@ window.ContactsView = {
                         <div id="pendingEmptyState" style="display:none; padding:80px 20px; text-align:center; color:rgba(255,255,255,0.2);">
                             <i class="icon-lucide-users" style="font-size:3rem; margin-bottom:16px; display:block; opacity:0.3;"></i>
                             <p style="font-weight:600;">No pending contacts to review.</p>
-                            <p style="font-size:0.8rem; margin-top:4px;">Click 'Pull from Brand-Sync' to fetch latest data.</p>
+                            <p style="font-size:0.8rem; margin-top:4px;">Click 'Get Data From BrandSync Leads Collection' to fetch latest data.</p>
                         </div>
                     </div>
                 </div>
