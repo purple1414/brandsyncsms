@@ -24,8 +24,7 @@ class BrandSyncApp {
             const aiText = aiLoading.querySelector('.ai-loading-text');
 
             if (aiLoading) {
-                aiLoading.style.display = 'flex';
-                aiLoading.style.opacity = '1';
+                aiLoading.classList.add('active');
             }
 
             // Cycle status messages for engagement
@@ -52,15 +51,12 @@ class BrandSyncApp {
             setTimeout(() => {
                 clearInterval(msgInterval);
                 if (aiLoading) {
-                    aiLoading.style.transition = 'opacity 1.0s cubic-bezier(0.4, 0, 0.2, 1)';
-                    aiLoading.style.opacity = '0';
+                    aiLoading.classList.remove('active');
                     aiLoading.style.transform = 'scale(1.05)';
                 }
                 
                 setTimeout(() => {
                     if (aiLoading) {
-                        aiLoading.style.display = 'none';
-                        aiLoading.style.opacity = '1';
                         aiLoading.style.transform = 'none';
                     }
                     if (aiText) aiText.innerText = "Initializing BrandSync SMS";
@@ -100,7 +96,7 @@ class BrandSyncApp {
             
             // Hide login, show AI scanning
             overlay.style.display = 'none';
-            aiLoading.style.display = 'flex';
+            aiLoading.classList.add('active');
 
             // Cycle status messages for engagement
             const messages = [
@@ -129,13 +125,10 @@ class BrandSyncApp {
 
             setTimeout(() => {
                 clearInterval(msgInterval);
-                aiLoading.style.transition = 'opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1)';
-                aiLoading.style.opacity = '0';
+                aiLoading.classList.remove('active');
                 aiLoading.style.transform = 'scale(1.1)';
 
                 setTimeout(() => {
-                    aiLoading.style.display = 'none';
-                    aiLoading.style.opacity = '1';
                     aiLoading.style.transform = 'none';
                     if (aiText) aiText.innerText = "Initializing BrandSync SMS"; // Reset for next time
                     
