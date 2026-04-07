@@ -298,20 +298,22 @@ window.ContactsView = {
                         <button onclick="window.ContactsView.bulkApprovePending()" class="btn" style="background:rgba(50,215,75,0.15); border:1px solid rgba(50,215,75,0.3); color:#32d74b; padding:8px 20px; border-radius:12px; font-weight:800; font-size:0.85rem;">Approve Selected</button>
                     </div>
 
-                    <div id="contacts" style="background:rgba(0,0,0,0.2); border-radius:24px; border:1px solid rgba(255,255,255,0.05); overflow:hidden;">
-                        <table style="width:100%; border-collapse:collapse;">
-                            <thead style="background:rgba(255,255,255,0.02);">
-                                <tr>
-                                    <th style="padding:16px 20px; text-align:left; width:45px;"><input type="checkbox" id="selectAllPending" onchange="window.ContactsView.toggleAllPending(this.checked)" style="width:17px; height:17px; accent-color:#ff9f0a; cursor:pointer;"></th>
-                                    <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Contact Name</th>
-                                    <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Phone Number</th>
-                                    <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Company</th>
-                                    <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Source</th>
-                                    <th style="padding:16px 20px; text-align:right; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pendingTableBody"></tbody>
-                        </table>
+                    <div id="contacts" style="background:rgba(0,0,0,0.2); border-radius:24px; border:1px solid rgba(255,255,255,0.05); overflow:hidden; display:flex; flex-direction:column; max-height: 400px;">
+                        <div style="flex:1; overflow-y:auto; overflow-x:hidden;">
+                            <table style="width:100%; border-collapse:collapse;">
+                                <thead style="background:rgba(255,255,255,0.02); position:sticky; top:0; z-index:10; backdrop-filter:blur(10px);">
+                                    <tr>
+                                        <th style="padding:16px 20px; text-align:left; width:45px;"><input type="checkbox" id="selectAllPending" onchange="window.ContactsView.toggleAllPending(this.checked)" style="width:17px; height:17px; accent-color:#ff9f0a; cursor:pointer;"></th>
+                                        <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Contact Name</th>
+                                        <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Phone Number</th>
+                                        <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Company</th>
+                                        <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Source</th>
+                                        <th style="padding:16px 20px; text-align:right; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pendingTableBody"></tbody>
+                            </table>
+                        </div>
                         <div id="pendingEmptyState" style="display:none; padding:80px 20px; text-align:center; color:rgba(255,255,255,0.2);">
                             <i class="icon-lucide-users" style="font-size:3rem; margin-bottom:16px; display:block; opacity:0.3;"></i>
                             <p style="font-weight:600;">No pending contacts to review.</p>
@@ -1589,30 +1591,53 @@ window.ContactsView = {
         }
 
         empty.style.display = 'none';
-        tbody.innerHTML = pending.map(p => `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.04); transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
+        tbody.innerHTML = pending.map(p => {
+            // Auto Format Name
+            const parsedName = window.ContactsView.parseName(p.name);
+            const formattedName = parsedName.full;
+            if (formattedName !== p.name && p.id) {
+                // Background update if changed
+                setTimeout(() => window.ContactsView.updatePendingField(p.id, 'name', formattedName), 10);
+                p.name = formattedName;
+            }
+
+            // Auto Format Phone (Starts with 63)
+            let formattedPhone = String(p.phone || '').replace(/[^\d]/g, '');
+            if (formattedPhone.startsWith('6309') && formattedPhone.length === 13) formattedPhone = '63' + formattedPhone.substring(3);
+            else if (formattedPhone.startsWith('09') && formattedPhone.length === 11) formattedPhone = '63' + formattedPhone.substring(1);
+            else if (formattedPhone.startsWith('9') && formattedPhone.length === 10) formattedPhone = '63' + formattedPhone;
+            
+            if (formattedPhone !== p.phone && p.id) {
+                // Background update if changed
+                setTimeout(() => window.ContactsView.updatePendingField(p.id, 'phone', formattedPhone), 10);
+                p.phone = formattedPhone;
+            }
+
+            return `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.04); transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'; this.querySelector('.pending-actions').style.opacity='1'" onmouseout="this.style.background=''; this.querySelector('.pending-actions').style.opacity='0'">
                 <td style="padding:16px 20px;"><input type="checkbox" class="pending-checkbox" value="${p.id}" onchange="window.ContactsView.updatePendingBulkUI()" style="width:16px; height:16px; accent-color:#ff9f0a; cursor:pointer;"></td>
                 <td style="padding:16px 12px; color:#fff; font-weight:600;">
                     <div style="display:flex; flex-direction:column; gap:2px;">
-                        <input type="text" value="${p.name}" onchange="window.ContactsView.updatePendingField('${p.id}', 'name', this.value)" style="background:transparent; border:none; color:#fff; font-weight:700; outline:none; font-size:0.9rem; padding:2px 4px; border-radius:4px; width:100%; border:1px solid transparent;" onfocus="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
+                        <input type="text" value="${p.name}" title="Edit Name Inline" onchange="window.ContactsView.updatePendingField('${p.id}', 'name', this.value)" style="background:transparent; border:none; color:#fff; font-weight:700; outline:none; font-size:0.9rem; padding:2px 4px; border-radius:4px; width:100%; border:1px solid transparent;" onfocus="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
                         <span style="font-size:0.65rem; color:rgba(255,255,255,0.3); font-weight:700; margin-left:4px;">${p.added}</span>
                     </div>
                 </td>
                 <td style="padding:16px 12px; font-family:monospace; color:#32d74b; font-weight:800;">
-                    <input type="text" value="${p.phone}" onchange="window.ContactsView.updatePendingField('${p.id}', 'phone', this.value)" style="background:transparent; border:none; color:#32d74b; font-weight:800; outline:none; font-family:monospace; font-size:0.9rem; padding:2px 4px; border-radius:4px; width:100%; border:1px solid transparent;" onfocus="this.style.background='rgba(50,215,75,0.1)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
+                    <input type="text" value="${p.phone}" title="Edit Phone Inline" onchange="window.ContactsView.updatePendingField('${p.id}', 'phone', this.value)" style="background:transparent; border:none; color:#32d74b; font-weight:800; outline:none; font-family:monospace; font-size:0.9rem; padding:2px 4px; border-radius:4px; width:100%; border:1px solid transparent;" onfocus="this.style.background='rgba(50,215,75,0.1)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
                 </td>
                 <td style="padding:16px 12px;">
-                    <input type="text" value="${p.company || ''}" placeholder="Company" onchange="window.ContactsView.updatePendingField('${p.id}', 'company', this.value)" style="background:transparent; border:none; color:rgba(255,255,255,0.6); outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent;" onfocus="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
+                    <input type="text" value="${p.company || ''}" placeholder="Company" title="Edit Company Inline" onchange="window.ContactsView.updatePendingField('${p.id}', 'company', this.value)" style="background:transparent; border:none; color:rgba(255,255,255,0.6); outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent;" onfocus="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
                 </td>
                 <td style="padding:16px 12px;"><span style="background:rgba(255,159,10,0.1); color:#ff9f0a; border:1px solid rgba(255,159,10,0.2); padding:2px 8px; border-radius:6px; font-size:0.65rem; font-weight:800;">${p.source}</span></td>
                 <td style="padding:16px 20px; text-align:right;">
-                    <div style="display:flex; justify-content:flex-end; gap:8px;">
+                    <div class="pending-actions" style="display:flex; justify-content:flex-end; gap:8px; opacity: 0; transition: opacity 0.2s ease;">
                         <button onclick="window.ContactsView.approvePending('${p.id}')" style="background:#32d74b; color:#000; border:none; height:32px; padding:0 12px; border-radius:8px; font-size:0.75rem; font-weight:800; cursor:pointer;" title="Approve & Finalize Identity">Approve</button>
-                        <button onclick="window.ContactsView.deletePending('${p.id}')" style="background:rgba(255,69,58,0.1); color:#ff453a; border:1px solid rgba(255,69,58,0.2); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6V6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
+                        <button onclick="window.ContactsView.deletePending('${p.id}')" style="background:rgba(255,69,58,0.1); color:#ff453a; border:1px solid rgba(255,69,58,0.2); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer;" title="Discard Record"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6V6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
                     </div>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
         this.updatePendingBulkUI();
     },
 
