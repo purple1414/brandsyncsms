@@ -566,14 +566,12 @@ input:focus + .toggle-slider {
 
 /* Login Footer */
 .login-footer {
-    position: absolute;
-    bottom: 32px;
-    left: 0;
+    position: relative;
     width: 100%;
     margin: 0;
     text-align: center;
     color: rgba(255, 255, 255, 0.6);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     transition: 0.4s;
