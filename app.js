@@ -563,12 +563,50 @@ class BrandSyncApp {
             pulseNode.style.boxShadow = `0 0 12px ${overallColor}`;
         }
 
-        // Count issues (slow or offline) and update the badge
-        const issueCount = [net, gh, sms].filter(s => s.priority >= 2).length;
+        // Count API connection issues (slow or offline)
+        const apiIssues = [net, gh, sms].filter(s => s.priority >= 2).length;
+
+        // Count Core Operational Status items
+        let opsAlerts = 0;
+        try {
+            const mKey = (window.BS_STORAGE_KEYS && window.BS_STORAGE_KEYS.MESSAGES) || 'brandsync_messages';
+            const msgs = JSON.parse(localStorage.getItem(mKey) || '[]');
+            const unread = msgs.filter(m => (m.sender === 'contact' && !m.isRead)).length;
+
+            const sKey = (window.Scheduler && window.Scheduler.STORAGE_KEY) || 'brandsync_scheduled_messages';
+            const scheduled = JSON.parse(localStorage.getItem(sKey) || '[]');
+            const pendingSched = scheduled.filter(s => (s.status || '').toLowerCase() === 'pending').length;
+
+            const campaigns = JSON.parse(localStorage.getItem('brandsync_campaigns') || '[]');
+            const activeCamp = campaigns.length;
+
+            opsAlerts = unread + pendingSched + activeCamp;
+
+            // Also update the flyout counts live
+            const elInbox = document.getElementById('gateway_inbox_notif');
+            const elInCount = document.getElementById('gateway_inbox_count');
+            const elSched = document.getElementById('gateway_scheduled_count');
+            const elCamp = document.getElementById('gateway_campaigns_count');
+
+            if (elInbox) {
+                if (unread > 0) {
+                    elInbox.innerText = unread;
+                    elInbox.style.display = 'flex';
+                } else {
+                    elInbox.style.display = 'none';
+                }
+            }
+            if (elInCount) elInCount.innerText = unread;
+            if (elSched) elSched.innerText = pendingSched;
+            if (elCamp) elCamp.innerText = activeCamp;
+        } catch (e) {}
+
+        // Total badge = API issues + operational alerts
+        const totalBadge = apiIssues + opsAlerts;
         const badge = document.getElementById('gatewayBadge');
         if (badge) {
-            if (issueCount > 0) {
-                badge.innerText = issueCount;
+            if (totalBadge > 0) {
+                badge.innerText = totalBadge;
                 badge.style.display = 'flex';
             } else {
                 badge.style.display = 'none';
