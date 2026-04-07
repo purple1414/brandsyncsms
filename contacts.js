@@ -114,31 +114,13 @@ window.ContactsView = {
                                 <input type="date" id="filterDateTo" onchange="window.ContactsView.loadData()" style="height:36px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; color-scheme:dark;">
                             </div>
                             <div>
-                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Category / Tag / Group</label>
+                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Global Tag / Group Search</label>
                                 <input type="text" id="filterTag" placeholder="E.g., VIP, Expo..." oninput="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none;">
                             </div>
                             <div>
-                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Company</label>
-                                <select id="filterCompanyDropdown" onchange="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(30,30,35,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; cursor:pointer;">
-                                    <option value="">All Companies</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Event</label>
-                                <select id="filterEventDropdown" onchange="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(30,30,35,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; cursor:pointer;">
-                                    <option value="">All Events</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Position</label>
-                                <select id="filterPositionDropdown" onchange="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(30,30,35,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; cursor:pointer;">
-                                    <option value="">All Positions</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Interest</label>
-                                <select id="filterInterestDropdown" onchange="window.ContactsView.loadData()" style="width:160px; height:36px; background:rgba(30,30,35,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; cursor:pointer;">
-                                    <option value="">All Interests</option>
+                                <label style="display:block; font-size:0.6rem; color:rgba(255,255,255,0.3); text-transform:uppercase; font-weight:800; margin-bottom:6px;">Unified Category Filter</label>
+                                <select id="filterUnifiedSelector" onchange="window.ContactsView.loadData()" style="width:240px; height:36px; background:rgba(30,30,35,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:0 12px; color:#fff; font-size:0.8rem; outline:none; cursor:pointer;">
+                                    <option value="">All Categories</option>
                                 </select>
                             </div>
                             <div style="flex:1;"></div>
@@ -675,10 +657,7 @@ window.ContactsView = {
         if(document.getElementById('filterDateFrom')) document.getElementById('filterDateFrom').value = '';
         if(document.getElementById('filterDateTo')) document.getElementById('filterDateTo').value = '';
         if(document.getElementById('filterTag')) document.getElementById('filterTag').value = '';
-        if(document.getElementById('filterCompanyDropdown')) document.getElementById('filterCompanyDropdown').value = '';
-        if(document.getElementById('filterEventDropdown')) document.getElementById('filterEventDropdown').value = '';
-        if(document.getElementById('filterPositionDropdown')) document.getElementById('filterPositionDropdown').value = '';
-        if(document.getElementById('filterInterestDropdown')) document.getElementById('filterInterestDropdown').value = '';
+        if(document.getElementById('filterUnifiedSelector')) document.getElementById('filterUnifiedSelector').value = '';
         
         if (this.isRecentFilterActive) {
             this.toggleRecentFilter(); // This natively re-renders loadData
@@ -699,10 +678,7 @@ window.ContactsView = {
         const dateFrom = document.getElementById('filterDateFrom')?.value;
         const dateTo = document.getElementById('filterDateTo')?.value;
         const filterTag = (document.getElementById('filterTag')?.value || '').toLowerCase();
-        const dropCompany = (document.getElementById('filterCompanyDropdown')?.value || '').toLowerCase();
-        const dropEvent = (document.getElementById('filterEventDropdown')?.value || '').toLowerCase();
-        const dropPosition = (document.getElementById('filterPositionDropdown')?.value || '').toLowerCase();
-        const dropInterest = (document.getElementById('filterInterestDropdown')?.value || '').toLowerCase();
+        const dropUnified = (document.getElementById('filterUnifiedSelector')?.value || ''); // e.g. "company:Google"
         
         if (!tbody) return;
         
@@ -710,20 +686,33 @@ window.ContactsView = {
         const groups = await window.BrandSyncAPI.getGroups(); 
         const grpMap = groups.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
 
-        // DYNAMIC DROPDOWN POPULATION logic
-        const populateSelect = (id, values, currentValue) => {
+        // UNIFIED DROPDOWN POPULATION logic
+        const populateUnified = (id, data, currentValue) => {
             const select = document.getElementById(id);
             if (!select) return;
-            const existingOptions = Array.from(select.options).map(o => o.value);
-            const newOptions = Array.from(values).filter(v => v && !existingOptions.includes(v)).sort();
             
-            if (newOptions.length > 0) {
-                newOptions.forEach(val => {
-                    const opt = document.createElement('option');
-                    opt.value = val.toLowerCase();
-                    opt.textContent = val;
-                    select.appendChild(opt);
-                });
+            // If already populated with something more than just "All", we might not need to re-parse unless contacts changed
+            // But for simplicity and to handle dynamic data, we'll re-render if count is small or on first load
+            if (select.options.length > 1 && !this._forceRefreshDropdowns) {
+                 // Optimization: only re-populate if we really need to
+            } else {
+                const html = [`<option value="">All Categories</option>`];
+                
+                const addGroup = (label, items, prefix) => {
+                    if (items.size === 0) return;
+                    html.push(`<optgroup label="${label}">`);
+                    Array.from(items).sort().forEach(item => {
+                        html.push(`<option value="${prefix}:${item.toLowerCase()}">${item}</option>`);
+                    });
+                    html.push(`</optgroup>`);
+                };
+
+                addGroup('COMPANIES', data.companies, 'company');
+                addGroup('EVENTS', data.events, 'event');
+                addGroup('POSITIONS', data.positions, 'position');
+                addGroup('INTERESTS', data.interests, 'interest');
+                
+                select.innerHTML = html.join('');
             }
             if (currentValue) select.value = currentValue.toLowerCase();
         };
@@ -743,30 +732,29 @@ window.ContactsView = {
             return String(input);
         };
 
-        const uniqueCompanies = new Set();
-        const uniqueEvents = new Set();
-        const uniquePositions = new Set();
-        const uniqueInterests = new Set();
+        const uniqueData = {
+            companies: new Set(),
+            events: new Set(),
+            positions: new Set(),
+            interests: new Set()
+        };
 
         contacts.forEach(c => {
-            if (c.company) uniqueCompanies.add(c.company.trim());
-            if (c.event) uniqueEvents.add(c.event.trim());
-            if (c.position) uniquePositions.add(c.position.trim());
+            if (c.company) uniqueData.companies.add(c.company.trim());
+            if (c.event) uniqueData.events.add(c.event.trim());
+            if (c.position) uniqueData.positions.add(c.position.trim());
             
             const rawInt = c.interest || c.selected_topic || '';
             const intStr = _extractStrings(rawInt);
             if (intStr) {
                 intStr.split(',').forEach(part => {
                     const p = part.trim();
-                    if (p && p !== 'N/A' && p !== 'Object Object') uniqueInterests.add(p);
+                    if (p && p !== 'N/A' && p !== 'Object Object') uniqueData.interests.add(p);
                 });
             }
         });
 
-        populateSelect('filterCompanyDropdown', uniqueCompanies, dropCompany);
-        populateSelect('filterEventDropdown', uniqueEvents, dropEvent);
-        populateSelect('filterPositionDropdown', uniquePositions, dropPosition);
-        populateSelect('filterInterestDropdown', uniqueInterests, dropInterest);
+        populateUnified('filterUnifiedSelector', uniqueData, dropUnified);
         
         const now = Date.now();
         const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
@@ -819,15 +807,20 @@ window.ContactsView = {
                 if (!addDateMs || addDateMs > toMs) return false;
             }
 
-            // Dropdown Precision Filters
-            if (dropCompany && (c.company || '').toLowerCase() !== dropCompany) return false;
-            if (dropEvent && (c.event || '').toLowerCase() !== dropEvent) return false;
-            if (dropPosition && (c.position || '').toLowerCase() !== dropPosition) return false;
-            
-            if (dropInterest) {
-                const rawInt = c.interest || c.selected_topic || '';
-                const intStr = _extractStrings(rawInt).toLowerCase();
-                if (!intStr.includes(dropInterest)) return false;
+            // Unified Smart Filter Dropdown
+            if (dropUnified) {
+                const [category, val] = dropUnified.split(':');
+                if (category === 'company') {
+                    if ((c.company || '').toLowerCase() !== val) return false;
+                } else if (category === 'event') {
+                    if ((c.event || '').toLowerCase() !== val) return false;
+                } else if (category === 'position') {
+                    if ((c.position || '').toLowerCase() !== val) return false;
+                } else if (category === 'interest') {
+                    const rawInt = c.interest || c.selected_topic || '';
+                    const intStr = _extractStrings(rawInt).toLowerCase();
+                    if (!intStr.includes(val)) return false;
+                }
             }
 
             // Categorical Checks (Tag Search)
@@ -851,10 +844,7 @@ window.ContactsView = {
         if (dateFrom) activeFilterCount++;
         if (dateTo) activeFilterCount++;
         if (filterTag) activeFilterCount++;
-        if (dropCompany) activeFilterCount++;
-        if (dropEvent) activeFilterCount++;
-        if (dropPosition) activeFilterCount++;
-        if (dropInterest) activeFilterCount++;
+        if (dropUnified) activeFilterCount++;
         
         const counterSpan = document.getElementById('advFilterCounter');
         if (counterSpan) {
@@ -871,10 +861,11 @@ window.ContactsView = {
             if (dateFrom) chipsHtml += `<div style="${chipStyle}"><span>📅</span> From: ${dateFrom}</div>`;
             if (dateTo) chipsHtml += `<div style="${chipStyle}"><span>📅</span> To: ${dateTo}</div>`;
             if (filterTag) chipsHtml += `<div style="${chipStyle}"><span>🏷️</span> Tag: ${filterTag}</div>`;
-            if (dropCompany) chipsHtml += `<div style="${chipStyle}"><span>🏢</span> Company: ${dropCompany}</div>`;
-            if (dropEvent) chipsHtml += `<div style="${chipStyle}"><span>📅</span> Event: ${dropEvent}</div>`;
-            if (dropPosition) chipsHtml += `<div style="${chipStyle}"><span>💼</span> Position: ${dropPosition}</div>`;
-            if (dropInterest) chipsHtml += `<div style="${chipStyle}"><span>🎯</span> Interest: ${dropInterest}</div>`;
+            if (dropUnified) {
+                const [cat, val] = dropUnified.split(':');
+                const catLabel = cat.charAt(0).toUpperCase() + cat.slice(1);
+                chipsHtml += `<div style="${chipStyle}"><span>🔍</span> ${catLabel}: ${val}</div>`;
+            }
             
             chipsContainer.innerHTML = chipsHtml;
             chipsContainer.style.display = chipsHtml ? 'flex' : 'none';
