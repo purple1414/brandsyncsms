@@ -824,13 +824,22 @@ window.ContactsView = {
                 const displayCompany = c.company ? _highlight(_toTitleCase(c.company)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 const displayEvent = c.event ? _highlight(_toTitleCase(c.event)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 
+                const _extractStrings = (val) => {
+                    if (!val) return '';
+                    if (typeof val === 'string') return val.trim();
+                    if (Array.isArray(val)) return val.map(_extractStrings).filter(Boolean).join(', ');
+                    if (typeof val === 'object') return val.name || val.title || val.label || val.value || val.text || val.topic || JSON.stringify(val);
+                    return String(val);
+                };
+
                 let rawInterest = c.interest || c.selected_topic || '';
                 if (typeof rawInterest === 'string' && rawInterest.trim().startsWith('[') && rawInterest.trim().endsWith(']')) {
                     try { rawInterest = JSON.parse(rawInterest.replace(/'/g, '"')); } catch(e) {}
                 }
-                if (Array.isArray(rawInterest)) rawInterest = rawInterest.join(', ');
-                let cleanInterest = String(rawInterest).replace(/[\[\]"'{}]/g, '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim();
-                const displayInterest = cleanInterest && cleanInterest !== 'N/A' ? _highlight(_toTitleCase(cleanInterest)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
+                
+                let extractedInterest = _extractStrings(rawInterest);
+                let cleanInterest = String(extractedInterest).replace(/[\[\]"'{}]/g, '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim();
+                const displayInterest = cleanInterest && cleanInterest !== 'N/A' && cleanInterest !== 'Object Object' ? _highlight(_toTitleCase(cleanInterest)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 
                 const displayPosition = c.position ? _highlight(_toTitleCase(c.position)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 
@@ -1670,14 +1679,23 @@ window.ContactsView = {
                 p.position = formattedPosition;
             }
 
-            // Format Interest as Comma Separated
+            const _extractStrings = (val) => {
+                if (!val) return '';
+                if (typeof val === 'string') return val.trim();
+                if (Array.isArray(val)) return val.map(_extractStrings).filter(Boolean).join(', ');
+                if (typeof val === 'object') return val.name || val.title || val.label || val.value || val.text || val.topic || JSON.stringify(val);
+                return String(val);
+            };
+
+            // Format Interest as Comma Separated safely deep diving objects
             let rawInterest = p.interest || p.selected_topic || '';
             if (typeof rawInterest === 'string' && rawInterest.trim().startsWith('[') && rawInterest.trim().endsWith(']')) {
                 try { rawInterest = JSON.parse(rawInterest.replace(/'/g, '"')); } catch(e) {}
             }
-            if (Array.isArray(rawInterest)) rawInterest = rawInterest.join(', ');
-            let cleanPendingInterest = String(rawInterest).replace(/[\[\]"'{}]/g, '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim();
-            const formattedInterest = _toTitleCase(cleanPendingInterest);
+            
+            let extractedInterest = _extractStrings(rawInterest);
+            let cleanPendingInterest = String(extractedInterest).replace(/[\[\]"'{}]/g, '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim();
+            const formattedInterest = cleanPendingInterest === 'Object Object' ? '' : _toTitleCase(cleanPendingInterest);
 
             // Auto Format Phone (Starts with 63)
             let formattedPhone = String(p.phone || '').replace(/[^\d]/g, '');
