@@ -590,8 +590,10 @@ input:focus + .toggle-slider {
 
 /* Login Footer */
 .login-footer {
-    position: relative;
-    margin-top: 32px;
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
     text-align: center;
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.8rem;
@@ -604,6 +606,7 @@ input:focus + .toggle-slider {
     border-radius: 100px;
     border: 1px solid rgba(255,255,255,0.05);
     backdrop-filter: blur(10px);
+    width: max-content;
 }
 
 .login-footer strong {
