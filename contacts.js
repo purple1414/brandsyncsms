@@ -183,10 +183,11 @@ window.ContactsView = {
                 </div>
             </div>
 
-            <!-- Contact Modal -->
             <div id="contactModal" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.4); backdrop-filter:blur(30px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
                 <div class="glass-panel" style="width:100%; max-width:520px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
-                    <button onclick="window.ContactsView.closeEditModal()" style="position: absolute; top: 20px; right: 20px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem;">&times;</button>
+                    <button onclick="window.ContactsView.closeEditModal()" style="position: absolute; top: 20px; right: 20px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem; transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                     <h3 id="contactModalTitle" style="font-size:1.35rem; font-weight:800; color:#fff; margin-bottom:4px;">Identity Profile</h3>
                     <p id="contactAddedLabel" style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-bottom:24px;">Added: Unknown</p>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
@@ -248,7 +249,9 @@ window.ContactsView = {
             <!-- Group Modal -->
             <div id="groupModal" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(0,0,0,0.6); backdrop-filter:blur(40px) saturate(200%); align-items:center; justify-content:center; padding:20px;">
                 <div class="glass-panel" style="width:100%; max-width:720px; max-height:90vh; overflow-y:auto; padding:32px; border-radius:36px; border:1px solid rgba(255,255,255,0.15); background:rgba(40,40,45,0.95); position: relative; animation: slideUp 0.4s cubic-bezier(0.1, 0.9, 0.2, 1); box-shadow: 0 40px 100px rgba(0,0,0,0.6);">
-                    <button onclick="document.getElementById('groupModal').style.display='none'" style="position: absolute; top: 20px; right: 20px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem;">&times;</button>
+                    <button onclick="document.getElementById('groupModal').style.display='none'" style="position: absolute; top: 20px; right: 20px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; border:1px solid rgba(255,255,255,0.1); font-size:1.2rem; transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                     <input type="hidden" id="edit_groupId">
                     <h3 id="groupModalTitle" style="font-size:1.4rem; font-weight:800; color:#fff; margin-bottom:24px;">Customize Group</h3>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:32px;">
@@ -288,7 +291,9 @@ window.ContactsView = {
                             <button id="pull-leads-btn" class="btn" style="background:linear-gradient(135deg, rgba(255,159,10,0.2), rgba(255,159,10,0.05)); border:1px solid rgba(255,159,10,0.4); color:#ff9f0a; padding:10px 20px; border-radius:14px; font-weight:800; font-size: 0.85rem; display:flex; align-items:center; gap:8px; box-shadow: 0 4px 15px rgba(255,159,10,0.15); transition: 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,159,10,0.25)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(255,159,10,0.2), rgba(255,159,10,0.05))'">
                                 <i class="icon-lucide-download-cloud" style="font-size:1.1rem;"></i> Get Data From BrandSync Leads Collection
                             </button>
-                            <button onclick="window.ContactsView.closePendingModal()" style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">&times;</button>
+                            <button onclick="window.ContactsView.closePendingModal()" style="width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.4rem; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
                         </div>
                     </div>
 
@@ -318,6 +323,9 @@ window.ContactsView = {
                                         <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Contact Name</th>
                                         <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Phone Number</th>
                                         <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Company</th>
+                                        <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Event</th>
+                                        <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Interest</th>
+                                        <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Position</th>
                                         <th style="padding:16px 12px; text-align:left; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Source</th>
                                         <th style="padding:16px 20px; text-align:right; font-size:0.65rem; color:rgba(255,255,255,0.3); text-transform:uppercase;">Actions</th>
                                     </tr>
@@ -1607,11 +1615,14 @@ window.ContactsView = {
         if (filterEl && filterEl.value) {
             const f = filterEl.value.toLowerCase();
             pending = pending.filter(p => 
-                (p.company || '').toLowerCase().includes(f) ||
-                (p.position || '').toLowerCase().includes(f) ||
+                (p.company || p.organization || '').toLowerCase().includes(f) ||
+                (p.position || p.role || '').toLowerCase().includes(f) ||
                 (p.name || '').toLowerCase().includes(f) ||
                 (p.salesPerson || '').toLowerCase().includes(f) ||
-                (p.interest || '').toLowerCase().includes(f)
+                (p.interest || p.selected_topic || '').toLowerCase().includes(f) ||
+                (p.event || '').toLowerCase().includes(f) ||
+                (p.phone || '').toLowerCase().includes(f) ||
+                (p.added || '').toLowerCase().includes(f)
             );
         }
 
@@ -1666,15 +1677,17 @@ window.ContactsView = {
                 <td style="padding:16px 12px; font-family:monospace; color:#32d74b; font-weight:800;">
                     <input type="text" value="${p.phone}" title="Edit Phone Inline" onchange="window.ContactsView.updatePendingField('${p.id}', 'phone', this.value)" style="background:transparent; border:none; color:#32d74b; font-weight:800; outline:none; font-family:monospace; font-size:0.9rem; padding:2px 4px; border-radius:4px; width:100%; border:1px solid transparent;" onfocus="this.style.background='rgba(50,215,75,0.1)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
                 </td>
-                <td style="padding:16px 12px; vertical-align: top;">
-                    <input type="text" value="${p.company || ''}" placeholder="Company" title="Edit Company Inline" onchange="window.ContactsView.updatePendingField('${p.id}', 'company', this.value)" style="background:transparent; border:none; color:rgba(255,255,255,0.8); font-weight: 600; outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent;" onfocus="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
-                    <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; opacity: 0.8;">
-                        ${p.position && p.position !== 'Lead' ? `<span style="font-size:0.6rem; background:rgba(255,255,255,0.08); padding:3px 6px; border-radius:4px; color:rgba(255,255,255,0.7);" title="Position"><i class="icon-lucide-briefcase" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> ${p.position}</span>` : ''}
-                        ${p.salesPerson && p.salesPerson !== 'Unassigned' ? `<span style="font-size:0.6rem; background:rgba(255,255,255,0.08); padding:3px 6px; border-radius:4px; color:rgba(255,255,255,0.7);" title="Salesperson"><i class="icon-lucide-user" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> ${p.salesPerson}</span>` : ''}
-                        ${p.interest && p.interest !== 'N/A' && p.interest !== '' ? `<span style="font-size:0.6rem; background:rgba(255,159,10,0.15); padding:3px 6px; border-radius:4px; color:#ff9f0a; font-weight:600;" title="Brand Interest"><i class="icon-lucide-star" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> ${p.interest}</span>` : ''}
-                        ${p.awareness && p.awareness !== 'N/A' ? `<span style="font-size:0.6rem; background:rgba(50,215,75,0.15); padding:3px 6px; border-radius:4px; color:#32d74b; font-weight:600;" title="Brand Awareness"><i class="icon-lucide-radio" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> Aware: ${p.awareness}</span>` : ''}
-                        ${p.event && p.event !== 'N/A' ? `<span style="font-size:0.6rem; background:rgba(10,132,255,0.15); padding:3px 6px; border-radius:4px; color:#0a84ff; font-weight:600;" title="Event"><i class="icon-lucide-calendar" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> ${p.event}</span>` : ''}
-                    </div>
+                <td style="padding:16px 12px; vertical-align: middle;">
+                    <input type="text" value="${p.company || p.organization || ''}" placeholder="Company" title="Edit Company Inline" onchange="window.ContactsView.updatePendingField('${p.id}', 'company', this.value)" style="background:transparent; border:none; color:rgba(255,255,255,0.8); font-weight: 600; outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent; padding:4px;" onfocus="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
+                </td>
+                <td style="padding:16px 12px; vertical-align: middle;">
+                    <input type="text" value="${p.event || ''}" placeholder="Event" title="Edit Event Inline" onchange="window.ContactsView.updatePendingField('${p.id}', 'event', this.value)" style="background:transparent; border:none; color:rgba(255,255,255,0.8); font-weight: 600; outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent; padding:4px;" onfocus="this.style.background='rgba(10,132,255,0.1)'; this.style.borderColor='rgba(10,132,255,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
+                </td>
+                <td style="padding:16px 12px; vertical-align: middle;">
+                    <input type="text" value="${p.interest || p.selected_topic || ''}" placeholder="Interest" title="Edit Interest Inline" onchange="window.ContactsView.updatePendingField('${p.id}', 'interest', this.value)" style="background:transparent; border:none; color:rgba(255,255,255,0.8); font-weight: 600; outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent; padding:4px;" onfocus="this.style.background='rgba(255,159,10,0.15)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
+                </td>
+                <td style="padding:16px 12px; vertical-align: middle;">
+                    <input type="text" value="${p.position || p.role || ''}" placeholder="Position" title="Edit Position Inline" onchange="window.ContactsView.updatePendingField('${p.id}', 'position', this.value)" style="background:transparent; border:none; color:rgba(255,255,255,0.8); font-weight: 600; outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent; padding:4px;" onfocus="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.3)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
                 </td>
                 <td style="padding:16px 12px;"><span style="background:rgba(255,159,10,0.1); color:#ff9f0a; border:1px solid rgba(255,159,10,0.2); padding:2px 8px; border-radius:6px; font-size:0.65rem; font-weight:800;">${p.source}</span></td>
                 <td style="padding:16px 20px; text-align:right;">
