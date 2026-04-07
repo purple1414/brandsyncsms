@@ -20,32 +20,12 @@ const initStorage = (key, defaults) => {
     return JSON.parse(localStorage.getItem(key));
 };
 
-// Seed Defaults
-const DEFAULT_CONTACTS = [
-    { id: 1, name: "John Doe", phone: "639171234567", tags: ["VIP", "Promo"], added: "2023-10-01", groupIds: [1] },
-    { id: 2, name: "Jane Smith", phone: "639189876543", tags: ["Marketing"], added: "2023-10-02", groupIds: [2] }
-];
-const DEFAULT_GROUPS = [
-    { id: 1, name: "VIP Clients", color: "#0a84ff", icon: "Star" },
-    { id: 2, name: "Marketing Blast", color: "#32d74b", icon: "Zap" }
-];
-const DEFAULT_TEMPLATES = [
-    { id: 1, name: "Marketing Promo", content: "{Hi|Hello} {name}! We have a 20% discount on {product}. Please visit our website!", folderId: 1, color: "#0a84ff" },
-    { id: 2, name: "Appointment Reminder", content: "Reminder: You have an appointment on {date} at {time}.", folderId: 2, color: "#32d74b" }
-];
-const DEFAULT_TEMPLATE_FOLDERS = [
-    { id: 1, name: "Marketing", color: "#0a84ff", icon: "FileText" },
-    { id: 2, name: "Reminders", color: "#32d74b", icon: "Zap" }
-];
-const DEFAULT_MESSAGES = [
-    { id: 1, contactId: 1, text: "Hey! Do you have any discounts available?", sender: "contact", timestamp: new Date(Date.now() - 172800000).toISOString() },
-    { id: 2, contactId: 1, text: "Yes! Check our VIP section for the 20% OFF codes.", sender: "user", timestamp: new Date(Date.now() - 151200000).toISOString() },
-    { id: 3, contactId: 1, text: "Got it, thanks! Just ordered the new kit.", sender: "contact", timestamp: new Date(Date.now() - 86400000).toISOString() },
-    { id: 4, contactId: 2, text: "Hello, I need help with my order #8821.", sender: "contact", timestamp: new Date(Date.now() - 3600000).toISOString(), isRead: true },
-    { id: 5, contactId: 2, text: "One moment Jane, looking into it now.", sender: "user", timestamp: new Date(Date.now() - 1800000).toISOString(), isRead: true },
-    { id: 6, contactId: 1, text: "Wait, the shipping address is wrong? Can you fix?", sender: "contact", timestamp: new Date(Date.now() - 300000).toISOString(), isRead: false },
-    { id: 7, contactId: 3, text: "Is the showroom open late tonight?", sender: "contact", timestamp: new Date(Date.now() - 7200000).toISOString(), isRead: true }
-];
+// Seed Defaults (Empty for production to prevent conflicts with Cloud Sync)
+const DEFAULT_CONTACTS = [];
+const DEFAULT_GROUPS = [];
+const DEFAULT_TEMPLATES = [];
+const DEFAULT_TEMPLATE_FOLDERS = [];
+const DEFAULT_MESSAGES = [];
 
 window.BrandSyncAPI = {
     // Persistence Initializer
