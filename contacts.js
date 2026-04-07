@@ -149,19 +149,19 @@ window.ContactsView = {
                         <div id="filterChipsContainer" style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;"></div>
                     </div>
                     
-                    <div style="flex: 1; overflow-x: auto; min-width: 100%; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left; table-layout: auto;">
+                    <div style="flex: 1; overflow-x: auto; min-width: 100%; scrollbar-width: thin; scrollbar-color: rgba(255,159,10,0.3) transparent;">
+                        <table style="width: 1150px; border-collapse: collapse; text-align: left; table-layout: fixed;">
                             <thead style="position: sticky; top: 0; background: rgba(30,30,35,0.8); backdrop-filter: blur(20px); z-index: 10;">
                                 <tr>
-                                    <th style="padding: 14px 24px; min-width: 45px;"><input type="checkbox" id="selectAllCheckbox" onchange="window.ContactsView.toggleAll(this.checked)" style="width: 17px; height: 17px; accent-color: var(--accent-color); cursor:pointer;"></th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 180px;">Names</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 130px;">Phone</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 120px;">Company</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 110px;">Event</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 140px;">Interest</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 100px;">Position</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 120px;">Groups / Tags</th>
-                                    <th style="padding: 14px 12px; text-align: right; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 100px;">Actions</th>
+                                    <th style="padding: 14px 24px; width: 45px;"><input type="checkbox" id="selectAllCheckbox" onchange="window.ContactsView.toggleAll(this.checked)" style="width: 17px; height: 17px; accent-color: var(--accent-color); cursor:pointer;"></th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 220px;">Names</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 140px;">Phone</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 130px;">Company</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 110px;">Event</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 160px;">Interest</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 110px;">Position</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 125px;">Groups / Tags</th>
+                                    <th style="padding: 14px 12px; text-align: right; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 110px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="contactsTableBody"></tbody>
@@ -843,10 +843,6 @@ window.ContactsView = {
                 if (!passTag) return false;
             }
 
-            if (filterCompany) {
-                if (!(c.company || '').toLowerCase().includes(filterCompany)) return false;
-            }
-
             return true;
         });
         
@@ -855,7 +851,10 @@ window.ContactsView = {
         if (dateFrom) activeFilterCount++;
         if (dateTo) activeFilterCount++;
         if (filterTag) activeFilterCount++;
-        if (filterCompany) activeFilterCount++;
+        if (dropCompany) activeFilterCount++;
+        if (dropEvent) activeFilterCount++;
+        if (dropPosition) activeFilterCount++;
+        if (dropInterest) activeFilterCount++;
         
         const counterSpan = document.getElementById('advFilterCounter');
         if (counterSpan) {
@@ -872,7 +871,10 @@ window.ContactsView = {
             if (dateFrom) chipsHtml += `<div style="${chipStyle}"><span>📅</span> From: ${dateFrom}</div>`;
             if (dateTo) chipsHtml += `<div style="${chipStyle}"><span>📅</span> To: ${dateTo}</div>`;
             if (filterTag) chipsHtml += `<div style="${chipStyle}"><span>🏷️</span> Tag: ${filterTag}</div>`;
-            if (filterCompany) chipsHtml += `<div style="${chipStyle}"><span>🏢</span> Company: ${filterCompany}</div>`;
+            if (dropCompany) chipsHtml += `<div style="${chipStyle}"><span>🏢</span> Company: ${dropCompany}</div>`;
+            if (dropEvent) chipsHtml += `<div style="${chipStyle}"><span>📅</span> Event: ${dropEvent}</div>`;
+            if (dropPosition) chipsHtml += `<div style="${chipStyle}"><span>💼</span> Position: ${dropPosition}</div>`;
+            if (dropInterest) chipsHtml += `<div style="${chipStyle}"><span>🎯</span> Interest: ${dropInterest}</div>`;
             
             chipsContainer.innerHTML = chipsHtml;
             chipsContainer.style.display = chipsHtml ? 'flex' : 'none';
@@ -927,14 +929,6 @@ window.ContactsView = {
                 const displayCompany = c.company ? _highlight(_toTitleCase(c.company)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 const displayEvent = c.event ? _highlight(_toTitleCase(c.event)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 
-                const _extractStrings = (val) => {
-                    if (!val) return '';
-                    if (typeof val === 'string') return val.trim();
-                    if (Array.isArray(val)) return val.map(_extractStrings).filter(Boolean).join(', ');
-                    if (typeof val === 'object') return val.name || val.title || val.label || val.value || val.text || val.topic || JSON.stringify(val);
-                    return String(val);
-                };
-
                 let rawInterest = c.interest || c.selected_topic || '';
                 if (typeof rawInterest === 'string' && rawInterest.trim().startsWith('[') && rawInterest.trim().endsWith(']')) {
                     try { rawInterest = JSON.parse(rawInterest.replace(/'/g, '"')); } catch(e) {}
