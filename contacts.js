@@ -1029,8 +1029,13 @@ window.ContactsView = {
             document.getElementById('edit_contactInterest').value = contact.interest || "";
             document.getElementById('edit_contactAwareness').value = contact.awareness || "";
             document.getElementById('edit_contactPosition').value = contact.position || "";
-            document.getElementById('edit_contactSales').value = contact.salesPerson || "";
-            checkboxes.forEach(cb => cb.checked = (contact.groupIds || []).includes(parseInt(cb.value)));
+            document.getElementById('edit_contactSales').value = contact.salesPerson || contact.salesperson || "";
+            
+            // TYPE-AGNOSTIC GROUP SELECTION: Ensure checkboxes match regardless of ID storage type
+            checkboxes.forEach(cb => {
+                const isAssigned = (contact.groupIds || []).some(gid => String(gid) === String(cb.value));
+                cb.checked = isAssigned;
+            });
         } else {
             ids.forEach(id => document.getElementById('edit' + id).value = "");
             checkboxes.forEach(cb => cb.checked = false);
@@ -1756,7 +1761,13 @@ window.ContactsView = {
             const res = await window.BrandSyncAPI.approvePendingContacts(ids, targetGroupId);
             console.log(`[UI] API response:`, res);
             if (res.success) {
-                window.showToast(`${ids.length} Identities approved!`, "success");
+                window.showToast(`${ids.length} Identities approved and synced!`, "success");
+                
+                // Clear filters to ensure the user actually SEES the new contacts
+                const searchInp = document.getElementById('contactSearch');
+                if (searchInp) searchInp.value = '';
+                this.isRecentFilterActive = false; // reset recent too for clarity
+                
                 this.loadData();
                 this.loadGroups();
                 this.loadPendingData();

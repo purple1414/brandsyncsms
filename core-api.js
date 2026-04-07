@@ -908,8 +908,15 @@ window.BrandSyncAPI = {
         this._set(BS_STORAGE_KEYS.CONTACTS, contacts);
         this._set(BS_STORAGE_KEYS.PENDING_CONTACTS, remaining);
         
-        // Trigger cloud sync
-        this.runHealth();
+        console.log(`[Approve] Logic Complete. ${approvedCount} records promoted.`);
+        if (contacts.length > 0) console.table(contacts.slice(0, 5));
+
+        // FORCE ATOMIC SYNC HANDSHAKE:
+        // We bypass the 3s debounce timer for approvals to prevent race conditions with cloud heartbeats.
+        this.syncCloudNow().then(res => {
+            console.log("[Approve] Atomic Cloud Handshake:", res.success ? "SUCCESS" : "FAILED", res.message || "");
+        });
+
         return { success: true, count: approvedCount };
     },
 
