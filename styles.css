@@ -478,115 +478,127 @@ input:focus + .toggle-slider {
     overflow: hidden;
 }
 
-/* Apple Edge Glow System */
+/* Apple Intelligence Fluid Glow System */
 .apple-aura-base {
     position: absolute;
     inset: 0;
-    background: #000;
+    background: radial-gradient(circle at 50% 50%, #050507 0%, #000 100%);
     z-index: 1;
 }
 
-/* Spinning conic gradient placed behind a dark mask */
+/* Multiple layered fluid blobs for a non-static organic feel */
 .apple-aura-spin {
     position: absolute;
-    width: 200vw;
-    height: 200vh;
-    left: -50vw;
-    top: -50vh;
-    background: conic-gradient(from 0deg at 50% 50%, #ff2a85, #8a2be2, #0a84ff, #5ac8fa, #ff2a85);
-    animation: auraSpin 4s linear infinite;
+    width: 150vw;
+    height: 150vh;
+    filter: blur(140px);
+    opacity: 0.7;
     z-index: 2;
-    opacity: 0.85;
+    mix-blend-mode: screen;
+    animation: liquidMove 10s ease-in-out infinite alternate;
+    background: 
+        radial-gradient(circle at 20% 30%, #0a84ff 0%, transparent 40%),
+        radial-gradient(circle at 80% 20%, #bf5af2 0%, transparent 40%),
+        radial-gradient(circle at 40% 80%, #ff2a85 0%, transparent 40%),
+        radial-gradient(circle at 70% 70%, #5ac8fa 0%, transparent 40%);
 }
 
-/* Dark Center mask to create strictly the animated "Edge Glow" */
+@keyframes liquidMove {
+    0% { transform: translate(-10%, -10%) rotate(0deg) scale(1); }
+    33% { transform: translate(10%, 5%) rotate(120deg) scale(1.2); }
+    66% { transform: translate(-5%, 15%) rotate(240deg) scale(0.9); }
+    100% { transform: translate(10%, -10%) rotate(360deg) scale(1.1); }
+}
+
+/* Inner Edge Glow (Siri Style) */
 .apple-aura-glow1 {
     position: absolute;
-    inset: 8px; /* Thickness of the glowing border */
-    background: #050507;
-    border-radius: 20px;
+    inset: 0;
     z-index: 3;
     pointer-events: none;
-    /* Soften the inner edge to look like an Apple intelligence glow */
-    box-shadow: 0 0 60px rgba(0,0,0,1), inset 0 0 100px rgba(0,0,0,0.8);
+    box-shadow: inset 0 0 150px rgba(0,0,0,0.9), inset 0 0 60px rgba(0,0,0,0.8);
+    border: 2px solid transparent;
+    background: linear-gradient(#050507, #050507) padding-box,
+                conic-gradient(from var(--angle), #0a84ff, #bf5af2, #ff2a85, #5ac8fa, #0a84ff) border-box;
+    animation: borderRotate 4s linear infinite;
+    mask: radial-gradient(circle at center, transparent 65%, black 100%);
+    -webkit-mask: radial-gradient(circle at center, transparent 65%, black 100%);
 }
 
-/* Sweeping Multi-color Full Screen Gradient Scanner */
+@property --angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes borderRotate {
+    to { --angle: 360deg; }
+}
+
+/* Sophisticated Scanning Beam */
 .apple-aura-glow2 {
     position: absolute;
-    inset: 0;
+    inset: -100% 0;
     background: linear-gradient(180deg, 
         transparent 0%, 
-        rgba(191,90,242,0.05) 30%, 
-        rgba(10,132,255,0.3) 50%, 
-        rgba(255,42,133,0.05) 70%, 
+        rgba(10, 132, 255, 0) 45%, 
+        rgba(255, 255, 255, 0.15) 50%, 
+        rgba(191, 90, 242, 0.3) 50.5%,
+        rgba(10, 132, 255, 0) 55%, 
         transparent 100%
     );
-    background-size: 100% 200%;
-    animation: appleScanner 3s ease-in-out infinite;
     z-index: 4;
     pointer-events: none;
-    mix-blend-mode: screen;
+    animation: scanPulse 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    mix-blend-mode: overlay;
+    filter: blur(2px);
+}
+
+@keyframes scanPulse {
+    0% { transform: translateY(-20%); opacity: 0; }
+    30% { opacity: 0.8; }
+    70% { opacity: 0.8; }
+    100% { transform: translateY(20%); opacity: 0; }
 }
 
 .ai-loading-logo {
     z-index: 10;
-    font-size: 6rem;
+    font-size: 5rem; /* Slightly smaller for minimal look */
     color: #fff;
-    animation: logoPulse 2s ease-in-out infinite alternate;
-    filter: drop-shadow(0 0 30px rgba(10, 132, 255, 0.8));
-    margin-bottom: 2rem;
+    animation: logoEmerge 3s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 40px rgba(10, 132, 255, 0.5));
+    margin-bottom: 2.5rem;
     position: relative;
-    background: linear-gradient(135deg, #0a84ff, #bf5af2, #ff2a85);
+}
+
+.ai-loading-logo i {
+    font-size: inherit;
+    background: linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.4) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-.ai-loading-logo::after {
-    display: none;
-}
-
-.ai-loading-logo i {
-    font-size: inherit;
-    -webkit-text-fill-color: initial;
-    color: #fff;
-    opacity: 1;
-}
-
-@keyframes auraSpin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes appleScanner {
-    0% { background-position: center -150%; opacity: 0; }
-    20% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { background-position: center 250%; opacity: 0; }
-}
-
-@keyframes logoPulse {
-    0% { transform: scale(0.95); opacity: 0.8; filter: drop-shadow(0 0 20px rgba(10, 132, 255, 0.4)); }
-    100% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 40px rgba(191, 90, 242, 0.9)); }
+@keyframes logoEmerge {
+    0% { transform: scale(0.9); opacity: 0.7; filter: drop-shadow(0 0 20px rgba(10, 132, 255, 0.3)); }
+    100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 60px rgba(191, 90, 242, 0.6)); }
 }
 
 .ai-loading-text {
     z-index: 10;
     position: relative;
-    font-size: 0.95rem;
-    font-weight: 900;
+    font-size: 0.8rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.5em;
-    color: #fff;
-    opacity: 0.8;
-    animation: shineText 2s ease-in-out infinite alternate;
-    margin-top: 15px;
+    letter-spacing: 0.6em;
+    color: rgba(255,255,255,0.6);
+    animation: textStream 3s ease-in-out infinite alternate;
+    margin-top: 20px;
 }
 
-@keyframes shineText {
-    0% { opacity: 0.4; transform: translateY(2px); text-shadow: 0 0 10px rgba(0,0,0,0); }
-    100% { opacity: 1; transform: translateY(-2px); text-shadow: 0 0 20px rgba(255,255,255,0.6); }
+@keyframes textStream {
+    0% { opacity: 0.3; letter-spacing: 0.4em; transform: translateY(5px); }
+    100% { opacity: 0.9; letter-spacing: 0.7em; transform: translateY(-5px); text-shadow: 0 0 20px rgba(255,255,255,0.4); }
 }
 
 /* Login Footer */

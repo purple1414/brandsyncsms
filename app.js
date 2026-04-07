@@ -21,19 +21,54 @@ class BrandSyncApp {
         if (window.AuthService && window.AuthService.isLoggedIn()) {
             document.getElementById('masterLockOverlay').style.display = 'none';
             const aiLoading = document.getElementById('aiLoadingScreen');
-            aiLoading.style.display = 'flex';
-            aiLoading.style.opacity = '1';
+            const aiText = aiLoading.querySelector('.ai-loading-text');
+
+            if (aiLoading) {
+                aiLoading.style.display = 'flex';
+                aiLoading.style.opacity = '1';
+            }
+
+            // Cycle status messages for engagement
+            const messages = [
+                "Re-establishing Neural Link",
+                "Authenticating Session Token",
+                "Preparing Workspace Index",
+                "Establishing Secure Uplink"
+            ];
+            
+            let msgIdx = 0;
+            const msgInterval = setInterval(() => {
+                if (aiText) {
+                    aiText.style.opacity = '0';
+                    setTimeout(() => {
+                        aiText.innerText = messages[msgIdx % messages.length];
+                        aiText.style.opacity = '1';
+                        msgIdx++;
+                    }, 400);
+                }
+            }, 800);
 
             // Simulate System Prep for returning users
             setTimeout(() => {
-                aiLoading.style.transition = 'opacity 0.8s ease-in-out';
-                aiLoading.style.opacity = '0';
+                clearInterval(msgInterval);
+                if (aiLoading) {
+                    aiLoading.style.transition = 'opacity 1.0s cubic-bezier(0.4, 0, 0.2, 1)';
+                    aiLoading.style.opacity = '0';
+                    aiLoading.style.transform = 'scale(1.05)';
+                }
+                
                 setTimeout(() => {
-                    aiLoading.style.display = 'none';
+                    if (aiLoading) {
+                        aiLoading.style.display = 'none';
+                        aiLoading.style.opacity = '1';
+                        aiLoading.style.transform = 'none';
+                    }
+                    if (aiText) aiText.innerText = "Initializing BrandSync SMS";
+
                     document.getElementById('mainAppContainer').style.display = 'flex';
                     this.bootLayout();
-                }, 800);
-            }, 2500);
+                }, 1000);
+            }, 3000); 
         } else {
             document.getElementById('masterLockOverlay').style.display = 'flex';
             document.getElementById('mainAppContainer').style.display = 'none';
@@ -61,16 +96,40 @@ class BrandSyncApp {
             // Visual transition -> AI Scanning Loading Screen
             const overlay = document.getElementById('masterLockOverlay');
             const aiLoading = document.getElementById('aiLoadingScreen');
+            const aiText = aiLoading.querySelector('.ai-loading-text');
             
             // Hide login, show AI scanning
             overlay.style.display = 'none';
             aiLoading.style.display = 'flex';
 
-            // Randomize duration between 6-10 seconds for "System Optimization" feel
-            const duration = 6000 + (Math.random() * 4000);
+            // Cycle status messages for engagement
+            const messages = [
+                "Initializing Neural Link",
+                "Optimizing Message Payloads",
+                "Sanitizing Gateway Nodes",
+                "Establishing Secure Uplink",
+                "Synchronizing Identity Index",
+                "Decrypting Session Keys"
+            ];
+            
+            let msgIdx = 0;
+            const msgInterval = setInterval(() => {
+                if (aiText) {
+                    aiText.style.opacity = '0';
+                    setTimeout(() => {
+                        aiText.innerText = messages[msgIdx % messages.length];
+                        aiText.style.opacity = '1';
+                        msgIdx++;
+                    }, 400);
+                }
+            }, 1800);
+
+            // Randomize duration between 6-9 seconds for "System Optimization" feel
+            const duration = 6500 + (Math.random() * 2500);
 
             setTimeout(() => {
-                aiLoading.style.transition = 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                clearInterval(msgInterval);
+                aiLoading.style.transition = 'opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1)';
                 aiLoading.style.opacity = '0';
                 aiLoading.style.transform = 'scale(1.1)';
 
@@ -78,11 +137,12 @@ class BrandSyncApp {
                     aiLoading.style.display = 'none';
                     aiLoading.style.opacity = '1';
                     aiLoading.style.transform = 'none';
+                    if (aiText) aiText.innerText = "Initializing BrandSync SMS"; // Reset for next time
                     
                     this.checkAuth();
                     // Trigger initial route
                     this.handleRoute();
-                }, 800);
+                }, 1200);
             }, duration);
         } else {
             if (errEl) {
