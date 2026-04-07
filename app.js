@@ -562,6 +562,18 @@ class BrandSyncApp {
             pulseNode.style.background = overallColor;
             pulseNode.style.boxShadow = `0 0 12px ${overallColor}`;
         }
+
+        // Count issues (slow or offline) and update the badge
+        const issueCount = [net, gh, sms].filter(s => s.priority >= 2).length;
+        const badge = document.getElementById('gatewayBadge');
+        if (badge) {
+            if (issueCount > 0) {
+                badge.innerText = issueCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
     }
 }
 
