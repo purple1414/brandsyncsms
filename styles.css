@@ -621,7 +621,7 @@ input:focus + .toggle-slider {
 
 .login-footer:hover {
     color: #fff;
-    transform: translateY(-2px);
+    transform: translateX(-50%) translateY(-2px);
     border-color: rgba(255,255,255,0.15);
     background: rgba(0,0,0,0.6);
     box-shadow: 0 10px 20px rgba(0,0,0,0.5);
