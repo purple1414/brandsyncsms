@@ -809,7 +809,10 @@ window.ContactsView = {
 
             // Unified Smart Filter Dropdown
             if (dropUnified) {
-                const [category, val] = dropUnified.split(':');
+                const firstColon = dropUnified.indexOf(':');
+                const category = dropUnified.substring(0, firstColon);
+                const val = dropUnified.substring(firstColon + 1);
+                
                 if (category === 'company') {
                     if ((c.company || '').toLowerCase() !== val) return false;
                 } else if (category === 'event') {
@@ -862,9 +865,11 @@ window.ContactsView = {
             if (dateTo) chipsHtml += `<div style="${chipStyle}"><span>📅</span> To: ${dateTo}</div>`;
             if (filterTag) chipsHtml += `<div style="${chipStyle}"><span>🏷️</span> Tag: ${filterTag}</div>`;
             if (dropUnified) {
-                const [cat, val] = dropUnified.split(':');
-                const catLabel = cat.charAt(0).toUpperCase() + cat.slice(1);
-                chipsHtml += `<div style="${chipStyle}"><span>🔍</span> ${catLabel}: ${val}</div>`;
+                const select = document.getElementById('filterUnifiedSelector');
+                const selectedOption = select.options[select.selectedIndex];
+                const catLabel = selectedOption.parentElement.label || 'Filter';
+                const valLabel = selectedOption.text;
+                chipsHtml += `<div style="${chipStyle}"><span>🔍</span> ${catLabel}: ${valLabel}</div>`;
             }
             
             chipsContainer.innerHTML = chipsHtml;
