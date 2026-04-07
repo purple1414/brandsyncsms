@@ -901,8 +901,10 @@ window.BrandSyncAPI = {
         let contacts = this._get(BS_STORAGE_KEYS.CONTACTS);
         let approvedCount = 0;
 
-        const toApprove = pending.filter(p => ids.includes(p.id));
-        const remaining = pending.filter(p => !ids.includes(p.id));
+        // SAFE TYPE-AGNOSTIC COMPARISON
+        // Pending leads may have Number IDs, but UI checkboxes supply String IDs
+        const toApprove = pending.filter(p => ids.some(id => String(id) === String(p.id)));
+        const remaining = pending.filter(p => !ids.some(id => String(id) === String(p.id)));
 
         console.log(`[Approve] IDs to approve:`, ids);
         console.log(`[Approve] Found ${toApprove.length} matching pending records.`);
@@ -956,7 +958,7 @@ window.BrandSyncAPI = {
 
     async deletePendingContacts(ids) {
         let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
-        const remaining = pending.filter(p => !ids.includes(p.id));
+        const remaining = pending.filter(p => !ids.some(id => String(id) === String(p.id)));
         this._set(BS_STORAGE_KEYS.PENDING_CONTACTS, remaining);
         return { success: true };
     },
