@@ -186,8 +186,6 @@ class BrandSyncApp {
         this.refreshGatewayStatus();
 
         setInterval(() => this.refreshGatewayStatus(), 5000);
-        setInterval(() => this.updateSyncStatusText(), 60000); // UI text refresh for "Last sync: X min ago"
-        this.updateSyncStatusText();
 
         const badge = document.getElementById('header-credits-badge');
         if (badge) badge.onclick = () => {

@@ -152,8 +152,7 @@ window.BrandSyncAPI = {
             const res = await fetch(`https://api.github.com/gists/${gistId}?cv=${Date.now()}`, {
                 headers: { 
                     'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github+json',
-                    'Cache-Control': 'no-cache'
+                    'Accept': 'application/vnd.github+json'
                 }
             });
             if(!res.ok) return { success: false, status: res.status };
@@ -677,7 +676,7 @@ window.BrandSyncAPI = {
             // Measure real latencies simultaneously
             const [pingNet, pingGh, pingSms] = await Promise.all([
                 measurePing('https://cloudflare-dns.com/dns-query?name=google.com&type=A'), // Fast internet check
-                health.github ? measurePing(`https://api.github.com/gists/${ghGistId}?t=${Date.now()}`) : Promise.resolve(-1),
+                health.github ? measurePing(`https://github.com/favicon.ico?t=${Date.now()}`) : Promise.resolve(-1),
                 measurePing(`https://dashboard.philsms.com?t=${Date.now()}`)
             ]);
             
