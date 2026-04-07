@@ -47,54 +47,54 @@ window.ContactsView = {
                         </div>
                         
                         <!-- Bottom Row: Search, Filters, Bulk Actions -->
-                        <div style="position: relative; height: 40px; display: flex;">
+                        <div style="min-height: 44px; display: flex;">
                             
                             <!-- Default State (Search & Filters) -->
-                            <div id="defaultActionControls" style="display: flex; gap:12px; align-items: center; justify-content: space-between; width:100%; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); opacity: 1; transform: translateY(0); pointer-events: auto; position: absolute; inset: 0;">
+                            <div id="defaultActionControls" style="display: flex; gap:12px; align-items: center; justify-content: space-between; width:100%;">
                                 <div style="flex: 1; max-width: 400px; position: relative; display: flex; align-items: center;">
                                     <svg style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.3);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                    <input type="text" id="contactSearch" placeholder="Search identities, tags, companies..." style="width: 100%; height: 40px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 40px; color: #fff; font-size: 0.9rem; outline: none; transition: 0.2s;" oninput="window.ContactsView.loadData()">
+                                    <input type="text" id="contactSearch" placeholder="Search identities, tags, companies..." style="width: 100%; height: 44px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 40px; color: #fff; font-size: 0.9rem; outline: none; transition: 0.2s;" oninput="window.ContactsView.loadData()">
                                     <button id="clearSearchBtn" onclick="document.getElementById('contactSearch').value=''; window.ContactsView.loadData();" style="display:none; position:absolute; right:12px; top: 50%; transform: translateY(-50%); background:rgba(255,255,255,0.15); border:none; width:18px; height:18px; border-radius:50%; color:#fff; cursor:pointer; align-items:center; justify-content:center; font-size:0.6rem; font-weight:900; opacity:0.6; transition:0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">✕</button>
                                 </div>
                                 <div style="display: flex; gap:12px; align-items: center;">
-                                    <button id="advFilterToggleBtn" onclick="window.ContactsView.toggleAdvancedFilters()" style="height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(255,255,255,0.05); color:#fff; border: 1px solid rgba(255,255,255,0.1); font-weight:700; font-size:0.8rem; align-items:center; gap:6px; display:flex;" title="Advanced Filter Options">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                                    <button id="advFilterToggleBtn" onclick="window.ContactsView.toggleAdvancedFilters()" style="height: 44px; border-radius: 12px; padding: 0 16px; background: rgba(255,255,255,0.05); color:#fff; border: 1px solid rgba(255,255,255,0.1); font-weight:700; font-size:0.85rem; align-items:center; gap:8px; display:flex;" title="Advanced Filter Options">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
                                         Filter<span id="advFilterCounter" style="display:none; background:#0a84ff; color:#fff; border-radius:10px; padding:2px 6px; font-size:0.65rem; font-weight:800; margin-left:2px;"></span>
                                     </button>
-                                    <button id="recentFilterBtn" onclick="window.ContactsView.toggleRecentFilter()" style="height: 40px; border-radius: 12px; padding: 0 16px; background: rgba(10,132,255,0.1); color:#0a84ff; border: 1px solid rgba(10,132,255,0.3); font-weight:700; font-size:0.8rem; align-items:center; gap:6px; display:flex;" title="Show only contacts from the last 7 days">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    <button id="recentFilterBtn" onclick="window.ContactsView.toggleRecentFilter()" style="height: 44px; border-radius: 12px; padding: 0 16px; background: rgba(10,132,255,0.1); color:#0a84ff; border: 1px solid rgba(10,132,255,0.3); font-weight:700; font-size:0.85rem; align-items:center; gap:8px; display:flex;" title="Show only contacts from the last 7 days">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                         Recent
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Contextual Bulk State (Actions) -->
-                            <div id="bulkActionControls" style="display: flex; gap:12px; align-items: center; justify-content: space-between; width:100%; position: absolute; inset: 0; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); opacity: 0; pointer-events: none; transform: translateY(-10px); background: rgba(30,10,10,0.8); border-radius: 12px; padding: 0 12px; border: 1px solid rgba(255,69,58,0.2); backdrop-filter: blur(10px); z-index: 50;">
+                            <div id="bulkActionControls" style="display: none; gap:12px; align-items: center; justify-content: space-between; width:100%; background: linear-gradient(90deg, rgba(30,20,35,0.8), rgba(10,10,20,0.9)); border-radius: 12px; padding: 0 16px; border: 1px solid rgba(191,90,242,0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div style="width:28px; height:28px; border-radius:50%; background:var(--accent-color); color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:800; box-shadow: 0 4px 10px rgba(10,132,255,0.4);" id="contextualSelectedCount">0</div>
-                                    <span style="font-size:0.85rem; color:#fff; font-weight:800;">Identities Selected</span>
+                                    <span style="font-size:0.9rem; color:#fff; font-weight:800;">Selected</span>
                                 </div>
-                                <div style="display:flex; gap:10px; align-items:center;">
-                                    <button id="groupFromSelectionBtn" onclick="window.ContactsView.createGroupFromSelection()" style="height: 32px; border-radius: 8px; padding: 0 14px; background: rgba(191,90,242,0.18); color:#bf5af2; border: 1px solid rgba(191,90,242,0.4); font-weight:800; font-size:0.75rem; align-items:center; gap:6px; display:flex;" title="Create a new group with these selected contacts">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                                <div style="display:flex; gap:12px; align-items:center;">
+                                    <button id="groupFromSelectionBtn" onclick="window.ContactsView.createGroupFromSelection()" style="height: 34px; border-radius: 8px; padding: 0 16px; background: rgba(191,90,242,0.18); color:#bf5af2; border: 1px solid rgba(191,90,242,0.4); font-weight:800; font-size:0.8rem; align-items:center; gap:8px; display:flex; white-space:nowrap;" title="Create a new group with these selected contacts">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
                                         Create Group
                                     </button>
                                     <div id="addToGroupContainer" style="position:relative;">
-                                        <button id="addToGroupBtn" onclick="window.ContactsView.toggleAddToGroupMenu()" style="height: 32px; border-radius: 8px; padding: 0 14px; background: rgba(50,215,75,0.15); color:var(--success-color); border: 1px solid rgba(50,215,75,0.3); font-weight:800; font-size:0.75rem; align-items:center; gap:6px; display:flex;" title="Add selected to an existing group">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+                                        <button id="addToGroupBtn" onclick="window.ContactsView.toggleAddToGroupMenu()" style="height: 34px; border-radius: 8px; padding: 0 16px; background: rgba(50,215,75,0.15); color:var(--success-color); border: 1px solid rgba(50,215,75,0.3); font-weight:800; font-size:0.8rem; align-items:center; gap:8px; display:flex; white-space:nowrap;" title="Add selected to an existing group">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
                                             Add To...
                                         </button>
-                                        <div id="addToGroupMenu" style="display:none; position:absolute; top:calc(100% + 8px); right:0; width:220px; background:rgba(30,30,35,0.98); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:8px; box-shadow:0 10px 40px rgba(0,0,0,0.8); z-index:100; backdrop-filter:blur(24px); max-height: 280px; overflow-y: auto;">
+                                        <div id="addToGroupMenu" style="display:none; position:absolute; top:calc(100% + 8px); right:0; width:240px; background:rgba(30,30,35,0.98); border:1px solid rgba(255,255,255,0.15); border-radius:12px; padding:12px; box-shadow:0 10px 40px rgba(0,0,0,0.8); z-index:100; backdrop-filter:blur(24px); max-height: 280px; overflow-y: auto;">
                                             <div style="font-size:0.7rem; color:rgba(255,255,255,0.4); font-weight:700; text-transform:uppercase; padding:4px 8px; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">Select Group</div>
                                             <div id="addToGroupList"></div>
                                         </div>
                                     </div>
-                                    <div style="width:1px; height:20px; background:rgba(255,255,255,0.2); margin:0 4px;"></div>
-                                    <button id="bulkDeleteBtn" onclick="window.ContactsView.bulkDelete()" style="height: 32px; border-radius: 8px; padding: 0 14px; background: rgba(255,69,58,0.2); color:#ff453a; border: 1px solid rgba(255,69,58,0.4); font-weight:800; font-size:0.75rem; align-items:center; gap:6px; display:flex;">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+                                    <div style="width:1px; height:24px; background:rgba(255,255,255,0.2); margin:0 4px;"></div>
+                                    <button id="bulkDeleteBtn" onclick="window.ContactsView.bulkDelete()" style="height: 34px; border-radius: 8px; padding: 0 16px; background: rgba(255,69,58,0.2); color:#ff453a; border: 1px solid rgba(255,69,58,0.4); font-weight:800; font-size:0.8rem; align-items:center; gap:8px; display:flex; white-space:nowrap;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
                                         Purge
                                     </button>
-                                    <button onclick="window.ContactsView.toggleAll(false)" style="height: 32px; border-radius: 8px; padding: 0 14px; background: rgba(255,255,255,0.05); color:#fff; border: 1px solid rgba(255,255,255,0.1); font-weight:700; font-size:0.75rem; align-items:center; display:flex; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                                    <button onclick="window.ContactsView.toggleAll(false)" style="height: 34px; border-radius: 8px; padding: 0 16px; background: rgba(255,255,255,0.05); color:#fff; border: 1px solid rgba(255,255,255,0.1); font-weight:800; font-size:0.8rem; align-items:center; display:flex; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
                                         Cancel
                                     </button>
                                 </div>
@@ -454,28 +454,12 @@ window.ContactsView = {
         const countBadge = document.getElementById('contextualSelectedCount');
         
         if (count > 0) {
-            if(defaultCtrl) { 
-                defaultCtrl.style.opacity = '0'; 
-                defaultCtrl.style.pointerEvents = 'none'; 
-                defaultCtrl.style.transform = 'translateY(10px)'; 
-            }
-            if(bulkCtrl) { 
-                bulkCtrl.style.opacity = '1'; 
-                bulkCtrl.style.pointerEvents = 'auto'; 
-                bulkCtrl.style.transform = 'translateY(0)'; 
-            }
+            if(defaultCtrl) defaultCtrl.style.display = 'none';
+            if(bulkCtrl) bulkCtrl.style.display = 'flex';
             if(countBadge) countBadge.innerText = count;
         } else {
-            if(defaultCtrl) { 
-                defaultCtrl.style.opacity = '1'; 
-                defaultCtrl.style.pointerEvents = 'auto'; 
-                defaultCtrl.style.transform = 'translateY(0)'; 
-            }
-            if(bulkCtrl) { 
-                bulkCtrl.style.opacity = '0'; 
-                bulkCtrl.style.pointerEvents = 'none'; 
-                bulkCtrl.style.transform = 'translateY(-10px)'; 
-            }
+            if(defaultCtrl) defaultCtrl.style.display = 'flex';
+            if(bulkCtrl) bulkCtrl.style.display = 'none';
             const menu = document.getElementById('addToGroupMenu');
             if(menu) menu.style.display = 'none';
         }
