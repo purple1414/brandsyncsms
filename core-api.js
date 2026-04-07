@@ -135,11 +135,15 @@ window.BrandSyncAPI = {
                     description: "BrandSync Platform Cloud Database",
                     files: {
                         "brandsync_db.json": {
-                            content: JSON.stringify(data, null, 2)
+                            content: JSON.stringify(data)
                         }
                     }
                 })
             });
+            if (!res.ok) {
+                const errorText = await res.text();
+                console.error(`GH Push Failed (HTTP ${res.status}):`, errorText);
+            }
             return { success: res.ok, status: res.status };
         } catch (e) { console.error("GH Push Exception", e); return { success: false, status: 0 }; }
     },
