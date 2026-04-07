@@ -498,12 +498,20 @@ input:focus + .toggle-slider {
 .ai-scan-beam {
     position: absolute;
     width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(10, 132, 255, 0.8), transparent);
-    box-shadow: 0 0 25px rgba(10, 132, 255, 0.6);
-    top: 50%;
-    animation: aiScanner 3s infinite ease-in-out;
-    opacity: 0.8;
+    height: 3px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(10, 132, 255, 0.2) 20%, 
+        rgba(10, 132, 255, 1) 50%, 
+        rgba(10, 132, 255, 0.2) 80%, 
+        transparent 100%
+    );
+    box-shadow: 0 0 40px rgba(10, 132, 255, 0.8), 0 0 100px rgba(10, 132, 255, 0.3);
+    top: 0;
+    left: 0;
+    animation: aiScanner 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    z-index: 10;
 }
 
 .ai-scan-core {
