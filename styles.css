@@ -576,23 +576,27 @@ input:focus + .toggle-slider {
     left: 0;
     right: 0;
     text-align: center;
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.05em;
     transition: 0.4s;
+    z-index: 100;
+    pointer-events: auto;
 }
 
 .login-footer strong {
-    color: rgba(255, 255, 255, 0.6);
+    color: #fff;
     background: linear-gradient(90deg, #0a84ff, #bf5af2);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 950;
+    filter: drop-shadow(0 0 10px rgba(10, 132, 255, 0.3));
 }
 
 .login-footer:hover {
-    color: rgba(255, 255, 255, 0.6);
+    color: #fff;
     transform: translateY(-2px);
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
