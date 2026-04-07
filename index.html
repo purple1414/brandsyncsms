@@ -34,17 +34,17 @@
             </div>
 
             <h1 style="font-size:2.4rem; color:#fff; font-weight:950; margin-bottom:12px; letter-spacing:-0.05em; line-height:1.1; background:linear-gradient(to bottom, #fff, rgba(255,255,255,0.6)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">
-                BrandSync Gateway</h1>
+                BrandSync SMS</h1>
             <p style="color:rgba(255,255,255,0.4); font-size:0.95rem; margin-bottom:48px; font-weight:500; letter-spacing:0.02em;">Authorize secure identity session.</p>
 
             <div style="display:flex; flex-direction:column; gap:22px; margin-bottom:40px;">
                 <!-- Username -->
                 <div style="position:relative; text-align:left;">
                     <label style="font-size:0.6rem; font-weight:900; color:rgba(255,255,255,0.25); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:12px; display:block; margin-left:6px;">Secure Identifier</label>
-                    <div style="position:relative;">
-                        <i class="icon-lucide-user" style="position:absolute; left:20px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,0.3); font-size:1rem;"></i>
+                    <div style="position:relative; display:flex; align-items:center;">
+                        <i class="icon-lucide-user" style="position:absolute; left:20px; color:#0a84ff; font-size:1.1rem; filter:drop-shadow(0 0 8px rgba(10,132,255,0.4));"></i>
                         <input type="text" id="loginUsername" placeholder="Username"
-                            style="width:100%; background:rgba(0,0,0,0.4); border:1.5px solid rgba(255,255,255,0.06); border-radius:20px; padding:20px 20px 20px 52px; color:#fff; font-size:1rem; outline:none; transition:0.4s; font-weight:600;"
+                            style="width:100%; background:rgba(0,0,0,0.4); border:1.5px solid rgba(255,255,255,0.06); border-radius:20px; padding:18px 20px 18px 56px; color:#fff; font-size:1rem; outline:none; transition:0.4s; font-weight:600;"
                             onfocus="this.style.borderColor='rgba(10,132,255,0.6)';this.style.background='rgba(0,0,0,0.6)';this.style.boxShadow='0 0 25px rgba(10,132,255,0.15)'"
                             onblur="this.style.borderColor='rgba(255,255,255,0.06)';this.style.background='rgba(0,0,0,0.4)';this.style.boxShadow='none'">
                     </div>
@@ -53,10 +53,10 @@
                 <!-- Password -->
                 <div style="position:relative; text-align:left;">
                     <label style="font-size:0.6rem; font-weight:900; color:rgba(255,255,255,0.25); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:12px; display:block; margin-left:6px;">Auth Key</label>
-                    <div style="position:relative;">
-                        <i class="icon-lucide-key-round" style="position:absolute; left:20px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,0.3); font-size:1rem;"></i>
+                    <div style="position:relative; display:flex; align-items:center;">
+                        <i class="icon-lucide-key-round" style="position:absolute; left:20px; color:#bf5af2; font-size:1.1rem; filter:drop-shadow(0 0 8px rgba(191,90,242,0.4));"></i>
                         <input type="password" id="loginPassword" placeholder="••••••••"
-                            style="width:100%; background:rgba(0,0,0,0.4); border:1.5px solid rgba(255,255,255,0.06); border-radius:20px; padding:20px 20px 20px 52px; color:#fff; font-size:1rem; outline:none; transition:0.4s; font-weight:600; letter-spacing:0.3em;"
+                            style="width:100%; background:rgba(0,0,0,0.4); border:1.5px solid rgba(255,255,255,0.06); border-radius:20px; padding:18px 20px 18px 56px; color:#fff; font-size:1rem; outline:none; transition:0.4s; font-weight:600; letter-spacing:0.3em;"
                             onfocus="this.style.borderColor='rgba(10,132,255,0.6)';this.style.background='rgba(0,0,0,0.6)';this.style.boxShadow='0 0 25px rgba(10,132,255,0.15)'"
                             onblur="this.style.borderColor='rgba(255,255,255,0.06)';this.style.background='rgba(0,0,0,0.4)';this.style.boxShadow='none'"
                             onkeydown="if(event.key === 'Enter') window.app.handleLogin()">
@@ -70,33 +70,41 @@
 
             <!-- Action Button -->
             <button onclick="window.app.handleLogin()"
-                style="width:100%; background:#fff; color:#000; border:none; border-radius:22px; padding:22px; font-weight:950; font-size:1.1rem; cursor:pointer; transition:0.4s; margin-bottom:36px; box-shadow:0 25px 50px rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; gap:12px; letter-spacing:-0.01em;"
+                style="width:100%; background:#fff; color:#000; border:none; border-radius:22px; padding:20px; font-weight:950; font-size:1.1rem; cursor:pointer; transition:0.4s; margin-bottom:24px; box-shadow:0 25px 50px rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; gap:12px; letter-spacing:-0.01em;"
                 onmouseover="this.style.transform='translateY(-4px) scale(1.02)';this.style.boxShadow='0 35px 70px rgba(255,255,255,0.2)'"
                 onmouseout="this.style.transform='none';this.style.boxShadow='0 25px 50px rgba(255,255,255,0.15)'">
-                Initiate Access <i class="icon-lucide-move-right" style="font-size:1.2rem; stroke-width:3;"></i>
-            </button>
-
-            <!-- Support Action -->
+                Login <i class="icon-lucide-move-right" style="font-size:1.2rem; stroke-width:3;"></i>
+                     <!-- Support Action -->
             <button
                 onclick="window.showToast('Please request credentials from Admin Jek (Marketing) or DSI Team', 'info')"
-                style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px; color:rgba(255,255,255,0.5); font-weight:800; text-decoration:none; font-size:0.8rem; padding:18px; border-radius:20px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); transition:0.3s; cursor:pointer; text-transform:uppercase; letter-spacing:0.08em;"
+                style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px; color:rgba(255,255,255,0.5); font-weight:800; text-decoration:none; font-size:0.8rem; padding:16px; border-radius:20px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.03); transition:0.3s; cursor:pointer; text-transform:uppercase; letter-spacing:0.08em;"
                 onmouseover="this.style.background='rgba(255,255,255,0.06)';this.style.color='#fff';this.style.borderColor='rgba(255,255,255,0.15)'"
                 onmouseout="this.style.background='rgba(255,255,255,0.03)';this.style.color='rgba(255,255,255,0.5)';this.style.borderColor='rgba(255,255,255,0.08)'">
                 <i class="icon-lucide-help-circle" style="font-size:1.1rem;"></i>
                 Request Credentials
             </button>
+        </div>
 
-            <!-- Cloud Sync Trigger (Automatic Data Parity) -->
-            <div style="margin-top:24px; padding-top:24px; border-top:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; gap:12px;">
-                <button onclick="window.app.handleCloudSync(this)" 
-                    style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; color:rgba(10,132,255,0.7); font-weight:700; font-size:0.75rem; padding:12px; border-radius:14px; border:1px solid rgba(10,132,255,0.15); background:rgba(10,132,255,0.04); cursor:pointer; transition:0.3s; text-transform:uppercase; letter-spacing:0.1em;">
-                    <i class="icon-lucide-cloud-download" style="font-size:0.9rem;"></i>
-                    <span id="syncLabel">Synchronize Cloud Index</span>
-                </button>
-                <div id="syncStatus" style="font-size:0.6rem; color:rgba(255,255,255,0.2); font-weight:800; text-transform:uppercase; letter-spacing:0.05em;">Status: Ready (Push/Pull Automated)</div>
-            </div>
+        <!-- Footer -->
+        <div class="login-footer">
+            Powered by <strong>Jek | Marketing Department</strong> – 0.0.1 © 2026 BrandSync
         </div>
     </div>
+
+    <!-- Modern AI Scan Loading Screen -->
+    <div id="aiLoadingScreen">
+        <div class="ai-scan-container">
+            <div class="ai-scan-shimmer"></div>
+            <div class="ai-scan-circle"></div>
+            <div class="ai-scan-core">
+                <i class="icon-lucide-scan-face"></i>
+            </div>
+            <div class="ai-scan-beam"></div>
+        </div>
+        <div class="ai-loading-text">Initializing AI Core...</div>
+    </div>
+
+    <!-- Main App UI -->
 
     <div class="app-container" style="display:none;" id="mainAppContainer">
         <!-- Sidebar Navigation -->

@@ -46,19 +46,32 @@ class BrandSyncApp {
         const result = window.AuthService.login(username, password);
 
         if (result.success) {
-            // Visual transition
+            // Visual transition -> AI Scanning Loading Screen
             const overlay = document.getElementById('masterLockOverlay');
-            overlay.style.transition = '0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-            overlay.style.opacity = '0';
-            overlay.style.transform = 'scale(1.1)';
+            const aiLoading = document.getElementById('aiLoadingScreen');
+            
+            // Hide login, show AI scanning
+            overlay.style.display = 'none';
+            aiLoading.style.display = 'flex';
+
+            // Randomize duration between 6-10 seconds for "System Optimization" feel
+            const duration = 6000 + (Math.random() * 4000);
 
             setTimeout(() => {
-                this.checkAuth();
-                overlay.style.opacity = '1';
-                overlay.style.transform = 'none';
-                // Trigger initial route
-                this.handleRoute();
-            }, 500);
+                aiLoading.style.transition = 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                aiLoading.style.opacity = '0';
+                aiLoading.style.transform = 'scale(1.1)';
+
+                setTimeout(() => {
+                    aiLoading.style.display = 'none';
+                    aiLoading.style.opacity = '1';
+                    aiLoading.style.transform = 'none';
+                    
+                    this.checkAuth();
+                    // Trigger initial route
+                    this.handleRoute();
+                }, 800);
+            }, duration);
         } else {
             if (errEl) {
                 errEl.innerText = result.error;

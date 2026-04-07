@@ -463,3 +463,136 @@ input:checked + .toggle-slider:before {
 input:focus + .toggle-slider {
     box-shadow: 0 0 0 2px rgba(10,132,255,0.3);
 }
+
+/* AI Loading Screen (Apple Style Scan) */
+#aiLoadingScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999999;
+    background: #000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    overflow: hidden;
+}
+
+.ai-scan-container {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-scan-circle {
+    position: absolute;
+    inset: 0;
+    border: 2px solid rgba(10, 132, 255, 0.2);
+    border-radius: 50%;
+    animation: aiPulse 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-scan-beam {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(10, 132, 255, 0.8), transparent);
+    box-shadow: 0 0 25px rgba(10, 132, 255, 0.6);
+    top: 50%;
+    animation: aiScanner 3s infinite ease-in-out;
+    opacity: 0.8;
+}
+
+.ai-scan-core {
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(10, 132, 255, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.ai-scan-core i {
+    font-size: 3rem;
+    color: #0a84ff;
+    filter: drop-shadow(0 0 15px rgba(10, 132, 255, 0.8));
+    animation: aiCoreRotate 10s infinite linear;
+}
+
+.ai-scan-shimmer {
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(circle at center, rgba(10, 132, 255, 0.15), transparent 70%);
+    animation: aiShimmer 2s infinite alternate ease-in-out;
+}
+
+@keyframes aiPulse {
+    0% { transform: scale(0.95); opacity: 0.3; border-color: rgba(10, 132, 255, 0.2); }
+    50% { transform: scale(1.1); opacity: 0.6; border-color: rgba(191, 90, 242, 0.4); }
+    100% { transform: scale(0.95); opacity: 0.3; border-color: rgba(10, 132, 255, 0.2); }
+}
+
+@keyframes aiScanner {
+    0% { top: 0%; opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+@keyframes aiCoreRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes aiShimmer {
+    from { opacity: 0.4; transform: scale(0.8); }
+    to { opacity: 0.8; transform: scale(1.2); }
+}
+
+.ai-loading-text {
+    margin-top: 48px;
+    font-size: 0.85rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.4em;
+    color: rgba(255, 255, 255, 0.4);
+    animation: textFlicker 2s infinite;
+}
+
+@keyframes textFlicker {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; color: #fff; text-shadow: 0 0 20px rgba(10, 132, 255, 0.5); }
+}
+
+/* Login Footer */
+.login-footer {
+    position: absolute;
+    bottom: 32px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    transition: 0.4s;
+}
+
+.login-footer strong {
+    color: rgba(255, 255, 255, 0.6);
+    background: linear-gradient(90deg, #0a84ff, #bf5af2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 950;
+}
+
+.login-footer:hover {
+    color: rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px);
+}
