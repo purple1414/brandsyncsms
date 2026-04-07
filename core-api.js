@@ -99,14 +99,21 @@ window.BrandSyncAPI = {
         }
 
         try {
-            // HIGH-FIDELITY PARITY SEQUENCE:
-            // 1. First push local state to cloud-first to ensure nothing is lost
-            const pushRes = await this.githubPush(token, gistId);
-            // 2. Then pull from cloud to reconcile with other users' changes
+            // HIGH-FIDELITY PARITY SEQUENCE [ATOMIC REINFORCEMENT]:
+            // 1. Pull from cloud first to reconcile with other users' changes
             const pullRes = await this.githubPull(token, gistId);
+            
+            if (!pullRes.success && pullRes.status !== 204) {
+                return { success: false, message: `Handshake Failed: Cloud unreachable (HTTP ${pullRes.status}). Aborting sync to prevent data loss.` };
+            }
+
+            // 2. Now that local state is merged with remote, push back to cloud
+            const pushRes = await this.githubPush(token, gistId);
 
             localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
-            return { success: pullRes.success, changed: pullRes.changed };
+            localStorage.setItem('BS_CLOUD_READY', 'true'); // Flag as safe for autonomous broadcasts
+            
+            return { success: pushRes.success, changed: pullRes.changed };
         } catch (e) {
             return { success: false, message: e.message };
         }
@@ -277,15 +284,27 @@ window.BrandSyncAPI = {
         if (token && gistId) {
             clearTimeout(this._syncTimer);
             this._syncTimer = setTimeout(async () => {
+                // SAFETY GUARD: Do not broadcast if we haven't successfully pulled at least once this session.
+                // This prevents pushing defaults before the cloud index is loaded.
+                const cloudReady = localStorage.getItem('BS_CLOUD_READY') === 'true';
+                
                 console.log("GitHub Cloud Engine: Initiating Atomic Reconcile Handshake...");
+                
                 // 1. Pull latest from remote first! This populates our LocalStorage with others' work
-                await this.githubPull(token, gistId);
-                // 2. LocalStorage now has the MERGED data (our change + their changes)
-                // 3. Push this consolidated world back to Gist
-                await this.githubPush(token, gistId);
-                console.log("GitHub Cloud Engine: World Consolidated.");
-                localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
-            }, 2500); 
+                const pullRes = await this.githubPull(token, gistId);
+                
+                // 2. ONLY proceed to Push if the Pull was successful OR if it's a completely new Gist (204)
+                if (pullRes.success || pullRes.status === 204) {
+                    // LocalStorage now has the MERGED data (our change + their changes)
+                    // 3. Push this consolidated world back to Gist
+                    await this.githubPush(token, gistId);
+                    console.log("GitHub Cloud Engine: World Consolidated.");
+                    localStorage.setItem('BS_LAST_SYNC', new Date().toISOString());
+                    localStorage.setItem('BS_CLOUD_READY', 'true');
+                } else {
+                    console.error("GitHub Cloud Engine: Sync Handshake Aborted—Cloud unreachable. Local changes preserved, but not broadcast.");
+                }
+            }, 3000); 
         }
     },
 
