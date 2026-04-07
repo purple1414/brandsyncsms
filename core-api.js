@@ -879,6 +879,10 @@ window.BrandSyncAPI = {
         const toApprove = pending.filter(p => ids.includes(p.id));
         const remaining = pending.filter(p => !ids.includes(p.id));
 
+        console.log(`[Approve] IDs to approve:`, ids);
+        console.log(`[Approve] Found ${toApprove.length} matching pending records.`);
+        console.log(`[Approve] Contacts count before: ${contacts.length}`);
+
         const d = new Date();
         const pad = n => String(n).padStart(2, '0');
         const timestamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -892,11 +896,14 @@ window.BrandSyncAPI = {
             contacts.unshift({
                 ...p,
                 id: newId,
+                salesPerson: p.salesPerson || p.salesperson || 'Unassigned', // Field parity bridge
                 added: timestamp, // Finalize approval timestamp
                 groupIds: grpIds
             });
             approvedCount++;
         });
+
+        console.log(`[Approve] Contacts count after: ${contacts.length}`);
 
         this._set(BS_STORAGE_KEYS.CONTACTS, contacts);
         this._set(BS_STORAGE_KEYS.PENDING_CONTACTS, remaining);

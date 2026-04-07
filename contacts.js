@@ -1751,8 +1751,10 @@ window.ContactsView = {
             targetGroupId = newId;
         }
 
-        window.BrandSyncAppInstance.confirmAction(`Approve ${ids.length} Identities?`, "These contacts will be finalized and added to your main global pool.", "#32d74b", async () => {
+        window.BrandSyncAppInstance.confirmAction(`Approve ${ids.length} Identities?`, `This will promote these ${ids.length} records to the main database and assign them to the selected group.`, "#32d74b", async () => {
+            console.log(`[UI] Approving ${ids.length} leads...`);
             const res = await window.BrandSyncAPI.approvePendingContacts(ids, targetGroupId);
+            console.log(`[UI] API response:`, res);
             if (res.success) {
                 window.showToast(`${ids.length} Identities approved!`, "success");
                 this.loadData();
