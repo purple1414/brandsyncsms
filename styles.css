@@ -520,6 +520,7 @@ input:focus + .toggle-slider {
     color: #fff;
     background: linear-gradient(135deg, #ffffff 0%, #a0ccff 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: logoPulse 2s ease-in-out infinite alternate;
     filter: drop-shadow(0 0 20px rgba(255,255,255,0.5));
@@ -563,6 +564,7 @@ input:focus + .toggle-slider {
     background: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0.3) 100%);
     background-size: 200% auto;
     -webkit-background-clip: text;
+    background-clip: text;
     animation: shineText 2s linear infinite;
     margin-top: 10px;
 }
