@@ -89,10 +89,15 @@ async function pullLeadsFromBrandSync(isBackground = false) {
     
     const statusEl = document.getElementById('sync-status');
     const btn = document.getElementById('pull-leads-btn');
+    const startTime = Date.now();
 
     if (!isBackground && statusEl) {
         statusEl.textContent = 'Checking server health...';
         statusEl.style.color = '#ff9f0a';
+    }
+
+    if (!isBackground && window.ContactsView && window.ContactsView.setPendingLoading) {
+        window.ContactsView.setPendingLoading(true, "Synchronizing Gateway Nodes...");
     }
     
     let originalHtml = '';
@@ -261,6 +266,22 @@ async function pullLeadsFromBrandSync(isBackground = false) {
         // Let's stick to user request: "shows how many is pending" - they'll see it on heartbeat.
         if (isBackground && newCount > 0 && window.showToast) {
             window.showToast(`Background Sync: ${newCount} new pending leads discovered.`, 'info');
+        }
+
+        // ARTIFICIAL RELAXATION: Ensure scan lasts 10-15 seconds for premium feel
+        if (!isBackground) {
+            const elapsed = Date.now() - startTime;
+            const minDuration = 10000 + (Math.random() * 5000); // 10-15s
+            if (elapsed < minDuration) {
+                if (window.ContactsView && window.ContactsView.setPendingLoading) {
+                    window.ContactsView.setPendingLoading(true, "Optimizing Neural Index...");
+                }
+                await new Promise(r => setTimeout(r, minDuration - elapsed));
+            }
+        }
+
+        if (!isBackground && window.ContactsView && window.ContactsView.setPendingLoading) {
+            window.ContactsView.setPendingLoading(false);
         }
 
         return leads;

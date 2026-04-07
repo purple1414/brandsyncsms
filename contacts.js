@@ -282,6 +282,17 @@ window.ContactsView = {
             <!-- Pending Approval Modal -->
             <div id="pendingModal" style="display:none; position:fixed; inset:0; z-index:30000; background:rgba(0,0,0,0.5); backdrop-filter:blur(50px) saturate(220%); align-items:center; justify-content:center; padding:20px;">
                 <div class="glass-panel" style="width:1100px; max-width: 95vw; max-height:90vh; overflow-y:auto; padding:32px; border-radius:40px; border:1px solid rgba(255,159,10,0.25); background:rgba(30,22,15,0.92); position: relative; animation: slideUp 0.5s cubic-bezier(0.1, 0.9, 0.25, 1); box-shadow: 0 50px 120px rgba(0,0,0,0.7); display:flex; flex-direction:column; gap:28px;">
+                    
+                    <!-- AI Scanner Overlay -->
+                    <div id="pendingLoadingOverlay" class="ai-scanner-overlay">
+                        <div class="scanner-aura"></div>
+                        <div class="scanner-beam"></div>
+                        <div class="scanner-content">
+                            <div class="scanner-logo"><i class="icon-lucide-scan-face"></i></div>
+                            <div class="scanner-text">Optimizing BrandSync Nodes...</div>
+                        </div>
+                    </div>
+
                     <button onclick="window.ContactsView.closePendingModal()" style="position: absolute; top: 24px; right: 24px; width:40px; height:40px; border-radius:50%; background:rgba(255,159,10,0.1); border:1px solid rgba(255,159,10,0.3); color:#ff9f0a; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10;" onmouseover="this.style.background='rgba(255,159,10,0.25)'; this.style.transform='rotate(90deg) scale(1.1)'" onmouseout="this.style.background='rgba(255,159,10,0.1)'; this.style.transform='rotate(0deg) scale(1)'">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
@@ -1852,6 +1863,21 @@ window.ContactsView = {
         if (badge) {
             badge.innerText = count;
             badge.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+        if (window.BrandSyncAppInstance) window.BrandSyncAppInstance.refreshGatewayStatus();
+    },
+
+    setPendingLoading(active, text = "Optimizing BrandSync Nodes...") {
+        const overlay = document.getElementById('pendingLoadingOverlay');
+        if (!overlay) return;
+        
+        const textEl = overlay.querySelector('.scanner-text');
+        if (textEl) textEl.innerText = text;
+
+        if (active) {
+            overlay.classList.add('active');
+        } else {
+            overlay.classList.remove('active');
         }
     },
 

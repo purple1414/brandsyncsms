@@ -683,3 +683,86 @@ input:focus + .toggle-slider {
     }
     .login-card-landscape h1 { font-size: 2.5rem !important; }
 }
+
+/* AI Scanner Overlay (Modular Component) */
+.ai-scanner-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1000;
+    background: #000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: inherit; /* Match parent glass panel */
+}
+
+.ai-scanner-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+
+.scanner-aura {
+    position: absolute;
+    inset: 0;
+    filter: blur(80px);
+    opacity: 0.5;
+    z-index: 1;
+    mix-blend-mode: screen;
+    animation: liquidMove 8s ease-in-out infinite alternate;
+    background: 
+        radial-gradient(circle at 20% 30%, #0a84ff 0%, transparent 40%),
+        radial-gradient(circle at 80% 20%, #bf5af2 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, #ff9f0a 0%, transparent 40%);
+}
+
+.scanner-beam {
+    position: absolute;
+    inset: -100% 0;
+    background: linear-gradient(180deg, 
+        transparent 0%, 
+        rgba(255, 159, 10, 0) 45%, 
+        rgba(255, 255, 255, 0.2) 50%, 
+        rgba(255, 159, 10, 0.4) 50.5%,
+        rgba(255, 159, 10, 0) 55%, 
+        transparent 100%
+    );
+    z-index: 2;
+    pointer-events: none;
+    animation: scanPulse 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    mix-blend-mode: overlay;
+    filter: blur(2px);
+}
+
+.scanner-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.scanner-logo {
+    font-size: 3rem;
+    background: linear-gradient(135deg, #fff, #ff9f0a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: logoEmerge 2s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 30px rgba(255, 159, 10, 0.4));
+}
+
+.scanner-text {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5em;
+    color: rgba(255, 159, 10, 0.8);
+    animation: textStream 2s ease-in-out infinite alternate;
+}
