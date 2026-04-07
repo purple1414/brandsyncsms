@@ -739,6 +739,8 @@ window.ContactsView = {
             interests: new Set()
         };
 
+        const corporateSuffixes = new Set(['inc', 'inc.', 'llc', 'llc.', 'corp', 'corp.', 'ltd', 'ltd.', 'co', 'co.', 'corporation', 'company', 'incorporated']);
+
         contacts.forEach(c => {
             if (c.company) uniqueData.companies.add(c.company.trim());
             if (c.event) uniqueData.events.add(c.event.trim());
@@ -749,7 +751,10 @@ window.ContactsView = {
             if (intStr) {
                 intStr.split(',').forEach(part => {
                     const p = part.trim();
-                    if (p && p !== 'N/A' && p !== 'Object Object') uniqueData.interests.add(p);
+                    const pLower = p.toLowerCase();
+                    if (p && p !== 'N/A' && p !== 'Object Object' && !corporateSuffixes.has(pLower)) {
+                        uniqueData.interests.add(p);
+                    }
                 });
             }
         });
