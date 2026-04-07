@@ -1740,7 +1740,7 @@ window.ContactsView = {
                     <input type="text" value="${p.event || ''}" placeholder="Event" title="${p.event || ''}" onchange="window.ContactsView.updatePendingField('${p.id}', 'event', this.value)" style="${inputStyle}" onfocus="this.style.background='rgba(10,132,255,0.1)'; this.style.borderColor='rgba(10,132,255,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
                 </td>
                 <td style="padding:16px 12px; vertical-align: middle; max-width:280px;">
-                    <input type="text" value="${formattedInterest}" placeholder="Interest" title="${formattedInterest}" onchange="window.ContactsView.updatePendingField('${p.id}', 'interest', this.value)" style="${inputStyle}" onfocus="this.style.background='rgba(255,159,10,0.15)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
+                    <textarea rows="2" placeholder="Interests..." onchange="window.ContactsView.updatePendingField('${p.id}', 'interest', this.value)" style="${inputStyle} resize:none; line-height:1.4; display:block; height:44px;" onfocus="this.style.background='rgba(255,159,10,0.15)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">${formattedInterest}</textarea>
                 </td>
                 <td style="padding:16px 20px; text-align:right;">
                     <div class="pending-actions" style="display:flex; justify-content:flex-end; gap:8px; opacity: 0; transition: opacity 0.2s ease;">
