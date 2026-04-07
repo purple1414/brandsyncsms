@@ -704,7 +704,7 @@ window.ContactsView = {
                     c.company,
                     c.position,
                     c.event,
-                    c.interest,
+                    Array.isArray(c.interest) ? c.interest.join(', ') : String(c.interest || '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', '),
                     c.awareness,
                     c.salesPerson,
                     (c.tags || []).join(' '),
@@ -735,8 +735,9 @@ window.ContactsView = {
             // Categorical Checks
             if (filterTag) {
                 const gNames = (c.groupIds || []).map(gid => grpMap[gid]?.name).join(' ').toLowerCase();
+                const intStr = Array.isArray(c.interest) ? c.interest.join(', ') : String(c.interest || '').replace(/[;\/\|]/g, ', ');
                 const passTag = (c.event || '').toLowerCase().includes(filterTag) || 
-                                (c.interest || '').toLowerCase().includes(filterTag) ||
+                                intStr.toLowerCase().includes(filterTag) ||
                                 (c.tags || []).join(' ').toLowerCase().includes(filterTag) || 
                                 gNames.includes(filterTag);
                 if (!passTag) return false;
@@ -822,7 +823,12 @@ window.ContactsView = {
                 const displayPhone = _highlight(`+${c.phone}`);
                 const displayCompany = c.company ? _highlight(_toTitleCase(c.company)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 const displayEvent = c.event ? _highlight(_toTitleCase(c.event)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
-                const displayInterest = c.interest ? _highlight(_toTitleCase(c.interest)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
+                
+                let rawInterest = c.interest || '';
+                if (Array.isArray(rawInterest)) rawInterest = rawInterest.join(', ');
+                let cleanInterest = String(rawInterest).replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim();
+                const displayInterest = cleanInterest ? _highlight(_toTitleCase(cleanInterest)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
+                
                 const displayPosition = c.position ? _highlight(_toTitleCase(c.position)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 
                 const cellStyle = "padding: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;";
