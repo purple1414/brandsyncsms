@@ -926,10 +926,17 @@ window.BrandSyncAPI = {
             contacts.unshift({
                 ...p,
                 id: newId,
+                company: p.company || p.organization || '',
+                position: p.position || p.role || '',
+                interest: p.interest || p.selected_topic || '',
                 salesPerson: p.salesPerson || p.salesperson || 'Unassigned', // Field parity bridge
                 added: timestamp, // Finalize approval timestamp
                 groupIds: grpIds
             });
+            // Clean up extraneous fields so they don't pollute the contact object
+            delete contacts[0].organization;
+            delete contacts[0].role;
+            delete contacts[0].selected_topic;
             approvedCount++;
         });
 
