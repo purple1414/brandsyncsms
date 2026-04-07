@@ -138,7 +138,7 @@ window.ContactsView = {
                                     <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 130px;">Phone</th>
                                     <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 120px;">Company</th>
                                     <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 110px;">Event</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 110px;">Interest</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 140px;">Interest</th>
                                     <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 100px;">Position</th>
                                     <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 120px;">Groups / Tags</th>
                                     <th style="padding: 14px 24px; text-align: right; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 100px;">Actions</th>
@@ -735,7 +735,10 @@ window.ContactsView = {
             // Categorical Checks
             if (filterTag) {
                 const gNames = (c.groupIds || []).map(gid => grpMap[gid]?.name).join(' ').toLowerCase();
-                const intStr = Array.isArray(c.interest) ? c.interest.join(', ') : String(c.interest || '').replace(/[;\/\|]/g, ', ');
+                // FIX: Check both interest and selected_topic for broader filtering compatibility
+                const rawInt = c.interest || c.selected_topic || '';
+                const intStr = Array.isArray(rawInt) ? rawInt.join(', ') : String(rawInt).replace(/[;\/\|]/g, ', ');
+                
                 const passTag = (c.event || '').toLowerCase().includes(filterTag) || 
                                 intStr.toLowerCase().includes(filterTag) ||
                                 (c.tags || []).join(' ').toLowerCase().includes(filterTag) || 
@@ -813,7 +816,10 @@ window.ContactsView = {
                 const grps = (c.groupIds || []).map(gid => grpMap[gid]).filter(Boolean);
                 const contactJson = JSON.stringify(c).replace(/"/g, '&quot;');
                 
-                const _toTitleCase = (str) => String(str || '').trim().toLowerCase().replace(/(^|[ \-\/])([a-z0-9])/g, m => m.toUpperCase());
+                const _toTitleCase = (str) => {
+                    if (!str) return '';
+                    return String(str).trim().toLowerCase().replace(/(^|[ \-\/,])([a-z0-9])/g, m => m.toUpperCase());
+                };
 
                 const rawDisplayName = window.ContactsView.parseName(c.name || 'Unknown').full;
                 const safeNameForDelete = rawDisplayName.replace(/'/g, "\\'");
@@ -872,7 +878,7 @@ window.ContactsView = {
                     <td style="${cellStyle} color: var(--success-color); font-weight: 800; font-family: monospace;">${displayPhone}</td>
                     <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.company || ''}">${displayCompany}</td>
                     <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.event || ''}">${displayEvent}</td>
-                    <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.interest || ''}">${displayInterest}</td>
+                    <td style="padding: 12px; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem; color: rgba(255,255,255,0.55);" title="${c.interest || c.selected_topic || ''}">${displayInterest}</td>
                     <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.position || ''}">${displayPosition}</td>
                     <td style="padding: 12px;"><div style="display:flex; gap: 4px; flex-wrap: nowrap; overflow: hidden;">${grps.length > 0 ? grps.map(g => `<span title="${g.name}" style="background:${(g.color || '#fff')+'1a'}; color: ${g.color || '#fff'}; border:1px solid ${(g.color || '#fff')+'33'}; padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px;">${_highlight(g.name)}</span>`).join('') : `<span style="color:rgba(255,255,255,0.1);">—</span>`}</div></td>
                     <td style="padding: 12px 24px; text-align: right;"><div style="display:flex; justify-content:flex-end; gap:6px;">
@@ -1660,7 +1666,10 @@ window.ContactsView = {
 
         empty.style.display = 'none';
 
-        const _toTitleCase = (str) => String(str || '').trim().toLowerCase().replace(/(^|[ \-\/])([a-z0-9])/g, m => m.toUpperCase());
+        const _toTitleCase = (str) => {
+            if (!str) return '';
+            return String(str).trim().toLowerCase().replace(/(^|[ \-\/,])([a-z0-9])/g, m => m.toUpperCase());
+        };
 
         tbody.innerHTML = pending.map(p => {
             // Auto Format Name
@@ -1709,7 +1718,7 @@ window.ContactsView = {
                 p.phone = formattedPhone;
             }
 
-            const inputStyle = "background:transparent; border:none; color:rgba(255,255,255,0.8); font-weight: 600; outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent; padding:4px; text-overflow:ellipsis; white-space:nowrap; overflow:hidden;";
+            const inputStyle = "background:transparent; border:none; color:rgba(255,255,255,0.8); font-weight: 600; outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent; padding:4px;";
 
             return `
             <tr style="border-bottom:1px solid rgba(255,255,255,0.04); transition:0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'; this.querySelector('.pending-actions').style.opacity='1'" onmouseout="this.style.background=''; this.querySelector('.pending-actions').style.opacity='0'">
@@ -1730,7 +1739,7 @@ window.ContactsView = {
                 <td style="padding:16px 12px; vertical-align: middle; max-width:150px;">
                     <input type="text" value="${p.event || ''}" placeholder="Event" title="${p.event || ''}" onchange="window.ContactsView.updatePendingField('${p.id}', 'event', this.value)" style="${inputStyle}" onfocus="this.style.background='rgba(10,132,255,0.1)'; this.style.borderColor='rgba(10,132,255,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
                 </td>
-                <td style="padding:16px 12px; vertical-align: middle; max-width:200px;">
+                <td style="padding:16px 12px; vertical-align: middle; max-width:280px;">
                     <input type="text" value="${formattedInterest}" placeholder="Interest" title="${formattedInterest}" onchange="window.ContactsView.updatePendingField('${p.id}', 'interest', this.value)" style="${inputStyle}" onfocus="this.style.background='rgba(255,159,10,0.15)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
                 </td>
                 <td style="padding:16px 20px; text-align:right;">
