@@ -683,6 +683,78 @@ input:focus + .toggle-slider {
     }
     .login-card-landscape h1 { font-size: 2.5rem !important; }
 }
+/* Apple Minimalist Design Utilities */
+.apple-heading {
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(to bottom, #fff, rgba(255,255,255,0.7));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+}
+
+.apple-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(40px) saturate(200%);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 28px;
+    padding: 24px;
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+}
+
+.apple-card:hover {
+    transform: translateY(-5px) scale(1.01);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+
+.glass-icon-wrapper {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-icon-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0.12;
+}
+
+.hover-drift {
+    animation: floatingDrift 6s ease-in-out infinite;
+}
+
+@keyframes floatingDrift {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+@keyframes cardEntrance {
+    from { opacity: 0; transform: translateY(20px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.stagger-entrance > * {
+    opacity: 0;
+    animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.stagger-entrance > *:nth-child(1) { animation-delay: 0.1s; }
+.stagger-entrance > *:nth-child(2) { animation-delay: 0.2s; }
+.stagger-entrance > *:nth-child(3) { animation-delay: 0.3s; }
+.stagger-entrance > *:nth-child(4) { animation-delay: 0.4s; }
 
 /* AI Scanner Overlay (Modular Component) */
 .ai-scanner-overlay {

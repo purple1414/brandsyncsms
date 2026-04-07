@@ -1,105 +1,121 @@
-// Dashboard View Component
+// Dashboard View Component — Minimalist Apple VisionOS Edition
 window.DashboardView = {
     async render(container) {
+        const now = new Date();
+        const hour = now.getHours();
+        let greeting = "Good Morning";
+        if (hour >= 12 && hour < 17) greeting = "Good Afternoon";
+        else if (hour >= 17) greeting = "Good Evening";
+
+        const dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
+        const dateStr = now.toLocaleDateString('en-US', dateOptions);
+
         container.innerHTML = `
-            <div class="view-container active fade-in">
-                <!-- Top Stats Grid -->
-                <div class="grid-4" id="dash-stats">
-                    <div class="card" style="align-items: center; justify-content: center; min-height: 120px;">
-                        <span style="color:var(--text-muted)">Loading stats...</span>
-                    </div>
+            <div class="view-container active fade-in" style="gap: 32px; padding: 40px;">
+                
+                <!-- Apple-Style Cinematic Header -->
+                <header class="dashboard-header" style="animation: fadeIn 1s ease-out;">
+                    <p style="font-size: 0.85rem; font-weight: 800; color: rgba(255,159,10,0.8); text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 8px;">Intelligence Overview</p>
+                    <h1 class="apple-heading">${greeting}, Admin</h1>
+                    <p style="font-size: 1rem; color: rgba(255,255,255,0.4); font-weight: 500;">${dateStr} <span style="margin: 0 10px; opacity: 0.3;">|</span> System Pulse: Optimal</p>
+                </header>
+
+                <!-- Key Metrics Grid -->
+                <div class="grid-4 stagger-entrance" id="dash-stats">
+                    <!-- Skeleton Cards during fetch handled by global loader -->
                 </div>
 
-                <!-- Main Grid -->
-                <div class="grid-2">
-                    <!-- Chart -->
-                    <div class="card" style="grid-column: span 1; display:flex; flex-direction:column; justify-content: space-between;">
+                <!-- Secondary Data Layer -->
+                <div class="grid-2 stagger-entrance" style="animation-delay: 0.4s;">
+                    
+                    <!-- Performance Analytics (VisionOS Style) -->
+                    <div class="apple-card" style="display:flex; flex-direction:column; gap: 24px; min-height: 420px;">
                         <div>
-                            <h3 style="font-size: 1rem; margin-bottom: 16px;">Delivery vs Failed Rate</h3>
-                            <div style="position: relative; height: 220px; width: 100%;">
+                            <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 4px;">Delivery Analytics</h3>
+                            <p style="font-size: 0.8rem; color: rgba(255,255,255,0.4);">Real-time transmission success metrics.</p>
+                        </div>
+                        
+                        <div style="flex: 1; position: relative; display: flex; align-items: center; justify-content: center;">
+                            <div style="position: relative; height: 260px; width: 100%;">
                                 <canvas id="deliveryChart"></canvas>
                             </div>
                         </div>
                         
-                        <!-- AI Insight Summary -->
-                        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05);">
-                            <div style="display:flex; align-items:center; gap: 8px; margin-bottom: 8px;">
-                                <i class="icon-lucide-sparkles" style="color: var(--accent-color); font-size: 0.9rem;"></i>
-                                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase;">Performance Summary</span>
+                        <!-- Intelligent Insight Card -->
+                        <div style="background: rgba(10, 132, 255, 0.08); border: 1px solid rgba(10, 132, 255, 0.15); border-radius: 20px; padding: 20px; display: flex; gap: 16px; align-items: flex-start;">
+                            <div class="glass-icon-wrapper" style="color: #0a84ff; flex-shrink: 0;">
+                                <i class="icon-lucide-sparkles"></i>
                             </div>
-                            <p id="ai-summary-text" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-                                Generating insights...
-                            </p>
+                            <div>
+                                <h4 style="font-size: 0.85rem; font-weight: 800; color: #fff; margin-bottom: 4px;">AI Insight</h4>
+                                <p id="ai-summary-text" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); line-height: 1.5;">Generating intelligence summary...</p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Recent Activity -->
-                    <div class="card" style="grid-column: span 1; overflow: hidden; display:flex; flex-direction:column;">
-                        <h3 style="font-size: 1rem; margin-bottom: 16px;">Recent Message Activity</h3>
-                        <div class="activity-timeline" id="recent-activity-container" style="display:flex; flex-direction: column; gap: 16px; flex: 1; overflow-y: auto;">
+                    <!-- Activity Stream -->
+                    <div class="apple-card" style="display:flex; flex-direction:column; gap: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 4px;">Transmission Stream</h3>
+                                <p style="font-size: 0.8rem; color: rgba(255,255,255,0.4);">Recent messaging node activity.</p>
+                            </div>
+                            <button onclick="window.location.hash='#inbox'" class="btn" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); font-size: 0.75rem; font-weight: 800; color: #fff; padding: 8px 14px; border-radius: 12px;">Live View</button>
+                        </div>
+                        
+                        <div class="activity-timeline" id="recent-activity-container" style="display:flex; flex-direction: column; gap: 4px; flex: 1; overflow-y: auto;">
                             <!-- Activity Items Injected Dynamically -->
-                            <div style="color: var(--text-muted); font-size: 0.85rem;">Loading recent history...</div>
                         </div>
                     </div>
                 </div>
             </div>
         `;
 
-        // Fetch Stats
-        const stats = await window.BrandSyncAPI.getDashboardStats();
-        
+        // Fetch Data
+        try {
+            const stats = await window.BrandSyncAPI.getDashboardStats();
+            this.renderStats(stats);
+            this.initActivityList(stats.recentActivity);
+            
+            const totalResolved = stats.delivered + stats.failed;
+            const deliveryRate = totalResolved > 0 ? ((stats.delivered / totalResolved) * 100).toFixed(1) : 0;
+            
+            this.initChart(stats, deliveryRate);
+            this.generateAISummary(stats, deliveryRate);
+        } catch (e) {
+            console.error("Dashboard Render Failed", e);
+        }
+    },
+
+    renderStats(stats) {
+        const statsContainer = document.getElementById('dash-stats');
+        if (!statsContainer) return;
+
         const totalResolved = stats.delivered + stats.failed;
         const deliveryRate = totalResolved > 0 ? ((stats.delivered / totalResolved) * 100).toFixed(1) : 0;
         const failRate = totalResolved > 0 ? ((stats.failed / totalResolved) * 100).toFixed(1) : 0;
 
-        const statsContainer = document.getElementById('dash-stats');
-        statsContainer.innerHTML = `
-            <div class="card" style="box-shadow: 0 4px 20px rgba(191, 90, 242, 0.15); border-color: rgba(191, 90, 242, 0.3);">
-                <div style="display:flex; justify-content: space-between; align-items: center;">
-                    <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Credits Remaining</span>
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(191, 90, 242, 0.1); display:flex; align-items:center; justify-content:center; color: var(--credit-color);">
-                        <i class="icon-lucide-coins"></i>
-                    </div>
-                </div>
-                <div style="font-size: 2rem; font-weight: 700; color: var(--credit-color);">${stats.credits.toLocaleString()}</div>
-            </div>
-            
-            <div class="card">
-                <div style="display:flex; justify-content: space-between; align-items: center;">
-                    <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Total Sent</span>
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(10, 132, 255, 0.1); display:flex; align-items:center; justify-content:center; color: var(--accent-color);">
-                        <i class="icon-lucide-send"></i>
-                    </div>
-                </div>
-                <div style="font-size: 2rem; font-weight: 700;">${stats.sent.toLocaleString()}</div>
-            </div>
+        const metrics = [
+            { label: 'Credits Status', value: stats.credits.toLocaleString(), color: 'var(--credit-color)', icon: 'icon-lucide-coins', sub: 'Available for dispatch' },
+            { label: 'Total Dispatched', value: stats.sent.toLocaleString(), color: 'var(--accent-color)', icon: 'icon-lucide-send', sub: 'Gross message volume' },
+            { label: 'Successful Delivery', value: stats.delivered.toLocaleString(), color: 'var(--success-color)', icon: 'icon-lucide-check-circle-2', sub: `${deliveryRate}% success rate` },
+            { label: 'Failed Transmission', value: stats.failed.toLocaleString(), color: 'var(--danger-color)', icon: 'icon-lucide-zap-off', sub: `${failRate}% failure rate` }
+        ];
 
-            <div class="card">
+        statsContainer.innerHTML = metrics.map(m => `
+            <div class="apple-card" style="display: flex; flex-direction: column; gap: 16px;">
                 <div style="display:flex; justify-content: space-between; align-items: center;">
-                    <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Delivered</span>
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(50, 215, 75, 0.1); display:flex; align-items:center; justify-content:center; color: var(--success-color);">
-                        <i class="icon-lucide-check-circle-2"></i>
+                    <div class="glass-icon-wrapper" style="color: ${m.color};">
+                        <i class="${m.icon}"></i>
                     </div>
+                    <span style="font-size: 0.65rem; color: rgba(255,255,255,0.3); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;">${m.label}</span>
                 </div>
-                <div style="font-size: 2rem; font-weight: 700;">${stats.delivered.toLocaleString()}</div>
-                <div style="font-size: 0.75rem; color: var(--success-color); margin-top: -8px;">${deliveryRate}% delivery rate</div>
-            </div>
-
-            <div class="card">
-                <div style="display:flex; justify-content: space-between; align-items: center;">
-                    <span style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Failed</span>
-                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255, 69, 58, 0.1); display:flex; align-items:center; justify-content:center; color: var(--danger-color);">
-                        <i class="icon-lucide-x-circle"></i>
-                    </div>
+                <div style="margin-top: 8px;">
+                    <div style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; color: #fff;">${m.value}</div>
+                    <div style="font-size: 0.75rem; font-weight: 600; color: ${m.color}; margin-top: 4px; opacity: 0.8;">${m.sub}</div>
                 </div>
-                <div style="font-size: 2rem; font-weight: 700;">${stats.failed.toLocaleString()}</div>
-                <div style="font-size: 0.75rem; color: var(--danger-color); margin-top: -8px;">${failRate}% failure rate</div>
             </div>
-        `;
-
-        this.initActivityList(stats.recentActivity);
-        this.initChart(stats, deliveryRate);
-        this.generateAISummary(stats, deliveryRate);
+        `).join('');
     },
 
     initActivityList(activities) {
@@ -107,31 +123,32 @@ window.DashboardView = {
         if(!container) return;
         
         if(!activities || activities.length === 0) {
-            container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">No recent messages found.</div>';
+            container.innerHTML = '<div style="padding: 40px; text-align:center; color: rgba(255,255,255,0.2); font-size: 0.85rem;">No recent transmission logs.</div>';
             return;
         }
 
         container.innerHTML = activities.map(act => {
             const st = String(act.status).toLowerCase();
-            let color = 'var(--text-muted)';
+            let color = 'rgba(255,255,255,0.2)';
             if(st.includes('deliver')) color = 'var(--success-color)';
-            else if(st.includes('fail') || st.includes('reject')) color = 'var(--danger-color)';
-            else color = 'var(--warning-color)';
+            else if(st.includes('fail')) color = 'var(--danger-color)';
+            else if(st.includes('pend')) color = 'var(--warning-color)';
 
-            const dateStr = act.date ? new Date(act.date).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : 'Just now';
-            const snippet = act.message.length > 40 ? act.message.substring(0, 40) + '...' : act.message;
+            const dateStr = act.date ? new Date(act.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Just now';
+            const snippet = act.message.length > 50 ? act.message.substring(0, 50) + '...' : act.message;
 
             return `
-                <div style="display:flex; gap: 12px; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div style="width: 8px; height: 8px; border-radius: 50%; background: ${color}; margin-top: 6px; flex-shrink: 0;"></div>
+                <div style="display:flex; gap: 16px; align-items: center; padding: 14px 16px; border-radius: 16px; transition: 0.2s; cursor: pointer;" 
+                     onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='transparent'">
+                    <div style="width: 8px; height: 8px; border-radius: 50%; background: ${color}; box-shadow: 0 0 10px ${color}66;"></div>
                     <div style="flex: 1; overflow: hidden;">
-                        <div style="display:flex; justify-content: space-between; gap: 8px;">
-                            <p style="font-size: 0.9rem; font-weight: 500; font-family: monospace;">To: ${act.to}</p>
-                            <span style="font-size: 0.75rem; color: ${color}; font-weight: 600;">${act.status}</span>
+                        <div style="display:flex; justify-content: space-between; gap: 12px; align-items: baseline;">
+                            <span style="font-size: 0.85rem; font-weight: 700; color: #fff; font-family: monospace;">+${act.to}</span>
+                            <span style="font-size: 0.65rem; color: rgba(255,255,255,0.3); font-weight: 700;">${dateStr}</span>
                         </div>
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">"${snippet}"</p>
-                        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">${dateStr}</p>
+                        <p style="font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${act.message}</p>
                     </div>
+                    <div style="font-size: 0.65rem; font-weight: 900; text-transform: uppercase; color: ${color}; letter-spacing: 0.05em; min-width: 65px; text-align: right;">${act.status}</div>
                 </div>
             `;
         }).join('');
@@ -142,20 +159,19 @@ window.DashboardView = {
         if(!p) return;
 
         if (stats.sent === 0) {
-            p.innerHTML = "You haven't sent any campaigns yet. Start scheduling messages to see your performance breakdown here.";
+            p.innerHTML = "Secure link established. No message cycles detected in the current epoch. Awaiting transmission commands.";
             return;
         }
 
-        let insight = `You have dispatched a total of <strong>${stats.sent.toLocaleString()}</strong> messages. `;
-        insight += `Currently, <strong>${stats.delivered.toLocaleString()}</strong> (<span style="color:var(--success-color)">${deliveryRate}%</span>) successfully reached your recipients, `;
-        insight += `while <strong>${stats.failed.toLocaleString()}</strong> failed to deliver. `;
+        let insight = `Node performance is peaking with a <strong>${deliveryRate}%</strong> transmission integrity. `;
+        insight += `Successfully routed ${stats.delivered.toLocaleString()} packages through secure gateway. `;
 
         if (deliveryRate >= 95) {
-            insight += "Your delivery health is excellent!";
+            insight += "System health is optimized. No intervention required.";
         } else if (deliveryRate >= 85) {
-            insight += "Delivery rate is stable, but consider cleaning your contact lists of inactive numbers.";
+            insight += "Slight packet loss detected. Monitor destination list hygiene.";
         } else {
-            insight += "High failure rate detected. It is highly recommended to purge blocked or invalid numbers from your audience.";
+            insight += "Critical failure rate. Recommend immediate audience sanitization.";
         }
 
         p.innerHTML = insight;
@@ -165,41 +181,8 @@ window.DashboardView = {
         const ctx = document.getElementById('deliveryChart');
         if(!ctx) return;
         
-        Chart.defaults.color = '#a1a1aa';
+        Chart.defaults.color = 'rgba(255,255,255,0.3)';
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Inter", sans-serif';
-
-        // Apple Fitness Style Centre Plugin
-        const centerTextPlugin = {
-            id: 'centerText',
-            beforeDraw: function(chart) {
-                if (chart.config.type !== 'doughnut') return;
-                var width = chart.width,
-                    height = chart.height,
-                    ctx = chart.ctx;
-
-                ctx.restore();
-                
-                // Main Percentage
-                var fontSize = (height / 120).toFixed(2);
-                ctx.font = 'bold ' + fontSize + 'em -apple-system, sans-serif';
-                ctx.textBaseline = "middle";
-                ctx.fillStyle = "#ffffff";
-                var text = deliveryRate + "%",
-                    textX = Math.round((width - ctx.measureText(text).width) / 2),
-                    textY = height / 2 - 10;
-                ctx.fillText(text, textX, textY);
-
-                // Subtitle
-                var subFontSize = (height / 280).toFixed(2);
-                ctx.font = '600 ' + subFontSize + 'em -apple-system, sans-serif';
-                ctx.fillStyle = "#a1a1aa";
-                var subText = "Delivered";
-                var subX = Math.round((width - ctx.measureText(subText).width) / 2);
-                ctx.fillText(subText, subX, textY + 28);
-                
-                ctx.save();
-            }
-        };
 
         new Chart(ctx, {
             type: 'doughnut',
@@ -208,59 +191,61 @@ window.DashboardView = {
                 datasets: [{
                     data: [stats.delivered, stats.failed],
                     backgroundColor: [
-                        'rgba(50, 215, 75, 1)',   // Apple Green Solid
-                        'rgba(255, 69, 58, 0.4)'  // Apple Red Softened
+                        '#32d74b',   // Apple Green
+                        'rgba(255, 69, 58, 0.2)'  // Apple Red Soft
+                    ],
+                    hoverBackgroundColor: [
+                        '#32d74b',
+                        '#ff453a'
                     ],
                     borderWidth: 0,
-                    borderRadius: 20, // Pill shaped overlap ends
-                    spacing: 4,       // Gap between segments
-                    hoverOffset: 8
+                    borderRadius: 30, // Extremely rounded edges
+                    spacing: 12,      // Wide gap for minimalist feel
+                    hoverOffset: 12
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '84%',        // Extremely sleek thin ring
+                cutout: '88%',        // Ultra-thin VisionOS ring
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { 
-                            padding: 24, 
-                            usePointStyle: true, 
-                            pointStyle: 'circle',
-                            font: { size: 12, weight: '600' }
-                        }
-                    },
+                    legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(28, 28, 30, 0.85)', // Glass tooltips
+                        backgroundColor: 'rgba(30, 30, 35, 0.95)',
+                        backdropFilter: 'blur(20px)',
                         titleColor: '#fff',
-                        bodyColor: '#e0e0e0',
-                        borderColor: 'rgba(255,255,255,0.1)',
+                        titleFont: { size: 14, weight: '800' },
+                        bodyColor: 'rgba(255,255,255,0.6)',
+                        padding: 16,
+                        cornerRadius: 20,
                         borderWidth: 1,
-                        padding: 14,
-                        cornerRadius: 16,
-                        displayColors: true,
-                        boxPadding: 8,
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) label += ': ';
-                                if (context.parsed !== null) label += context.parsed + ' msgs';
-                                return label;
-                            }
-                        }
+                        borderColor: 'rgba(255,255,255,0.1)'
                     }
                 }
             },
-            plugins: [centerTextPlugin] // Inject text plugin
+            plugins: [{
+                id: 'centerText',
+                beforeDraw: (chart) => {
+                    const { width, height, ctx } = chart;
+                    ctx.restore();
+                    
+                    ctx.font = 'bold 2.5rem -apple-system, sans-serif';
+                    ctx.textBaseline = "middle";
+                    ctx.fillStyle = "#ffffff";
+                    const text = deliveryRate + "%";
+                    const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                    const textY = height / 2 - 5;
+                    ctx.fillText(text, textX, textY);
+
+                    ctx.font = '700 0.75rem -apple-system, sans-serif';
+                    ctx.fillStyle = "rgba(255,255,255,0.3)";
+                    const subText = "INTEGRITY";
+                    const subX = Math.round((width - ctx.measureText(subText).width) / 2);
+                    ctx.fillText(subText, subX, textY + 35);
+                    
+                    ctx.save();
+                }
+            }]
         });
     }
 };
-
-// Hook into app
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for app to be ready
-    setTimeout(() => {
-        if(window.app) window.app.views['dashboard'] = () => window.DashboardView.render(window.app.contentArea);
-    }, 100);
-});

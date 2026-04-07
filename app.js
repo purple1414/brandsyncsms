@@ -398,14 +398,38 @@ class BrandSyncApp {
 
         const inst = viewMap[hash];
         if (inst && inst.render) {
+            // SHOW SCANNER
+            this.showLoading("Neural Processing: " + (titleMap[hash] || "BrandSync"));
+            
+            // ARTIFICIAL RELAXATION: Minimum 1000ms scan for premium feel
+            const startRouteAt = Date.now();
+            
             await inst.render(this.contentArea);
             if (hash === 'inbox') this.markInboxAsRead();
+            
+            const elapsed = Date.now() - startRouteAt;
+            if (elapsed < 1000) await new Promise(r => setTimeout(r, 1000 - elapsed));
+            
+            this.hideLoading();
         } else {
             this.contentArea.innerHTML = `<div class="card" style="padding:40px; text-align:center;"><p style="color:var(--text-muted);">View component not initialized for: <b>${hash}</b></p></div>`;
         }
 
         this.refreshBalance();
         if (window.RBAC) window.RBAC.applyNavVisibility();
+    }
+
+    showLoading(text = "Optimizing Neural Index...") {
+        const overlay = document.getElementById('globalLoadingOverlay');
+        if (!overlay) return;
+        const textEl = overlay.querySelector('.scanner-text');
+        if (textEl) textEl.innerText = text;
+        overlay.classList.add('active');
+    }
+
+    hideLoading() {
+        const overlay = document.getElementById('globalLoadingOverlay');
+        if (overlay) overlay.classList.remove('active');
     }
 
     renderStatic(title, desc) {
