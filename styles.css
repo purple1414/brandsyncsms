@@ -355,6 +355,11 @@ body {
     animation: fadeIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
 }
 
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* Base View Layouts */
 .view-container {
     display: none;
