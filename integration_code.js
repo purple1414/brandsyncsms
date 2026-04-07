@@ -165,7 +165,7 @@ async function pullLeadsFromBrandSync() {
         // Look into BOTH pending and main contacts to hot-patch broken historic imports
         const mainKey = 'brandsync_contacts';
         const existingMain = JSON.parse(localStorage.getItem(mainKey) || '[]');
-        
+        let newCount = 0;
         let updatedCount = 0;
         let mainUpdatedCount = 0;
 
