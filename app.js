@@ -505,10 +505,10 @@ class BrandSyncApp {
 
     updateHeartbeatUI(health) {
         const formatLatency = (ms) => {
-            if (ms < 0) return { text: 'OFFLINE', color: '#ff453a' }; // Red
-            if (ms < 200) return { text: `${ms}ms`, color: '#32d74b' }; // Green
-            if (ms < 800) return { text: `${ms}ms`, color: '#ffd60a' }; // Yellow
-            return { text: `${ms}ms`, color: '#ff453a' }; // Red
+            if (ms < 0) return { text: 'OFFLINE', color: '#ff453a', priority: 3 }; // Red
+            if (ms < 200) return { text: `${ms}ms`, color: '#32d74b', priority: 1 }; // Green
+            if (ms < 800) return { text: `${ms}ms`, color: '#ffd60a', priority: 2 }; // Yellow
+            return { text: `${ms}ms`, color: '#ff453a', priority: 3 }; // Red
         };
 
         const net = formatLatency(health.internet ? health.latencyNet : -1);
@@ -533,6 +533,34 @@ class BrandSyncApp {
             elSms.innerText = sms.text;
             elSms.style.color = sms.color;
             elSms.style.textShadow = `0 0 12px ${sms.color}`;
+        }
+
+        // Determine overall worst status for the heartbeat button glow
+        const worstPriority = Math.max(net.priority, gh.priority, sms.priority);
+        let overallColor = '#32d74b'; // Green default
+        if (worstPriority === 2) overallColor = '#ffd60a'; // Yellow
+        if (worstPriority === 3) overallColor = '#ff453a'; // Red
+
+        // Update the main heartbeat button
+        const btn = document.getElementById('gatewayHeartbeatBtn');
+        const icon = document.getElementById('gatewayHeartbeatIcon');
+        const pulseNode = document.getElementById('heart-pulse-node');
+
+        if (btn) {
+            btn.style.background = overallColor.replace('#32d74b', 'rgba(50,215,75,0.1)')
+                .replace('#ffd60a', 'rgba(255,214,10,0.12)')
+                .replace('#ff453a', 'rgba(255,69,58,0.12)');
+            btn.style.borderColor = overallColor.replace('#32d74b', 'rgba(50,215,75,0.3)')
+                .replace('#ffd60a', 'rgba(255,214,10,0.4)')
+                .replace('#ff453a', 'rgba(255,69,58,0.4)');
+            btn.style.boxShadow = `0 0 18px ${overallColor}44`;
+        }
+        if (icon) {
+            icon.style.color = overallColor;
+        }
+        if (pulseNode) {
+            pulseNode.style.background = overallColor;
+            pulseNode.style.boxShadow = `0 0 12px ${overallColor}`;
         }
     }
 }
