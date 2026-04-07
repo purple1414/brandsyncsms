@@ -283,6 +283,7 @@ window.ContactsView = {
                             <p style="font-size:0.8rem; color:rgba(255,159,10,0.5);">Review and approve contacts from Brand-Sync Lead Syndication.</p>
                         </div>
                         <div style="display:flex; gap:16px; align-items:center;">
+                            <input type="text" id="pendingFilter" placeholder="Filter company, position..." oninput="window.ContactsView.loadPendingData()" class="glass-input" style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; padding:8px 12px; font-size:0.8rem; outline:none; max-width:180px;">
                             <span id="sync-status" style="font-size:0.75rem; color:rgba(255,159,10,0.6); font-weight:700;">Ready to sync</span>
                             <button id="pull-leads-btn" class="btn" style="background:linear-gradient(135deg, rgba(255,159,10,0.2), rgba(255,159,10,0.05)); border:1px solid rgba(255,159,10,0.4); color:#ff9f0a; padding:10px 20px; border-radius:14px; font-weight:800; font-size: 0.85rem; display:flex; align-items:center; gap:8px; box-shadow: 0 4px 15px rgba(255,159,10,0.15); transition: 0.3s; cursor: pointer;" onmouseover="this.style.background='rgba(255,159,10,0.25)'" onmouseout="this.style.background='linear-gradient(135deg, rgba(255,159,10,0.2), rgba(255,159,10,0.05))'">
                                 <i class="icon-lucide-download-cloud" style="font-size:1.1rem;"></i> Get Data From BrandSync Leads Collection
@@ -293,6 +294,16 @@ window.ContactsView = {
 
                     <div id="pendingBulkActions" style="display:none; padding:12px 20px; background:rgba(255,159,10,0.1); border:1px solid rgba(255,159,10,0.2); border-radius:18px; align-items:center; gap:16px;">
                         <span style="font-size:0.85rem; color:#fff; font-weight:700;"><span id="pendingSelectCount">0</span> selected for action</span>
+                        
+                        <div style="display:flex; align-items:center; gap:8px; margin-left:16px;">
+                            <span style="font-size:0.75rem; color:rgba(255,255,255,0.6); font-weight:700;">Assign to:</span>
+                            <select id="pendingBulkGroupSelect" onchange="if(this.value==='new') { document.getElementById('pendingBulkNewGroup').style.display='block'; } else { document.getElementById('pendingBulkNewGroup').style.display='none'; }" style="background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); border-radius:12px; color:#fff; padding:6px 10px; font-size:0.75rem; outline:none; max-width: 140px; cursor:pointer;">
+                                <option value="">None</option>
+                                <option value="new">Create New Group...</option>
+                            </select>
+                            <input type="text" id="pendingBulkNewGroup" placeholder="New Group Name" style="display:none; background:rgba(0,0,0,0.5); border:1px solid rgba(255,159,10,0.5); border-radius:12px; color:#fff; padding:6px 12px; font-size:0.75rem; outline:none; max-width: 140px;">
+                        </div>
+
                         <div style="flex:1;"></div>
                         <button onclick="window.ContactsView.bulkDeletePending()" class="btn" style="background:rgba(255,69,58,0.15); border:1px solid rgba(255,69,58,0.3); color:#ff453a; padding:8px 16px; border-radius:12px; font-weight:700; font-size:0.8rem;">Delete Selected</button>
                         <button onclick="window.ContactsView.bulkApprovePending()" class="btn" style="background:rgba(50,215,75,0.15); border:1px solid rgba(50,215,75,0.3); color:#32d74b; padding:8px 20px; border-radius:12px; font-weight:800; font-size:0.85rem;">Approve Selected</button>
@@ -1581,8 +1592,31 @@ window.ContactsView = {
         const empty = document.getElementById('pendingEmptyState');
         if (!tbody) return;
 
-        const pending = window.BrandSyncAPI.getPendingContacts();
-        this.updatePendingCounter(pending.length);
+        let pendingRaw = window.BrandSyncAPI.getPendingContacts();
+        this.updatePendingCounter(pendingRaw.length);
+
+        let pending = pendingRaw;
+        const filterEl = document.getElementById('pendingFilter');
+        if (filterEl && filterEl.value) {
+            const f = filterEl.value.toLowerCase();
+            pending = pending.filter(p => 
+                (p.company || '').toLowerCase().includes(f) ||
+                (p.position || '').toLowerCase().includes(f) ||
+                (p.name || '').toLowerCase().includes(f) ||
+                (p.salesperson || '').toLowerCase().includes(f) ||
+                (p.interest || '').toLowerCase().includes(f)
+            );
+        }
+
+        // Populate the `<select id="pendingBulkGroupSelect">` on load
+        const sel = document.getElementById('pendingBulkGroupSelect');
+        if (sel) {
+            const groups = window.BrandSyncAPI._get(window.BS_STORAGE_KEYS ? window.BS_STORAGE_KEYS.GROUPS : 'brandsync_groups');
+            const existVal = sel.value;
+            sel.innerHTML = `<option value="">None</option><option value="new">Create New Group...</option>` + groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+            if (sel.querySelector(`option[value="${existVal}"]`)) sel.value = existVal;
+            else sel.value = "";
+        }
 
         if (pending.length === 0) {
             tbody.innerHTML = '';
@@ -1688,11 +1722,13 @@ window.ContactsView = {
     },
 
     async approvePending(id) {
-        const res = await window.BrandSyncAPI.approvePendingContacts([id]);
+        let targetGrpId = null;
+        const res = await window.BrandSyncAPI.approvePendingContacts([id], targetGrpId);
         if (res.success) {
             window.showToast("Identity Approved!", "success");
+            this.loadData();
+            this.loadGroups();
             this.loadPendingData();
-            this.updatePendingCounter();
         }
     },
 
@@ -1700,12 +1736,28 @@ window.ContactsView = {
         const ids = Array.from(document.querySelectorAll('.pending-checkbox:checked')).map(cb => cb.value);
         if (ids.length === 0) return;
 
+        const sel = document.getElementById('pendingBulkGroupSelect');
+        const newGrpInput = document.getElementById('pendingBulkNewGroup');
+        let targetGroupId = sel ? sel.value : null;
+
+        if (targetGroupId === 'new') {
+            const grpName = newGrpInput.value.trim();
+            if (!grpName) return window.showToast('Please provide a name for the new group.', 'error');
+            const newId = Date.now() + Math.random();
+            const groupsKey = window.BS_STORAGE_KEYS ? window.BS_STORAGE_KEYS.GROUPS : 'brandsync_groups';
+            const groups = window.BrandSyncAPI._get(groupsKey);
+            groups.push({ id: newId, name: grpName, color: '#ff9f0a', icon: 'Star' });
+            window.BrandSyncAPI._set(groupsKey, groups);
+            targetGroupId = newId;
+        }
+
         window.BrandSyncAppInstance.confirmAction(`Approve ${ids.length} Identities?`, "These contacts will be finalized and added to your main global pool.", "#32d74b", async () => {
-            const res = await window.BrandSyncAPI.approvePendingContacts(ids);
+            const res = await window.BrandSyncAPI.approvePendingContacts(ids, targetGroupId);
             if (res.success) {
                 window.showToast(`${ids.length} Identities approved!`, "success");
+                this.loadData();
+                this.loadGroups();
                 this.loadPendingData();
-                this.updatePendingCounter();
                 if (document.getElementById('selectAllPending')) document.getElementById('selectAllPending').checked = false;
             }
         });
@@ -1714,8 +1766,8 @@ window.ContactsView = {
     async deletePending(id) {
         await window.BrandSyncAPI.deletePendingContacts([id]);
         window.showToast("Pending record discarded.", "info");
+        this.loadData();
         this.loadPendingData();
-        this.updatePendingCounter();
     },
 
     async bulkDeletePending() {
@@ -1725,8 +1777,8 @@ window.ContactsView = {
         window.BrandSyncAppInstance.confirmAction(`Discard ${ids.length} Records?`, "This will remove them from the review queue PERMANENTLY.", "#ff453a", async () => {
             await window.BrandSyncAPI.deletePendingContacts(ids);
             window.showToast(`${ids.length} Records discarded.`, "success");
+            this.loadData();
             this.loadPendingData();
-            this.updatePendingCounter();
             if (document.getElementById('selectAllPending')) document.getElementById('selectAllPending').checked = false;
         });
     }

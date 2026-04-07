@@ -871,7 +871,7 @@ window.BrandSyncAPI = {
         return this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
     },
 
-    async approvePendingContacts(ids) {
+    async approvePendingContacts(ids, targetGroupId = null) {
         let pending = this._get(BS_STORAGE_KEYS.PENDING_CONTACTS);
         let contacts = this._get(BS_STORAGE_KEYS.CONTACTS);
         let approvedCount = 0;
@@ -881,10 +881,13 @@ window.BrandSyncAPI = {
 
         toApprove.forEach(p => {
             const newId = Date.now() + Math.random();
+            const grpIds = [];
+            if (targetGroupId) grpIds.push(targetGroupId);
+
             contacts.unshift({
                 ...p,
                 id: newId,
-                groupIds: []
+                groupIds: grpIds
             });
             approvedCount++;
         });
