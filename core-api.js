@@ -865,9 +865,12 @@ window.BrandSyncAPI = {
                         phone: phone,
                         email: lead.email || 'N/A',
                         company: lead.company || 'Brand-Sync Origin',
-                        position: lead.approval_status || 'Lead',
-                        event: lead.event || 'N/A',
-                        interest: '',
+                        position: lead.position || lead.approval_status || 'Lead',
+                        event: lead.event || lead.event_name || 'N/A',
+                        interest: lead.interest || lead.brand_interested || 'N/A',
+                        salesperson: lead.salesperson || lead.sales_person || 'Unassigned',
+                        tags: Array.isArray(lead.tags) ? lead.tags : typeof lead.tags === 'string' ? lead.tags.split(',').map(s=>s.trim()).filter(x=>x) : [],
+                        brand_awareness: lead.brand_awareness || 'N/A',
                         added: new Date().toISOString().substring(0, 10),
                         source: 'Brand-Sync'
                     });
