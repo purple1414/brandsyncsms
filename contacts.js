@@ -389,7 +389,7 @@ window.ContactsView = {
     async loadGroups() {
         const slider = document.getElementById('groupsList'); if (!slider) return;
         const groups = await window.BrandSyncAPI.getGroups(); this.cachedGroups = groups;
-        const contacts = await window.BrandSyncAPI.getContacts(); const counts = groups.reduce((acc, g) => { acc[g.id] = contacts.filter(c => (c.groupIds || []).includes(g.id)).length; return acc; }, {});
+        const contacts = await window.BrandSyncAPI.getContacts(); const counts = groups.reduce((acc, g) => { acc[g.id] = contacts.filter(c => (c.groupIds || []).some(gid => String(gid) === String(g.id))).length; return acc; }, {});
         const gc = document.getElementById('groupCheckboxes'); if(gc) gc.innerHTML = groups.map(g => `<label style="display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,0.03); cursor:pointer;"><input type="checkbox" class="group-select-check" value="${g.id}" style="width:16px; height:16px; accent-color:${g.color};"><span style="color:#fff; font-size:0.85rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${g.name}</span></label>`).join('');
 
         let html = `<div onclick="window.ContactsView.setGroup(null)" class="glass-card pool-card ${this.activeGroupId === null ? 'active' : ''}" style="flex: 0 0 150px; height: 110px; padding: 18px; border-radius: 24px; background: ${this.activeGroupId === null ? 'rgba(10,132,255,0.18)' : 'rgba(255,255,255,0.04)'}; border: 1px solid ${this.activeGroupId === null ? 'rgba(10,132,255,0.35)' : 'rgba(255,255,255,0.1)'}; backdrop-filter: blur(25px); cursor: pointer; transition: transform 0.3s, background 0.3s; position: relative; display:flex; flex-direction:column; justify-content: space-between; scroll-snap-align: center; transform-origin: center;">
@@ -772,7 +772,7 @@ window.ContactsView = {
         }
 
         this.updatePendingCounter();
-        if (this.activeGroupId !== null) contacts = contacts.filter(c => c.groupIds && c.groupIds.includes(this.activeGroupId));
+        if (this.activeGroupId !== null) contacts = contacts.filter(c => c.groupIds && c.groupIds.some(gid => String(gid) === String(this.activeGroupId)));
         // Reorder results slightly: Exact match on name goes to the absolute top
         if (keywords.length > 0) {
             const rawSearch = keywords.join(' ');
@@ -1603,7 +1603,7 @@ window.ContactsView = {
                 (p.company || '').toLowerCase().includes(f) ||
                 (p.position || '').toLowerCase().includes(f) ||
                 (p.name || '').toLowerCase().includes(f) ||
-                (p.salesperson || '').toLowerCase().includes(f) ||
+                (p.salesPerson || '').toLowerCase().includes(f) ||
                 (p.interest || '').toLowerCase().includes(f)
             );
         }
@@ -1663,9 +1663,9 @@ window.ContactsView = {
                     <input type="text" value="${p.company || ''}" placeholder="Company" title="Edit Company Inline" onchange="window.ContactsView.updatePendingField('${p.id}', 'company', this.value)" style="background:transparent; border:none; color:rgba(255,255,255,0.8); font-weight: 600; outline:none; font-size:0.85rem; width:100%; border-radius:4px; border:1px solid transparent;" onfocus="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,159,10,0.5)'" onblur="this.style.background='transparent'; this.style.borderColor='transparent'">
                     <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; opacity: 0.8;">
                         ${p.position && p.position !== 'Lead' ? `<span style="font-size:0.6rem; background:rgba(255,255,255,0.08); padding:3px 6px; border-radius:4px; color:rgba(255,255,255,0.7);" title="Position"><i class="icon-lucide-briefcase" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> ${p.position}</span>` : ''}
-                        ${p.salesperson && p.salesperson !== 'Unassigned' ? `<span style="font-size:0.6rem; background:rgba(255,255,255,0.08); padding:3px 6px; border-radius:4px; color:rgba(255,255,255,0.7);" title="Salesperson"><i class="icon-lucide-user" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> ${p.salesperson}</span>` : ''}
+                        ${p.salesPerson && p.salesPerson !== 'Unassigned' ? `<span style="font-size:0.6rem; background:rgba(255,255,255,0.08); padding:3px 6px; border-radius:4px; color:rgba(255,255,255,0.7);" title="Salesperson"><i class="icon-lucide-user" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> ${p.salesPerson}</span>` : ''}
                         ${p.interest && p.interest !== 'N/A' && p.interest !== '' ? `<span style="font-size:0.6rem; background:rgba(255,159,10,0.15); padding:3px 6px; border-radius:4px; color:#ff9f0a; font-weight:600;" title="Brand Interest"><i class="icon-lucide-star" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> ${p.interest}</span>` : ''}
-                        ${p.brand_awareness && p.brand_awareness !== 'N/A' ? `<span style="font-size:0.6rem; background:rgba(50,215,75,0.15); padding:3px 6px; border-radius:4px; color:#32d74b; font-weight:600;" title="Brand Awareness"><i class="icon-lucide-radio" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> Aware: ${p.brand_awareness}</span>` : ''}
+                        ${p.awareness && p.awareness !== 'N/A' ? `<span style="font-size:0.6rem; background:rgba(50,215,75,0.15); padding:3px 6px; border-radius:4px; color:#32d74b; font-weight:600;" title="Brand Awareness"><i class="icon-lucide-radio" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> Aware: ${p.awareness}</span>` : ''}
                         ${p.event && p.event !== 'N/A' ? `<span style="font-size:0.6rem; background:rgba(10,132,255,0.15); padding:3px 6px; border-radius:4px; color:#0a84ff; font-weight:600;" title="Event"><i class="icon-lucide-calendar" style="font-size:0.65rem; margin-right:2px; vertical-align:-1px;"></i> ${p.event}</span>` : ''}
                     </div>
                 </td>

@@ -847,10 +847,10 @@ window.BrandSyncAPI = {
                         position: lead.position || lead.approval_status || 'Lead',
                         event: lead.event || lead.event_name || 'N/A',
                         interest: lead.interest || lead.brand_interested || 'N/A',
-                        salesperson: lead.salesperson || lead.sales_person || 'Unassigned',
+                        salesPerson: lead.salesperson || lead.sales_person || 'Unassigned',
                         tags: Array.isArray(lead.tags) ? lead.tags : typeof lead.tags === 'string' ? lead.tags.split(',').map(s=>s.trim()).filter(x=>x) : [],
-                        brand_awareness: lead.brand_awareness || 'N/A',
-                        added: new Date().toISOString().substring(0, 10),
+                        awareness: lead.brand_awareness || 'N/A',
+                        added: new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0') + '-' + String(new Date().getDate()).padStart(2,'0') + ' ' + String(new Date().getHours()).padStart(2,'0') + ':' + String(new Date().getMinutes()).padStart(2,'0'),
                         source: 'Brand-Sync'
                     });
                     importedCount++;
@@ -879,14 +879,20 @@ window.BrandSyncAPI = {
         const toApprove = pending.filter(p => ids.includes(p.id));
         const remaining = pending.filter(p => !ids.includes(p.id));
 
+        const d = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const timestamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
         toApprove.forEach(p => {
-            const newId = Date.now() + Math.random();
+            const newId = Date.now().toString() + "_" + Math.random().toString(36).slice(2, 11);
             const grpIds = [];
-            if (targetGroupId) grpIds.push(targetGroupId);
+            // ENSURE CONSISTENT STRING TYPING FOR GROUP IDs TO MATCH Standard .includes() checks
+            if (targetGroupId) grpIds.push(String(targetGroupId));
 
             contacts.unshift({
                 ...p,
                 id: newId,
+                added: timestamp, // Finalize approval timestamp
                 groupIds: grpIds
             });
             approvedCount++;
