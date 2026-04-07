@@ -129,19 +129,19 @@ window.ContactsView = {
                         <div id="filterChipsContainer" style="display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;"></div>
                     </div>
                     
-                    <div style="flex: 1; overflow-x: hidden; min-width: 100%;">
-                        <table style="width: 100%; border-collapse: collapse; text-align: left; table-layout: fixed;">
+                    <div style="flex: 1; overflow-x: auto; min-width: 100%; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; table-layout: auto;">
                             <thead style="position: sticky; top: 0; background: rgba(30,30,35,0.8); backdrop-filter: blur(20px); z-index: 10;">
                                 <tr>
-                                    <th style="padding: 14px 24px; width: 45px;"><input type="checkbox" id="selectAllCheckbox" onchange="window.ContactsView.toggleAll(this.checked)" style="width: 17px; height: 17px; accent-color: var(--accent-color); cursor:pointer;"></th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 180px;">Names</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 130px;">Phone</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 120px;">Company</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 110px;">Event</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 140px;">Interest</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 100px;">Position</th>
-                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 120px;">Groups / Tags</th>
-                                    <th style="padding: 14px 24px; text-align: right; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; width: 100px;">Actions</th>
+                                    <th style="padding: 14px 24px; min-width: 45px;"><input type="checkbox" id="selectAllCheckbox" onchange="window.ContactsView.toggleAll(this.checked)" style="width: 17px; height: 17px; accent-color: var(--accent-color); cursor:pointer;"></th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 180px;">Names</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 130px;">Phone</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 120px;">Company</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 110px;">Event</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 140px;">Interest</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 100px;">Position</th>
+                                    <th style="padding: 14px 12px; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 120px;">Groups / Tags</th>
+                                    <th style="padding: 14px 12px; text-align: right; font-weight: 700; font-size: 0.65rem; color: rgba(255,255,255,0.3); text-transform: uppercase; min-width: 100px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="contactsTableBody"></tbody>
@@ -884,7 +884,7 @@ window.ContactsView = {
                     <td style="padding: 12px; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem; color: rgba(255,255,255,0.55);" title="${c.interest || c.selected_topic || ''}">${displayInterest}</td>
                     <td style="${cellStyle} color: rgba(255,255,255,0.55);" title="${c.position || ''}">${displayPosition}</td>
                     <td style="padding: 12px;"><div style="display:flex; gap: 4px; flex-wrap: nowrap; overflow: hidden;">${grps.length > 0 ? grps.map(g => `<span title="${g.name}" style="background:${(g.color || '#fff')+'1a'}; color: ${g.color || '#fff'}; border:1px solid ${(g.color || '#fff')+'33'}; padding: 2px 8px; border-radius: 6px; font-size: 0.6rem; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px;">${_highlight(g.name)}</span>`).join('') : `<span style="color:rgba(255,255,255,0.1);">—</span>`}</div></td>
-                    <td style="padding: 12px 24px; text-align: right;"><div style="display:flex; justify-content:flex-end; gap:6px;">
+                    <td style="padding: 12px 12px; text-align: right;"><div style="display:flex; justify-content:flex-end; gap:6px;">
                         <button onclick="event.stopPropagation(); window.ContactsView.openEditModal(${contactJson})" style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.04); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path></svg></button>
                         <button onclick="event.stopPropagation(); window.ContactsView.deleteIndividual('${c.id}', '${safeNameForDelete}')" style="width:30px; height:30px; border-radius:8px; border:1px solid rgba(255,69,58,0.15); background:rgba(255,69,58,0.05); color:#ff453a; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6L19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg></button>
                     </div></td>
