@@ -20,8 +20,20 @@ class BrandSyncApp {
     checkAuth() {
         if (window.AuthService && window.AuthService.isLoggedIn()) {
             document.getElementById('masterLockOverlay').style.display = 'none';
-            document.getElementById('mainAppContainer').style.display = 'flex';
-            this.bootLayout();
+            const aiLoading = document.getElementById('aiLoadingScreen');
+            aiLoading.style.display = 'flex';
+            aiLoading.style.opacity = '1';
+
+            // Simulate System Prep for returning users
+            setTimeout(() => {
+                aiLoading.style.transition = 'opacity 0.8s ease-in-out';
+                aiLoading.style.opacity = '0';
+                setTimeout(() => {
+                    aiLoading.style.display = 'none';
+                    document.getElementById('mainAppContainer').style.display = 'flex';
+                    this.bootLayout();
+                }, 800);
+            }, 2500);
         } else {
             document.getElementById('masterLockOverlay').style.display = 'flex';
             document.getElementById('mainAppContainer').style.display = 'none';
