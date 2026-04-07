@@ -825,9 +825,12 @@ window.ContactsView = {
                 const displayEvent = c.event ? _highlight(_toTitleCase(c.event)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 
                 let rawInterest = c.interest || '';
+                if (typeof rawInterest === 'string' && rawInterest.trim().startsWith('[') && rawInterest.trim().endsWith(']')) {
+                    try { rawInterest = JSON.parse(rawInterest); } catch(e) {}
+                }
                 if (Array.isArray(rawInterest)) rawInterest = rawInterest.join(', ');
-                let cleanInterest = String(rawInterest).replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim();
-                const displayInterest = cleanInterest ? _highlight(_toTitleCase(cleanInterest)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
+                let cleanInterest = String(rawInterest).replace(/[\[\]"]/g, '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim();
+                const displayInterest = cleanInterest && cleanInterest !== 'N/A' ? _highlight(_toTitleCase(cleanInterest)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 
                 const displayPosition = c.position ? _highlight(_toTitleCase(c.position)) : '<span style="color:rgba(255,255,255,0.1);">—</span>';
                 
@@ -1669,8 +1672,11 @@ window.ContactsView = {
 
             // Format Interest as Comma Separated
             let rawInterest = p.interest || p.selected_topic || '';
+            if (typeof rawInterest === 'string' && rawInterest.trim().startsWith('[') && rawInterest.trim().endsWith(']')) {
+                try { rawInterest = JSON.parse(rawInterest); } catch(e) {}
+            }
             if (Array.isArray(rawInterest)) rawInterest = rawInterest.join(', ');
-            const formattedInterest = _toTitleCase(String(rawInterest).replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim());
+            const formattedInterest = _toTitleCase(String(rawInterest).replace(/[\[\]"]/g, '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim());
 
             // Auto Format Phone (Starts with 63)
             let formattedPhone = String(p.phone || '').replace(/[^\d]/g, '');

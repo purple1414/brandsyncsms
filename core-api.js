@@ -874,7 +874,7 @@ window.BrandSyncAPI = {
                         company: lead.company || 'Brand-Sync Origin',
                         position: lead.position || lead.approval_status || 'Lead',
                         event: lead.event || lead.event_name || 'N/A',
-                        interest: lead.interest || lead.brand_interested || 'N/A',
+                        interest: lead.selected_topic || lead.interest || lead.brand_interested || 'N/A',
                         salesPerson: lead.salesperson || lead.sales_person || 'Unassigned',
                         tags: Array.isArray(lead.tags) ? lead.tags : typeof lead.tags === 'string' ? lead.tags.split(',').map(s=>s.trim()).filter(x=>x) : [],
                         awareness: lead.brand_awareness || 'N/A',
