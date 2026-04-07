@@ -1662,7 +1662,9 @@ window.ContactsView = {
             }
 
             // Format Interest as Comma Separated
-            const formattedInterest = _toTitleCase((p.interest || p.selected_topic || '').replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', '));
+            let rawInterest = p.interest || p.selected_topic || '';
+            if (Array.isArray(rawInterest)) rawInterest = rawInterest.join(', ');
+            const formattedInterest = _toTitleCase(String(rawInterest).replace(/[;\/\|]/g, ', ').replace(/\s*,\s*/g, ', ').replace(/(^,+)|(,$)/g, '').trim());
 
             // Auto Format Phone (Starts with 63)
             let formattedPhone = String(p.phone || '').replace(/[^\d]/g, '');
