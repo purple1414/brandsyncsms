@@ -163,26 +163,40 @@ async function pullLeadsFromBrandSync() {
         const existing = JSON.parse(localStorage.getItem(pendingKey) || '[]');
         
         let newCount = 0;
+        let updatedCount = 0;
         leads.forEach(lead => {
+            const mappedCompany = lead.organization || lead.company || lead.organizations || '';
+            const mappedPosition = lead.role || lead.position || lead.roles || lead.job_title || '';
+            const mappedEvent = lead.event || lead.event_name || '';
+            const mappedInterest = lead.selected_topic || lead.selected_topics || lead.topics || lead.interest || lead.interests || lead.brand_interest || lead.brand_interested || '';
+
             // Check if already exists by ID or phone number  
-            const exists = existing.some(e => 
+            const extIdx = existing.findIndex(e => 
                 (e.id && e.id === lead.id) || 
                 (e.phone && e.phone === lead.phone)
             );
-            if (!exists) {
+
+            if (extIdx !== -1) {
+                // Force update existing records to repair empty field mappings
+                existing[extIdx].company = mappedCompany || existing[extIdx].company;
+                existing[extIdx].position = mappedPosition || existing[extIdx].position;
+                existing[extIdx].event = mappedEvent || existing[extIdx].event;
+                existing[extIdx].interest = mappedInterest || existing[extIdx].interest;
+                updatedCount++;
+            } else {
                 existing.push({
                     id: lead.id,
                     name: lead.name || 'Unknown',
                     phone: lead.phone || '',
                     email: lead.email || '',
-                    company: lead.organization || lead.company || lead.organizations || '',
-                    position: lead.role || lead.position || lead.roles || lead.job_title || '',
+                    company: mappedCompany,
+                    position: mappedPosition,
                     familiarity: lead.familiarity || 0,
-                    event: lead.event || lead.event_name || '',
+                    event: mappedEvent,
                     event_id: lead.event_id || null,
                     status: lead.status || 'Standard',
                     approval_status: lead.approval_status || 'Pending',
-                    interest: lead.selected_topic || lead.selected_topics || lead.topics || lead.interest || lead.interests || lead.brand_interest || lead.brand_interested || '',
+                    interest: mappedInterest,
                     consent: lead.consent || 0,
                     created_at: lead.created_at || new Date().toISOString(),
                     sync_status: lead.sync_status || 'Pending',
@@ -210,12 +224,12 @@ async function pullLeadsFromBrandSync() {
 
         // Update status
         if (statusEl) {
-            statusEl.textContent = `✓ ${count} leads (${newCount} new) via ${usedSource.name}`;
+            statusEl.textContent = `✓ ${count} leads (${newCount} new, ${updatedCount} refreshed)`;
             statusEl.style.color = '#32d74b';
         }
         
         if (window.showToast) {
-            window.showToast(`Pull Successful: ${count} leads fetched (${newCount} new) from ${usedSource.name}`, 'success');
+            window.showToast(`Pull Successful: ${newCount} new leads, ${updatedCount} refreshed.`, 'success');
         }
 
         return leads;
