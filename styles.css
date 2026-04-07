@@ -481,12 +481,20 @@ input:focus + .toggle-slider {
     inset: 0;
     z-index: 9999999;
     background: #000;
-    display: none;
+    display: flex; /* Always flex to keep content centered */
+    visibility: hidden;
+    opacity: 0;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: #fff;
     overflow: hidden;
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+}
+
+#aiLoadingScreen.active {
+    visibility: visible;
+    opacity: 1;
 }
 
 /* Apple Intelligence Fluid Glow System */
@@ -762,19 +770,20 @@ input:focus + .toggle-slider {
     inset: 0;
     z-index: 1000;
     background: #000;
-    display: none;
+    display: flex;
+    visibility: hidden;
+    opacity: 0;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: #fff;
     overflow: hidden;
-    opacity: 0;
-    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
     border-radius: inherit; /* Match parent glass panel */
 }
 
 .ai-scanner-overlay.active {
-    display: flex;
+    visibility: visible;
     opacity: 1;
 }
 
