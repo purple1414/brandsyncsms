@@ -23,9 +23,15 @@ window.Scheduler = {
         this._persist(messages);
         
         // Arm the timer locally ONLY if NOT handled by remote gateway
-        if (!entry.remoteScheduled) {
-            this.armTimer(entry);
-        }
+        // Using a short delay to ensure Cloud Sync (Gist) doesn't overwrite the flag immediately
+        setTimeout(() => {
+            if (!entry.remoteScheduled) {
+                console.log(`[Scheduler] Arming local timer for ${entry.id}`);
+                this.armTimer(entry);
+            } else {
+                console.warn(`[Scheduler] Message ${entry.id} is GATEWAY-MANAGED. Local timer suppressed.`);
+            }
+        }, 100);
         
         return entry;
     },

@@ -410,11 +410,13 @@ window.BrandSyncAPI = {
                     recipient: targetNumber, 
                     message: parseSpintax(payload.message),
                     type: 'plain',
-                    // PHIL-SMS SCHEDULING: Use both 'schedule_time' and 'schedule' to ensure compatibility.
-                    // Format must be strictly YYYY-MM-DD HH:MM:SS
+                    // PHIL-SMS v3 SCHEDULING: Use 'scheduled_at' and 'is_scheduled: 1'
+                    // Format must be YYYY-MM-DD HH:MM:SS
                     ...(payload.scheduleTime && { 
-                        schedule_time: payload.scheduleTime.replace('T', ' ').substring(0, 16) + ':00',
-                        schedule: payload.scheduleTime.replace('T', ' ').substring(0, 16) + ':00'
+                        scheduled_at: payload.scheduleTime.replace('T', ' ').substring(0, 16) + ':00',
+                        is_scheduled: 1,
+                        // Redundancy for older v3 versions
+                        schedule_time: payload.scheduleTime.replace('T', ' ').substring(0, 16) + ':00'
                     })
                 };
                 
