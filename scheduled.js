@@ -480,7 +480,10 @@ window.ScheduledView = {
                                 <div style="background:${statusBg}; color:${statusColor}; padding:6px 14px; border-radius:12px; font-size:0.75rem; font-weight:800; display:inline-flex; align-items:center; gap:4px; text-transform:uppercase; letter-spacing:0.04em;">${m.status} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
                                 <div class="hover-full-msg" style="display:none; position:absolute; top:calc(100% + 5px); right:0; width:260px; background:rgba(255,69,58,0.95); padding:12px 14px; border-radius:12px; border:1px solid rgba(255,100,100,0.3); backdrop-filter:blur(24px); box-shadow:0 8px 30px rgba(255,69,58,0.4); z-index:9999; color:#fff; font-size:0.75rem; white-space:pre-wrap; word-break:break-word; pointer-events:none; line-height:1.4; text-transform:none; font-weight:500;"><strong>Execution Error:</strong><br>${window.BrandSyncAPI && window.BrandSyncAPI.toFriendlyError ? window.BrandSyncAPI.toFriendlyError({message: m.errorReason}) : (m.errorReason || 'System encountered a processing issue.')}</div>
                             </div>` :
-                            `<div style="background:${statusBg}; color:${statusColor}; padding:6px 14px; border-radius:12px; font-size:0.75rem; font-weight:800; display:inline-block; text-transform:uppercase; letter-spacing:0.04em;">${m.status}</div>`
+                            `<div>
+                                <div style="background:${statusBg}; color:${statusColor}; padding:6px 14px; border-radius:12px; font-size:0.75rem; font-weight:800; display:inline-block; text-transform:uppercase; letter-spacing:0.04em;">${m.status}</div>
+                                ${m.cloud_dispatched ? `<div style="margin-top:4px; font-size:0.6rem; color:#0a84ff; font-weight:800; display:flex; align-items:center; gap:3px; text-transform:uppercase; letter-spacing:0.04em;"><i class="icon-lucide-cloud" style="font-size:0.8rem;"></i> Cloud Dispatch</div>` : ''}
+                            </div>`
                             }
                         </td>
                         <td style="padding:20px; text-align:right;">
