@@ -453,11 +453,20 @@ window.BrandSyncAPI = {
                     if (data.status === 'success' || data.message) {
                         sentCount++;
                     } else {
-                        throw new Error(data.message || 'API rejected formatting.');
+                        // Use API-provided error message if available
+                        const apiMsg = data.message || data.error || 'API rejected formatting.';
+                        throw new Error(apiMsg);
                     }
                 } else {
-                    const errorText = await res.text();
-                    throw new Error(errorText);
+                    // Attempt to parse JSON error response for clearer diagnostics
+                    let errorMsg = '';
+                    try {
+                        const errData = await res.json();
+                        errorMsg = errData.message || errData.error || await res.text();
+                    } catch (_) {
+                        errorMsg = await res.text();
+                    }
+                    throw new Error(errorMsg);
                 }
             } catch (err) {
                 console.error("PhilSMS Dispatch Error:", err);
