@@ -95,6 +95,12 @@ window.Scheduler = {
     // Arm a setTimeout to fire the message at the scheduled time
     armTimer(entry) {
         if(!this._timers) this._timers = {};
+        
+        // Skip local arming if the message is already scheduled on the gateway
+        if (entry.remoteScheduled) {
+            console.log(`[Scheduler] Message ${entry.id} is remotely scheduled. Skipping local timer.`);
+            return;
+        }
 
         // Cancel existing timer to prevent double firing on sync/restore
         if(this._timers[entry.id]) {
@@ -192,7 +198,10 @@ window.Scheduler = {
         messages.forEach(m => {
             const fireAt = new Date(m.scheduleTime).getTime();
             if(fireAt > Date.now()) {
-                this.armTimer(m);
+                // Only arm local timers for messages NOT handled by the gateway
+                if (!m.remoteScheduled) {
+                    this.armTimer(m);
+                }
                 restored++;
             } else {
                 // Past due - mark as failed

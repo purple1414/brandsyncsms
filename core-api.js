@@ -410,7 +410,7 @@ window.BrandSyncAPI = {
                     recipient: targetNumber, 
                     message: parseSpintax(payload.message),
                     type: 'plain',
-                    ...(payload.scheduleTime && { schedule_time: payload.scheduleTime.replace('T', ' ').substring(0, 16) })
+                    ...(payload.scheduleTime && { schedule_time: payload.scheduleTime.replace('T', ' ').substring(0, 16) + ':00' })
                 };
 
                 let res;
