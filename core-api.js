@@ -108,6 +108,8 @@ window.BrandSyncAPI = {
                 const storageKey = BS_STORAGE_KEYS[k];
                 data[storageKey] = this._get(storageKey);
             });
+            // Include Emergency Failsafe state for Cloud Scheduler
+            data['brandsync_failsafe'] = localStorage.getItem('brandsync_failsafe') === 'true';
             
             // Step 1: Verification Handshake (Check if Gist exists and is accessible)
             const checkRes = await fetch(`https://api.github.com/gists/${gistId}`, {
@@ -383,8 +385,16 @@ window.BrandSyncAPI = {
         return "The message could not be sent due to a system glitch. Please try again later.";
     },
 
+    // Failsafe Guard: Checks if the system is in emergency lockdown
+    isFailsafeActive() {
+        return localStorage.getItem('brandsync_failsafe') === 'true';
+    },
+
     // SMS Dispatch Engine
     async sendSMS(payload) {
+        if (this.isFailsafeActive()) {
+            throw new Error("ACTION BLOCKED: Emergency Failsafe is ACTIVE. Please reconnect in the header to resume.");
+        }
         const parseSpintax = (text) => {
             const matches = text.match(/\{([^{}]+)\}/g);
             if (!matches) return text;

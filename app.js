@@ -165,6 +165,53 @@ class BrandSyncApp {
         location.replace(location.pathname);
     }
 
+    toggleFailsafe() {
+        const isActive = localStorage.getItem('brandsync_failsafe') === 'true';
+        const newState = !isActive;
+        
+        localStorage.setItem('brandsync_failsafe', newState);
+        
+        if (newState) {
+            if (window.showToast) window.showToast('EMERGENCY FAILSAFE ACTIVE: SYSTEM DISCONNECTED', 'error');
+            console.error('[BrandSync] Emergency Failsafe Triggered. All outgoing API communication blocked.');
+        } else {
+            if (window.showToast) window.showToast('Systems Restored: Failsafe Disengaged', 'success');
+            console.log('[BrandSync] Systems Restored. Normal operation resumed.');
+        }
+        
+        this.updateFailsafeUI();
+        
+        // Broadcast state to Cloud via Gist
+        if (window.BrandSyncAPI && window.BrandSyncAPI.githubPush) {
+            const config = window.BrandSyncConfig;
+            window.BrandSyncAPI.githubPush(config.DEFAULT_GITHUB_TOKEN, config.DEFAULT_GIST_ID);
+        }
+    }
+
+    updateFailsafeUI() {
+        const isActive = localStorage.getItem('brandsync_failsafe') === 'true';
+        const btn = document.getElementById('failsafeToggleBtn');
+        const icon = document.getElementById('failsafeIcon');
+        
+        if (!btn || !icon) return;
+        
+        if (isActive) {
+            btn.classList.add('failsafe-active');
+            btn.title = 'EMERGENCY FAILSAFE ACTIVE (Click to Restore)';
+            if (icon) {
+                icon.className = 'icon-lucide-zap-off';
+                icon.style.color = '#fff';
+            }
+        } else {
+            btn.classList.remove('failsafe-active');
+            btn.title = 'Emergency Failsafe (Standard Mode)';
+            if (icon) {
+                icon.className = 'icon-lucide-zap';
+                icon.style.color = 'rgba(255,255,255,0.4)';
+            }
+        }
+    }
+
     bootLayout() {
         // Run API health heartbeats
         if (window.BrandSyncAPI && window.BrandSyncAPI.init) window.BrandSyncAPI.init();
@@ -177,6 +224,7 @@ class BrandSyncApp {
         this.refreshBalance();
         this.setupTopUp();
         this.refreshGatewayStatus();
+        this.updateFailsafeUI();
 
         setInterval(() => this.refreshGatewayStatus(), 5000);
 

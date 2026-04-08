@@ -123,10 +123,15 @@ async function run() {
     try {
         const db = await getGistDB();
         
+        // EMERGENCY FAILSAFE CHECK: If the web app has triggered the kill-switch,
+        // do NOT process any messages. Exit immediately.
+        if (db.brandsync_failsafe === true) {
+            console.log('🛑 EMERGENCY FAILSAFE IS ACTIVE. Cloud Scheduler will NOT dispatch any messages.');
+            console.log('To resume, disable the Failsafe from the BrandSync dashboard header.');
+            return;
+        }
+
         // The web app stores scheduled messages in 'brandsync_scheduled_messages'
-        // But since we are merging all data into one brandsync_db.json, 
-        // we need to look for that specific key. 
-        // If the Gist is just the array directly, we handle that too.
         let schedules = db.brandsync_scheduled_messages || [];
         if (!Array.isArray(schedules) && Array.isArray(db)) schedules = db;
 

@@ -273,6 +273,11 @@
                         <i class="icon-lucide-calculator" style="font-size: 0.9rem; color: #ff9f0a;"></i> Credit
                         Conversion
                     </button>
+                    <button id="failsafeToggleBtn" onclick="window.BrandSyncAppInstance.toggleFailsafe()" class="btn icon-btn"
+                        title="Emergency Failsafe: Disconnect All APIs"
+                        style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); margin-right: 8px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                        <i id="failsafeIcon" class="icon-lucide-zap" style="color: rgba(255,255,255,0.4); font-size: 1rem;"></i>
+                    </button>
                     <div class="search-box glass-input" style="position: relative;">
                         <i class="icon-lucide-search"></i>
                         <input type="text" id="globalSearch" placeholder="Search identity index..."
