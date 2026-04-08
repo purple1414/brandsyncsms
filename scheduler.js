@@ -96,8 +96,8 @@ window.Scheduler = {
         if(!this._timers) this._timers = {};
         
         // Skip local arming if the message is already scheduled on the gateway
-        if (entry.remoteScheduled) {
-            console.log(`[Scheduler] Message ${entry.id} is remotely scheduled. Skipping local timer.`);
+        if (entry.remoteScheduled === true || entry.remoteScheduled === "true") {
+            console.warn(`[Scheduler] Message ${entry.id} is managed by GATEWAY. Browser timer suppressed to prevent duplicates.`);
             return;
         }
 
@@ -197,11 +197,13 @@ window.Scheduler = {
         messages.forEach(m => {
             const fireAt = new Date(m.scheduleTime).getTime();
             if(fireAt > Date.now()) {
-                // Only arm local timers for messages NOT handled by the gateway
-                if (!m.remoteScheduled) {
+                // ONLY arm local timers for messages NOT handled by the gateway
+                if (m.remoteScheduled === true || m.remoteScheduled === "true") {
+                    console.log(`[Scheduler] Skipping local restoration for remote-managed task: ${m.id}`);
+                } else {
                     this.armTimer(m);
+                    restored++;
                 }
-                restored++;
             } else {
                 // Past due - mark as failed
                 this._updateStatus(m.id, 'failed', 'This message was scheduled for a time when the system was offline and could not be sent.');

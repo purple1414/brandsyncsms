@@ -410,8 +410,15 @@ window.BrandSyncAPI = {
                     recipient: targetNumber, 
                     message: parseSpintax(payload.message),
                     type: 'plain',
-                    ...(payload.scheduleTime && { schedule_time: payload.scheduleTime.replace('T', ' ').substring(0, 16) + ':00' })
+                    // PHIL-SMS SCHEDULING: Use both 'schedule_time' and 'schedule' to ensure compatibility.
+                    // Format must be strictly YYYY-MM-DD HH:MM:SS
+                    ...(payload.scheduleTime && { 
+                        schedule_time: payload.scheduleTime.replace('T', ' ').substring(0, 16) + ':00',
+                        schedule: payload.scheduleTime.replace('T', ' ').substring(0, 16) + ':00'
+                    })
                 };
+                
+                if (payload.scheduleTime) console.log(`[API] Initializing autonomous dispatch for ${payload.scheduleTime}`);
 
                 let res;
                 try {
