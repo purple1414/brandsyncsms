@@ -297,6 +297,41 @@ window.SendSMSView = {
                 .apple-modal-card .modal-actions button:active {
                     transform: scale(0.97);
                 }
+                .modal-preview-box {
+                    background: rgba(0, 0, 0, 0.25);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 12px;
+                    padding: 12px;
+                    margin: 16px 0;
+                    text-align: left;
+                    max-height: 120px;
+                    overflow-y: auto;
+                    font-size: 0.85rem;
+                    line-height: 1.5;
+                    color: rgba(255, 255, 255, 0.85);
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                }
+                .modal-preview-label {
+                    font-size: 0.65rem;
+                    text-transform: uppercase;
+                    color: rgba(255, 255, 255, 0.4);
+                    font-weight: 700;
+                    margin-bottom: 6px;
+                    letter-spacing: 0.05em;
+                }
+                .btn-loading {
+                    pointer-events: none;
+                    opacity: 0.7;
+                }
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .spinner-icon {
+                    animation: spin 1s linear infinite;
+                    display: inline-block;
+                }
 
                 /* Apple-style Dropdown */
                 .apple-dropdown-menu {
@@ -785,13 +820,17 @@ window.SendSMSView = {
             const totalCredits = validRecipients.length * calc.segments;
             const modalHTML = `
                 <div id="smsConfirmModal" class="apple-modal-overlay">
-                    <div class="apple-modal-card">
+                    <div class="apple-modal-card" style="width: 420px;">
                         <div class="modal-body">
                             <div class="modal-icon">
                                 <i class="icon-lucide-send" style="color: #0a84ff;"></i>
                             </div>
-                            <h3>${isSch ? 'Schedule Message?' : 'Send Message?'}</h3>
-                            <p class="modal-desc">This action will ${isSch ? 'schedule' : 'dispatch'} your message to <strong style="color:#f5f5f7;">${validRecipients.length}</strong> recipient${validRecipients.length !== 1 ? 's' : ''} via <strong style="color:#f5f5f7;">${senderId.value}</strong>.</p>
+                            <h3>${isSch ? 'Schedule Message?' : 'Review Message'}</h3>
+                            <p class="modal-desc" style="margin-bottom: 12px;">Review your message details before ${isSch ? 'scheduling' : 'sending'} via <strong style="color:#0a84ff;">${senderId.value}</strong>.</p>
+                            
+                            <div class="modal-preview-label">Message Preview</div>
+                            <div class="modal-preview-box">${textInput.value.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+
                             <div class="modal-stats">
                                 <div class="modal-stat">
                                     <span class="stat-value" style="color:#0a84ff;">${validRecipients.length}</span>
@@ -803,13 +842,13 @@ window.SendSMSView = {
                                 </div>
                                 <div class="modal-stat">
                                     <span class="stat-value" style="color:#32d74b;">${totalCredits}</span>
-                                    <span class="stat-label">Credits</span>
+                                    <span class="stat-label">Total Credits</span>
                                 </div>
                             </div>
                         </div>
                         <div class="modal-actions">
                             <button id="cancelConfBtn">Cancel</button>
-                            <button id="agreeConfBtn">${isSch ? 'Schedule' : 'Send Now'}</button>
+                            <button id="agreeConfBtn" style="min-width: 140px;">${isSch ? 'Schedule' : 'Send Now'}</button>
                         </div>
                     </div>
                 </div>
@@ -817,24 +856,32 @@ window.SendSMSView = {
             document.body.insertAdjacentHTML('beforeend', modalHTML);
 
             const m = document.getElementById('smsConfirmModal');
-            document.getElementById('cancelConfBtn').onclick = () => m.remove();
+            const cancelBtn = document.getElementById('cancelConfBtn');
+            const confirmBtn = document.getElementById('agreeConfBtn');
+            
+            cancelBtn.onclick = () => m.remove();
             
             let processing = false;
-            document.getElementById('agreeConfBtn').onclick = async () => {
+            confirmBtn.onclick = async () => {
                 if(processing) return;
                 processing = true;
-                document.getElementById('agreeConfBtn').disabled = true;
+                
+                // Visual feedback
+                confirmBtn.classList.add('btn-loading');
+                confirmBtn.innerHTML = `<i class="icon-lucide-loader spinner-icon"></i> ${isSch ? 'Scheduling...' : 'Sending...'}`;
+                cancelBtn.style.opacity = '0.5';
+                cancelBtn.style.pointerEvents = 'none';
                 
                 try {
                     if (isSch) {
-                        window.Scheduler.save({
+                        await window.Scheduler.save({
                             message: textInput.value,
                             recipients: validRecipients,
                             senderId: senderId.value,
                             segments: calc.segments,
                             scheduleTime: scheduleTime.value
                         });
-                        window.showToast("Scheduled!", 'success');
+                        window.showToast("Scheduled successfully", 'success');
                     } else {
                         const res = await window.BrandSyncAPI.sendSMS({
                             message: textInput.value,
@@ -842,11 +889,25 @@ window.SendSMSView = {
                             senderId: senderId.value,
                             segments: calc.segments
                         });
-                        window.showToast("Sent!", 'success');
+                        window.showToast("Message sent successfully!", 'success');
                     }
-                    textInput.value = ''; recipientsArea.value = ''; updateMetrics();
-                } catch(e) { window.showToast("Error: " + e, 'error'); }
-                finally { m.remove(); if(window.BrandSyncAPI.runHealth) window.BrandSyncAPI.runHealth(); }
+                    
+                    // Cleanup inputs only on success
+                    textInput.value = ''; 
+                    recipientsArea.value = ''; 
+                    updateMetrics();
+                    m.remove();
+                } catch(e) { 
+                    window.showToast("Error: " + (e.message || e), 'error');
+                    // Re-enable on error
+                    processing = false;
+                    confirmBtn.classList.remove('btn-loading');
+                    confirmBtn.innerHTML = isSch ? 'Schedule' : 'Send Now';
+                    cancelBtn.style.opacity = '1';
+                    cancelBtn.style.pointerEvents = 'auto';
+                } finally { 
+                    if(window.BrandSyncAPI.runHealth) window.BrandSyncAPI.runHealth(); 
+                }
             };
         };
     }
