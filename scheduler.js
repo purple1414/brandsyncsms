@@ -16,16 +16,15 @@ window.Scheduler = {
             scheduleTime: payload.scheduleTime,  // ISO string: "2024-03-27T19:30"
             scheduledAt: new Date().toISOString(),
             status: 'pending',  // pending | sent | failed
-            recurring: payload.recurring || { type: 'none' }
+            recurring: payload.recurring || { type: 'none' },
+            remoteScheduled: !!payload.remoteScheduled // Lock this in BEFORE persisting
         };
         messages.push(entry);
         this._persist(messages);
         
-        // Arm the timer immediately if not handled by remote gateway
-        if (!payload.remoteScheduled) {
+        // Arm the timer locally ONLY if NOT handled by remote gateway
+        if (!entry.remoteScheduled) {
             this.armTimer(entry);
-        } else {
-            entry.remoteScheduled = true;
         }
         
         return entry;
