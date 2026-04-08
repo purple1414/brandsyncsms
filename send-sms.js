@@ -915,29 +915,27 @@ window.SendSMSView = {
                 cancelBtn.style.pointerEvents = 'none';
                 
                 try {
-                    // AUTONOMOUS SCHEDULING: 
-                    // We send the scheduleTime to the gateway immediately. 
-                    // This way, the gateway (PhilSMS) handles the timer even if the browser is closed.
-                    const res = await window.BrandSyncAPI.sendSMS({
-                        message: textInput.value,
-                        recipients: validRecipients,
-                        senderId: senderId.value,
-                        segments: calc.segments,
-                        scheduleTime: isSch ? scheduleTime.value : null
-                    });
-
                     if (isSch) {
-                        // Persist in local scheduler with 'remoteScheduled' flag to skip local timers
+                        // LOCAL SCHEDULING: 
+                        // Instead of calling the gateway immediately (which fires right away),
+                        // we save to the local scheduler. The browser will fire it at the specific time.
                         await window.Scheduler.save({
                             message: textInput.value,
                             recipients: validRecipients,
                             senderId: senderId.value,
                             segments: calc.segments,
                             scheduleTime: scheduleTime.value,
-                            remoteScheduled: true // skips client-side setTimeout
+                            remoteScheduled: false // Browser handles the timer
                         });
-                        window.showToast("Message scheduled on gateway!", 'success');
+                        window.showToast("Message scheduled! Keep this tab open.", 'success');
                     } else {
+                        // Immediate dispatch
+                        await window.BrandSyncAPI.sendSMS({
+                            message: textInput.value,
+                            recipients: validRecipients,
+                            senderId: senderId.value,
+                            segments: calc.segments
+                        });
                         window.showToast("Message sent successfully!", 'success');
                     }
                     

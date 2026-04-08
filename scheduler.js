@@ -22,16 +22,8 @@ window.Scheduler = {
         messages.push(entry);
         this._persist(messages);
         
-        // Arm the timer locally ONLY if NOT handled by remote gateway
-        // Using a short delay to ensure Cloud Sync (Gist) doesn't overwrite the flag immediately
-        setTimeout(() => {
-            if (!entry.remoteScheduled) {
-                console.log(`[Scheduler] Arming local timer for ${entry.id}`);
-                this.armTimer(entry);
-            } else {
-                console.warn(`[Scheduler] Message ${entry.id} is GATEWAY-MANAGED. Local timer suppressed.`);
-            }
-        }, 100);
+        // Arm the timer locally
+        this.armTimer(entry);
         
         return entry;
     },
@@ -101,11 +93,8 @@ window.Scheduler = {
     armTimer(entry) {
         if(!this._timers) this._timers = {};
         
-        // Skip local arming if the message is already scheduled on the gateway
-        if (entry.remoteScheduled === true || entry.remoteScheduled === "true") {
-            console.warn(`[Scheduler] Message ${entry.id} is managed by GATEWAY. Browser timer suppressed to prevent duplicates.`);
-            return;
-        }
+        // Local arming is now mandatory for reliable scheduling
+        // (Gateway scheduling is bypassed to avoid 'send now' behavior)
 
         // Cancel existing timer to prevent double firing on sync/restore
         if(this._timers[entry.id]) {
@@ -203,13 +192,9 @@ window.Scheduler = {
         messages.forEach(m => {
             const fireAt = new Date(m.scheduleTime).getTime();
             if(fireAt > Date.now()) {
-                // ONLY arm local timers for messages NOT handled by the gateway
-                if (m.remoteScheduled === true || m.remoteScheduled === "true") {
-                    console.log(`[Scheduler] Skipping local restoration for remote-managed task: ${m.id}`);
-                } else {
-                    this.armTimer(m);
-                    restored++;
-                }
+                // Always arm local timers for pending messages
+                this.armTimer(m);
+                restored++;
             } else {
                 // Past due - mark as failed
                 this._updateStatus(m.id, 'failed', 'This message was scheduled for a time when the system was offline and could not be sent.');
