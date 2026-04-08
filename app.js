@@ -643,6 +643,13 @@ class BrandSyncApp {
             }
         }
     }
+
+    updateSidebarCounts() {
+        // This method is called by various components to refresh global notification counts
+        if (window.BrandSyncAPI && window.BrandSyncAPI.runHealth) {
+            window.BrandSyncAPI.runHealth();
+        }
+    }
 }
 
 // Initialized Application Node

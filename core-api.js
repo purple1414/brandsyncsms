@@ -358,6 +358,31 @@ window.BrandSyncAPI = {
         };
     },
 
+    // Helper for non-technical error messages
+    toFriendlyError(err) {
+        const msg = (err.message || String(err)).toLowerCase();
+        if (msg.includes('insufficient balance') || msg.includes('credits')) {
+            return "You don't have enough credits to send this message. Please contact the Marketing department to top up.";
+        }
+        if (msg.includes('invalid number') || msg.includes('format')) {
+            return "One or more phone numbers are incorrect. Please check the recipient list and try again.";
+        }
+        if (msg.includes('sender id not found') || msg.includes('sender')) {
+            return "The selected Sender ID is not active or approved. Please pick a different one.";
+        }
+        if (msg.includes('auth') || msg.includes('unauthorized') || msg.includes('401')) {
+            return "System authentication error. Try refreshing the page or logging in again.";
+        }
+        if (msg.includes('network') || msg.includes('fetch') || msg.includes('timeout')) {
+            return "Connection error. Please check your internet and try again.";
+        }
+        // Specific API formatting errors
+        if (msg.includes('rejected formatting') || msg.includes('400')) {
+            return "The message formatting is not supported by the provider. Try removing special characters.";
+        }
+        return "The message could not be sent due to a system glitch. Please try again later.";
+    },
+
     // SMS Dispatch Engine
     async sendSMS(payload) {
         const parseSpintax = (text) => {
@@ -413,16 +438,16 @@ window.BrandSyncAPI = {
                     }
                 } else {
                     const errorText = await res.text();
-                    throw new Error(`API Error ${res.status}: ${errorText.substring(0, 100)}`);
+                    throw new Error(errorText);
                 }
             } catch (err) {
                 console.error("PhilSMS Dispatch Error:", err);
-                lastError = err.message;
+                lastError = this.toFriendlyError(err);
             }
         }
 
         if (sentCount === 0 && lastError) {
-            if (window.showToast) window.showToast(`Send failed: ${lastError}`, 'error');
+            if (window.showToast) window.showToast(lastError, 'error');
             throw new Error(lastError);
         }
         

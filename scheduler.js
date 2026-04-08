@@ -196,7 +196,7 @@ window.Scheduler = {
                 restored++;
             } else {
                 // Past due - mark as failed
-                this._updateStatus(m.id, 'failed', 'Overdue message caught during system restore.');
+                this._updateStatus(m.id, 'failed', 'This message was scheduled for a time when the system was offline and could not be sent.');
             }
         });
         if(restored > 0) console.log(`[Scheduler] Restored ${restored} pending timer(s).`);

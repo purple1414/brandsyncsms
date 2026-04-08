@@ -811,8 +811,9 @@ window.SendSMSView = {
             }
             const validRecipients = recipientsArea.value.split(',').map(r => r.trim()).filter(r => r.length >= 10);
             const calc = window.calculateSMSLength(textInput.value);
-            const isSch = scheduleTime.style.display !== 'none' && scheduleTime.value;
-            const targetTime = isSch ? new Date(scheduleTime.value) : null;
+            const isSch = scheduleToggleBtn.querySelector('span').innerText === 'Cancel';
+            const targetTime = isSch ? (scheduleTime.value ? new Date(scheduleTime.value) : new Date(Date.now() + 60000)) : null;
+            if (isSch && !scheduleTime.value) scheduleTime.value = targetTime.toISOString().slice(0, 16);
 
             // Prevent multiple modals from overlapping
             const existingModal = document.getElementById('smsConfirmModal');
