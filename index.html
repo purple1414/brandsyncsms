@@ -273,11 +273,6 @@
                         <i class="icon-lucide-calculator" style="font-size: 0.9rem; color: #ff9f0a;"></i> Credit
                         Conversion
                     </button>
-                    <button id="failsafeToggleBtn" onclick="window.BrandSyncAppInstance.toggleFailsafe()" class="btn icon-btn"
-                        title="Emergency Failsafe: Disconnect All APIs"
-                        style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); margin-right: 8px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
-                        <i id="failsafeIcon" class="icon-lucide-zap" style="color: rgba(255,255,255,0.4); font-size: 1rem;"></i>
-                    </button>
                     <div class="search-box glass-input" style="position: relative;">
                         <i class="icon-lucide-search"></i>
                         <input type="text" id="globalSearch" placeholder="Search identity index..."
@@ -288,7 +283,7 @@
                             <!-- Results Injected Here -->
                         </div>
                     </div>
-                    <div style="position: relative;">
+                    <div style="position: relative; display: flex; align-items: center; gap: 8px;">
                         <button id="gatewayHeartbeatBtn" onclick="window.BrandSyncAppInstance.toggleGateway()" class="btn icon-btn"
                             title="Gateway Heartbeat: Active Pulse"
                             style="background: rgba(50, 215, 75, 0.1); border: 1px solid rgba(50, 215, 75, 0.2); position: relative; transition: all 0.6s ease; box-shadow: 0 0 15px rgba(50, 215, 75, 0.2);">
@@ -296,6 +291,11 @@
                             <div id="gatewayBadge"
                                 style="position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 50%; background: #ff453a; color: #fff; font-size: 0.65rem; font-weight: 900; align-items: center; justify-content: center; border: 2px solid #1c1c1e; box-shadow: 0 4px 12px rgba(255,69,58,0.5); pointer-events: none; display: none; animation: badgePop 0.3s ease-out;">
                                 0</div>
+                        </button>
+                        <button id="failsafeToggleBtn" onclick="window.BrandSyncAppInstance.toggleFailsafe()" class="btn icon-btn"
+                            title="Emergency Failsafe: Disconnect All APIs"
+                            style="background: rgba(255, 69, 58, 0.05); border: 1px solid rgba(255, 69, 58, 0.1); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                            <i id="failsafeIcon" class="icon-lucide-alert-triangle" style="color: rgba(255,255,255,0.4); font-size: 1rem;"></i>
                         </button>
                         <div id="gatewayFlyout" class="glass-panel"
                             style="display:none; position: absolute; top: calc(100% + 15px); right: 0; width: 280px; padding: 24px; border-radius: 20px; background: #1c1c22; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 50px 150px rgba(0,0,0,0.9); z-index: 1000000; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: top right;">

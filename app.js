@@ -197,17 +197,21 @@ class BrandSyncApp {
         
         if (isActive) {
             btn.classList.add('failsafe-active');
+            document.body.classList.add('failsafe-global-alert');
             btn.title = 'EMERGENCY FAILSAFE ACTIVE (Click to Restore)';
             if (icon) {
-                icon.className = 'icon-lucide-zap-off';
-                icon.style.color = '#fff';
+                icon.className = 'icon-lucide-alert-triangle';
+                icon.style.color = '#ff453a';
+                icon.style.filter = 'drop-shadow(0 0 8px #ff453a)';
             }
         } else {
             btn.classList.remove('failsafe-active');
+            document.body.classList.remove('failsafe-global-alert');
             btn.title = 'Emergency Failsafe (Standard Mode)';
             if (icon) {
-                icon.className = 'icon-lucide-zap';
+                icon.className = 'icon-lucide-alert-triangle';
                 icon.style.color = 'rgba(255,255,255,0.4)';
+                icon.style.filter = 'none';
             }
         }
     }
