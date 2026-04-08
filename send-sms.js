@@ -812,22 +812,40 @@ window.SendSMSView = {
             const validRecipients = recipientsArea.value.split(',').map(r => r.trim()).filter(r => r.length >= 10);
             const calc = window.calculateSMSLength(textInput.value);
             const isSch = scheduleTime.style.display !== 'none' && scheduleTime.value;
+            const targetTime = isSch ? new Date(scheduleTime.value) : null;
 
             // Prevent multiple modals from overlapping
             const existingModal = document.getElementById('smsConfirmModal');
-            if (existingModal) existingModal.remove();
+            if (existingModal) {
+                if (existingModal._timer) clearInterval(existingModal._timer);
+                existingModal.remove();
+            }
 
             const totalCredits = validRecipients.length * calc.segments;
+            
+            let countdownHTML = '';
+            if (isSch) {
+                countdownHTML = `
+                    <div style="margin: 16px 0; padding: 16px; background: rgba(10, 132, 255, 0.1); border: 1px dashed rgba(10, 132, 255, 0.3); border-radius: 14px; text-align: center;">
+                        <div style="font-size: 0.65rem; text-transform: uppercase; color: #0a84ff; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px;">Scheduled For Delivery</div>
+                        <div style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px;">${targetTime.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })}</div>
+                        <div id="modalCountdown" style="font-size: 1.2rem; font-weight: 800; color: #0a84ff; font-family: 'SF Mono', monospace;">--:--:--</div>
+                    </div>
+                `;
+            }
+
             const modalHTML = `
                 <div id="smsConfirmModal" class="apple-modal-overlay">
-                    <div class="apple-modal-card" style="width: 420px;">
+                    <div class="apple-modal-card" style="width: 440px;">
                         <div class="modal-body">
                             <div class="modal-icon">
-                                <i class="icon-lucide-send" style="color: #0a84ff;"></i>
+                                <i class="${isSch ? 'icon-lucide-calendar-check' : 'icon-lucide-send'}" style="color: #0a84ff;"></i>
                             </div>
-                            <h3>${isSch ? 'Schedule Message?' : 'Review Message'}</h3>
-                            <p class="modal-desc" style="margin-bottom: 12px;">Review your message details before ${isSch ? 'scheduling' : 'sending'} via <strong style="color:#0a84ff;">${senderId.value}</strong>.</p>
+                            <h3>${isSch ? 'Confirm Schedule' : 'Review Message'}</h3>
+                            <p class="modal-desc" style="margin-bottom: 12px;">Review your dispatch details before finalizing via <strong style="color:#0a84ff;">${senderId.value}</strong>.</p>
                             
+                            ${countdownHTML}
+
                             <div class="modal-preview-label">Message Preview</div>
                             <div class="modal-preview-box">${textInput.value.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
 
@@ -848,7 +866,7 @@ window.SendSMSView = {
                         </div>
                         <div class="modal-actions">
                             <button id="cancelConfBtn">Cancel</button>
-                            <button id="agreeConfBtn" style="min-width: 140px;">${isSch ? 'Schedule' : 'Send Now'}</button>
+                            <button id="agreeConfBtn" style="min-width: 160px;">${isSch ? 'Confirm Schedule' : 'Send Now'}</button>
                         </div>
                     </div>
                 </div>
@@ -858,8 +876,31 @@ window.SendSMSView = {
             const m = document.getElementById('smsConfirmModal');
             const cancelBtn = document.getElementById('cancelConfBtn');
             const confirmBtn = document.getElementById('agreeConfBtn');
+            const countdownEl = document.getElementById('modalCountdown');
             
-            cancelBtn.onclick = () => m.remove();
+            // Countdown Timer Logic
+            if (isSch && countdownEl) {
+                const updateCountdown = () => {
+                    const now = new Date();
+                    const diff = targetTime - now;
+                    if (diff <= 0) {
+                        countdownEl.innerText = "00:00:00";
+                        countdownEl.style.color = "#ff453a";
+                        return;
+                    }
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                    countdownEl.innerText = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                };
+                updateCountdown();
+                m._timer = setInterval(updateCountdown, 1000);
+            }
+
+            cancelBtn.onclick = () => {
+                if (m._timer) clearInterval(m._timer);
+                m.remove();
+            };
             
             let processing = false;
             confirmBtn.onclick = async () => {
@@ -873,22 +914,29 @@ window.SendSMSView = {
                 cancelBtn.style.pointerEvents = 'none';
                 
                 try {
+                    // AUTONOMOUS SCHEDULING: 
+                    // We send the scheduleTime to the gateway immediately. 
+                    // This way, the gateway (PhilSMS) handles the timer even if the browser is closed.
+                    const res = await window.BrandSyncAPI.sendSMS({
+                        message: textInput.value,
+                        recipients: validRecipients,
+                        senderId: senderId.value,
+                        segments: calc.segments,
+                        scheduleTime: isSch ? scheduleTime.value : null
+                    });
+
                     if (isSch) {
+                        // Persist in local scheduler with 'remoteScheduled' flag to skip local timers
                         await window.Scheduler.save({
                             message: textInput.value,
                             recipients: validRecipients,
                             senderId: senderId.value,
                             segments: calc.segments,
-                            scheduleTime: scheduleTime.value
+                            scheduleTime: scheduleTime.value,
+                            remoteScheduled: true // skips client-side setTimeout
                         });
-                        window.showToast("Scheduled successfully", 'success');
+                        window.showToast("Message scheduled on gateway!", 'success');
                     } else {
-                        const res = await window.BrandSyncAPI.sendSMS({
-                            message: textInput.value,
-                            recipients: validRecipients,
-                            senderId: senderId.value,
-                            segments: calc.segments
-                        });
                         window.showToast("Message sent successfully!", 'success');
                     }
                     
@@ -896,13 +944,15 @@ window.SendSMSView = {
                     textInput.value = ''; 
                     recipientsArea.value = ''; 
                     updateMetrics();
+                    
+                    if (m._timer) clearInterval(m._timer);
                     m.remove();
                 } catch(e) { 
                     window.showToast("Error: " + (e.message || e), 'error');
                     // Re-enable on error
                     processing = false;
                     confirmBtn.classList.remove('btn-loading');
-                    confirmBtn.innerHTML = isSch ? 'Schedule' : 'Send Now';
+                    confirmBtn.innerHTML = isSch ? 'Confirm Schedule' : 'Send Now';
                     cancelBtn.style.opacity = '1';
                     cancelBtn.style.pointerEvents = 'auto';
                 } finally { 

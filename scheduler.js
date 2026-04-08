@@ -21,8 +21,12 @@ window.Scheduler = {
         messages.push(entry);
         this._persist(messages);
         
-        // Arm the timer immediately
-        this.armTimer(entry);
+        // Arm the timer immediately if not handled by remote gateway
+        if (!payload.remoteScheduled) {
+            this.armTimer(entry);
+        } else {
+            entry.remoteScheduled = true;
+        }
         
         return entry;
     },
