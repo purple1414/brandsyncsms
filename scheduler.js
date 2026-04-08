@@ -116,6 +116,15 @@ window.Scheduler = {
 
         this._timers[entry.id] = setTimeout(async () => {
             console.log('[Scheduler] Firing scheduled message:', entry.id);
+
+            // EMERGENCY FAILSAFE GUARD: Block dispatch if kill-switch is active
+            if (localStorage.getItem('brandsync_failsafe') === 'true') {
+                console.warn('[Scheduler] FAILSAFE ACTIVE — Message blocked:', entry.id);
+                this._updateStatus(entry.id, 'failed', 'Blocked by Emergency Failsafe.');
+                if (window.showToast) window.showToast('🛑 Failsafe Active: Scheduled message was blocked.', 'error');
+                return;
+            }
+
             try {
                 const res = await window.BrandSyncAPI.sendSMS({
                     senderId: entry.senderId,
